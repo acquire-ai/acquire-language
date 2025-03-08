@@ -14,12 +14,10 @@ export default defineContentScript({
 
     if (window.location.pathname.includes('/watch')) {
 
-      // 根据页面加载状态初始化处理器
       if (document.readyState === 'complete') {
         initializeHandler();
       } else {
         window.addEventListener('load', () => {
-          console.log('页面加载完成，初始化字幕处理器');
           initializeHandler();
         });
       }
@@ -40,8 +38,7 @@ export default defineContentScript({
       new MutationObserver(() => {
         if (lastUrl !== window.location.href) {
           lastUrl = window.location.href;
-          console.log('URL 变化，重新检查是否为视频页面:', lastUrl);
-          
+
           if (window.location.pathname.includes('/watch')) {
             console.log('检测到新的 YouTube 视频页面，重新初始化字幕处理器');
             initializeHandler();
