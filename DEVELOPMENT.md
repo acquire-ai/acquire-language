@@ -88,6 +88,10 @@ YouTube 字幕处理器是扩展的核心功能模块，负责：
 - 创建自定义字幕容器
 - 监听字幕变化
 - 提供字幕增强功能（单词查询、翻译等）
+- 注入和管理样式
+- **单词点击交互**：使字幕中的单词可点击，点击后显示单词释义
+- **集成 AI 服务**：调用 AI 模型获取单词的上下文相关释义
+- **鼠标悬停暂停**：当鼠标悬停在字幕上时自动暂停视频，离开时恢复播放
 
 ```typescript
 // 示例：创建自定义字幕容器
@@ -101,7 +105,81 @@ private createSubtitleContainer() {
   this.subtitleContainer = document.createElement('div');
   this.subtitleContainer.id = 'acquire-language-subtitle';
   
-  // 设置样式...
+  // 添加到文档
+  document.body.appendChild(this.subtitleContainer);
+}
+```
+
+```typescript
+// 示例：添加单词点击事件
+private addWordClickEvents() {
+  if (!this.subtitleContainer) return;
+  
+  const wordElements = this.subtitleContainer.querySelectorAll('.acquire-language-word');
+  
+  wordElements.forEach(element => {
+    element.addEventListener('click', async (event) => {
+      // 阻止事件冒泡
+      event.stopPropagation();
+      
+      // 获取单词和位置
+      const word = element.getAttribute('data-word') || '';
+      const rect = element.getBoundingClientRect();
+      const position = {
+        x: rect.left + window.scrollX,
+        y: rect.bottom + window.scrollY + 10
+      };
+      
+      // 显示加载状态
+      this.wordPopup.showLoading(word, position);
+      
+      // 获取单词释义
+      try {
+        // 调用 AI 服务获取释义
+        const definition = await this.aiService.getWordDefinition(
+          word, 
+          this.currentSubtitle,
+          this.settings.targetLanguage
+        );
+        
+        // 显示单词释义
+        this.wordPopup.show(word, definition, position);
+      } catch (error) {
+        console.error('获取单词释义失败:', error);
+        this.wordPopup.show(word, `获取释义失败: ${error.message}`, position);
+      }
+    });
+  });
+}
+```
+
+```typescript
+// 示例：添加字幕悬停事件 - 暂停视频
+private addSubtitleHoverEvents() {
+  if (!this.subtitleContainer) return;
+
+  // 记录视频播放状态
+  let wasPlaying = false;
+
+  // 鼠标进入字幕区域时暂停视频
+  this.subtitleContainer.addEventListener('mouseenter', () => {
+    const video = document.querySelector('video');
+    if (video) {
+      wasPlaying = !video.paused;
+      if (wasPlaying) {
+        video.pause();
+      }
+    }
+  });
+
+  // 鼠标离开字幕区域时恢复视频播放
+  this.subtitleContainer.addEventListener('mouseleave', () => {
+    const video = document.querySelector('video');
+    if (video && wasPlaying) {
+      video.play();
+      wasPlaying = false;
+    }
+  });
 }
 ```
 
@@ -163,6 +241,65 @@ interface VocabularyData {
 - 访问生词本
 - 打开设置页面
 
+### 7. AI 服务 (ai.ts)
+
+AI 服务模块负责与 AI 模型（如 OpenAI GPT-4o-mini 或 DeepSeek）交互，提供以下功能：
+
+- **单词释义**：根据上下文获取单词的详细释义
+- **文本翻译**：将字幕文本翻译成用户的母语
+
+```typescript
+// AI 服务接口
+export interface AIService {
+  getWordDefinition(word: string, context: string, targetLanguage: string): Promise<string>;
+  translateText(text: string, sourceLanguage: string, targetLanguage: string): Promise<string>;
+}
+
+// 创建 AI 服务
+export function createAIService(model: string, apiKey: string): AIService {
+  switch (model) {
+    case 'deepseek':
+      return new DeepSeekAIService(apiKey);
+    case 'gpt-4o-mini':
+      return new GPT4oMiniAIService(apiKey);
+    default:
+      return new DeepSeekAIService(apiKey);
+  }
+}
+```
+
+### 8. 单词弹出组件 (WordPopup.ts)
+
+单词弹出组件负责显示单词的详细释义，提供以下功能：
+
+- **显示加载状态**：在获取释义时显示加载动画
+- **显示单词释义**：以美观的方式展示单词的释义、例句和翻译
+- **添加到生词本**：允许用户将单词添加到生词本
+- **智能定位**：根据字幕位置自动调整弹出框位置，避免遮挡字幕
+
+```typescript
+// 示例：智能定位弹出框
+private setPosition(position: { x: number, y: number }) {
+  // ... 其他代码 ...
+  
+  // 如果找到字幕容器，将弹出框放在字幕上方
+  if (subtitleContainer) {
+    const subtitleRect = subtitleContainer.getBoundingClientRect();
+    
+    // 计算弹出框应该放置的垂直位置 - 字幕容器上方留出一定间距
+    const topPosition = subtitleRect.top + window.scrollY - popupRect.height - 20;
+    
+    // 如果计算出的位置是负数（超出屏幕顶部），则放在字幕下方
+    if (topPosition < 0) {
+      this.popupElement.style.top = `${subtitleRect.bottom + window.scrollY + 20}px`;
+    } else {
+      this.popupElement.style.top = `${topPosition}px`;
+    }
+  }
+  // ... 其他代码 ...
+}
+```
+
 ## 数据流
 
 1. **字幕处理流程**：
@@ -183,6 +320,13 @@ interface VocabularyData {
    - 设置保存到 browser.storage.local
    - 内容脚本和后台脚本读取设置并应用
 
+4. **单词释义流程**：
+   - 用户点击字幕中的单词
+   - 字幕处理器捕获点击事件，获取单词和上下文
+   - 调用 AI 服务获取单词释义
+   - 显示单词释义弹出框
+   - 用户可以将单词添加到生词本
+
 ## 开发指南
 
 ### 添加新功能
@@ -199,6 +343,16 @@ interface VocabularyData {
    - 修改 `Word` 接口添加新属性
    - 更新 `Vocabulary.tsx` 组件显示新属性
    - 在后台脚本中更新保存逻辑
+
+4. **支持新的 AI 模型**：
+   - 在 `ai.ts` 中创建新的 AI 服务类，实现 `AIService` 接口
+   - 在 `createAIService` 函数中添加新模型的支持
+   - 在选项页面中添加新模型选项
+
+5. **增强单词释义功能**：
+   - 修改 AI 提示以获取更详细的单词信息
+   - 更新 `WordPopup` 组件以显示更丰富的内容
+   - 添加发音、图片等多媒体内容
 
 ### 调试技巧
 
@@ -264,3 +418,22 @@ npm run zip
 3. **扩展加载失败**：
    - 检查 `manifest.json` 是否有语法错误
    - 确保所有依赖都已安装 (`npm install`) 
+
+## 用户体验功能
+
+扩展提供了多种增强用户体验的功能：
+
+1. **字幕增强**：
+   - 美观的字幕显示
+   - 单词可点击，获取释义
+   - 鼠标悬停效果，突出显示单词
+
+2. **学习辅助**：
+   - 鼠标悬停在字幕上时自动暂停视频，方便用户专注学习
+   - 离开字幕区域时自动恢复播放
+   - 单词释义弹出框智能定位，避免遮挡字幕
+
+3. **生词本管理**：
+   - 一键添加单词到生词本
+   - 保存单词的上下文
+   - 方便后续复习 

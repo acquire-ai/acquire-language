@@ -4,6 +4,9 @@
  * 这个类负责查找 YouTube 字幕，并以更美观的方式显示它们。
  * 它使用 MutationObserver 监听字幕变化，并定期检查字幕内容。
  */
+import { WordPopup } from './WordPopup';
+import { createAIService } from '../services/ai';
+
 export class YouTubeSubtitleHandler {
     private subtitleContainer: HTMLElement | null = null;
     private originalSubtitleContainer: HTMLElement | null = null;
@@ -12,12 +15,57 @@ export class YouTubeSubtitleHandler {
     private containerObserver: MutationObserver | null = null;
     private lastCheckTime: number = 0;
     private checkInterval: number = 500;
+    private wordPopup: WordPopup;
+    private aiService: any = null;
+    private settings: any = null;
 
     constructor() {
-        this.init();
+        // 创建单词弹出组件
+        this.wordPopup = new WordPopup();
+        
+        // 加载设置
+        this.loadSettings().then(() => {
+            this.init();
+        });
+    }
+
+    async loadSettings() {
+        console.log('加载设置...');
+        try {
+            // 从存储中获取设置
+            const result = await browser.storage.local.get('settings');
+            console.log('从存储中获取的设置:', result);
+            
+            this.settings = result.settings || {
+                nativeLanguage: 'zh-CN',
+                targetLanguage: 'en',
+                languageLevel: 'B1',
+                aiModel: 'deepseek',
+                apiKey: ''
+            };
+            
+            console.log('使用的设置:', this.settings);
+            
+            // 如果有 API 密钥，初始化 AI 服务
+            if (this.settings.apiKey) {
+                console.log(`使用 API 密钥初始化 AI 服务，模型: ${this.settings.aiModel}`);
+                try {
+                    this.aiService = createAIService(this.settings.aiModel, this.settings.apiKey);
+                    console.log('AI 服务初始化成功');
+                } catch (error) {
+                    console.error('初始化 AI 服务失败:', error);
+                }
+            } else {
+                console.warn('未设置 API 密钥，无法初始化 AI 服务');
+            }
+        } catch (error) {
+            console.error('加载设置失败:', error);
+        }
     }
 
     async init() {
+        // 注入样式表
+        this.injectStylesheet();
 
         // 创建自定义字幕容器
         this.createSubtitleContainer();
@@ -27,6 +75,84 @@ export class YouTubeSubtitleHandler {
 
         // 设置定期检查
         this.setupPeriodicCheck();
+    }
+
+    /**
+     * 注入样式表
+     */
+    private injectStylesheet() {
+        const styleId = 'acquire-language-styles';
+        
+        // 检查样式表是否已存在
+        if (document.getElementById(styleId)) {
+            return;
+        }
+        
+        // 创建样式元素
+        const style = document.createElement('style');
+        style.id = styleId;
+        style.textContent = `
+            #acquire-language-subtitle {
+              position: fixed;
+              bottom: 80px;
+              left: 50%;
+              transform: translateX(-50%);
+              width: auto;
+              max-width: 80%;
+              text-align: center;
+              z-index: 2147483647;
+              transition: transform 0.2s ease;
+            }
+            
+            #acquire-language-subtitle:hover {
+              transform: translateX(-50%) scale(1.05);
+            }
+            
+            .acquire-language-initial-message {
+              background-color: rgba(0, 0, 0, 0.7);
+              color: white;
+              padding: 10px 15px;
+              border-radius: 8px;
+              font-size: 14px;
+              margin-bottom: 10px;
+            }
+            
+            .acquire-language-subtitle-text {
+              background-color: rgba(0, 0, 0, 0.8);
+              color: white;
+              padding: 12px 18px;
+              border-radius: 8px;
+              font-size: 18px;
+              line-height: 1.5;
+              display: inline-block;
+              box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+              transition: background-color 0.2s ease;
+            }
+            
+            #acquire-language-subtitle:hover .acquire-language-subtitle-text {
+              background-color: rgba(0, 0, 0, 0.9);
+            }
+            
+            .acquire-language-word {
+              cursor: pointer;
+              position: relative;
+              display: inline-block;
+              margin: 0 2px;
+              padding: 0 2px;
+              border-radius: 3px;
+              transition: all 0.2s ease;
+            }
+            
+            .acquire-language-word:hover {
+              text-decoration: underline;
+              color: #ffcc00;
+              background-color: rgba(255, 204, 0, 0.2);
+              transform: scale(1.1);
+            }
+        `;
+        
+        // 添加到文档头部
+        document.head.appendChild(style);
     }
 
     /**
@@ -45,33 +171,61 @@ export class YouTubeSubtitleHandler {
         this.subtitleContainer = document.createElement('div');
         this.subtitleContainer.id = 'acquire-language-subtitle';
 
-        // 设置样式
-        Object.assign(this.subtitleContainer.style, {
-            position: 'fixed',
-            bottom: '80px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: 'auto',
-            maxWidth: '80%',
-            textAlign: 'center',
-            zIndex: '2147483647'
-        });
-
         // 添加到文档
         document.body.appendChild(this.subtitleContainer);
+
+        // 添加鼠标悬停事件 - 暂停视频
+        this.addSubtitleHoverEvents();
 
         // 显示初始提示
         this.showInitialMessage();
     }
 
     /**
+     * 添加字幕悬停事件 - 暂停视频
+     */
+    private addSubtitleHoverEvents() {
+        if (!this.subtitleContainer) return;
+        let wasPlaying = false;
+
+        // 鼠标进入字幕区域时暂停视频
+        this.subtitleContainer.addEventListener('mouseenter', () => {
+            const video = document.querySelector('video');
+            if (video) {
+                wasPlaying = !video.paused;
+                if (wasPlaying) {
+                    video.pause();
+                }
+            }
+        });
+
+        // 鼠标离开字幕区域时恢复视频播放
+        this.subtitleContainer.addEventListener('mouseleave', () => {
+            const video = document.querySelector('video');
+            if (video && wasPlaying) {
+                video.play();
+                wasPlaying = false;
+            }
+        });
+    }
+
+    /**
      * 显示初始提示消息
      */
     private showInitialMessage() {
-        if (!this.subtitleContainer) return;
-
-        const message = this.createStyledContainer('字幕增强已启用 - 等待字幕出现...');
-        this.subtitleContainer.innerHTML = message;
+        if (this.subtitleContainer) {
+            const message = document.createElement('div');
+            message.className = 'acquire-language-initial-message';
+            message.textContent = '习得语言已启动，正在等待字幕...';
+            this.subtitleContainer.appendChild(message);
+            
+            // 5秒后移除提示
+            setTimeout(() => {
+                if (message.parentNode === this.subtitleContainer) {
+                    this.subtitleContainer?.removeChild(message);
+                }
+            }, 5000);
+        }
     }
 
     private findOriginalSubtitleContainer() {
@@ -245,32 +399,135 @@ export class YouTubeSubtitleHandler {
      */
     private updateSubtitle(subtitle: string) {
         if (!this.subtitleContainer) return;
-
+        
+        this.currentSubtitle = subtitle;
         this.subtitleContainer.innerHTML = this.createStyledContainer(subtitle);
+        
+        // 添加单词点击事件
+        this.addWordClickEvents();
     }
 
     /**
-     * 创建样式化的容器
+     * 创建样式化的字幕容器
      */
     private createStyledContainer(text: string): string {
-        return `
-      <div style="
-        background-color: rgba(0,0,0,0.7); 
-        padding: 12px 20px; 
-        border-radius: 8px; 
-        display: inline-block; 
-        max-width: 80%;
-        font-size: 24px;
-        font-weight: 500;
-        color: white;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        letter-spacing: 0.5px;
-        line-height: 1.4;
-      ">
-        ${text}
-      </div>
-    `;
+        if (!text) return '';
+        
+        // 将文本分割成单词，并为每个单词添加可点击的样式
+        const words = text.split(' ').map(word => {
+            // 过滤掉标点符号等
+            const cleanWord = word.replace(/[.,!?;:'"()]/g, '');
+            if (cleanWord.length < 2) return word; // 跳过短单词和标点
+            
+            return `<span class="acquire-language-word" data-word="${cleanWord}">${word}</span>`;
+        }).join(' ');
+        
+        return `<div class="acquire-language-subtitle-text">${words}</div>`;
+    }
+
+    /**
+     * 添加单词点击事件
+     */
+    private addWordClickEvents() {
+        if (!this.subtitleContainer) {
+            console.error('添加单词点击事件失败: subtitleContainer 不存在');
+            return;
+        }
+        
+        const wordElements = this.subtitleContainer.querySelectorAll('.acquire-language-word');
+
+        wordElements.forEach(element => {
+            element.addEventListener('click', async (event) => {
+                // 阻止事件冒泡
+                event.stopPropagation();
+                
+                // 获取单词和位置
+                const word = element.getAttribute('data-word') || '';
+
+                const rect = element.getBoundingClientRect();
+                const position = {
+                    x: rect.left + (window.scrollX/2),
+                    y: rect.bottom + window.scrollY + 5
+                };
+                
+                // 显示加载状态
+                this.wordPopup.showLoading(word, position);
+
+                // 获取单词释义
+                try {
+                    // 检查是否有 AI 服务
+                    if (!this.aiService) {
+                        console.log('AI 服务未初始化，尝试重新加载设置');
+                        await this.loadSettings();
+                        
+                        if (!this.settings) {
+                            console.error('加载设置失败');
+                            this.wordPopup.show(word, '无法加载设置，请检查扩展配置。', position);
+                            return;
+                        }
+                        
+
+                        if (!this.settings.apiKey) {
+                            console.error('API 密钥未设置');
+                            this.wordPopup.show(word, `
+                                <div style="text-align: center;">
+                                    <p>请在设置中配置 API 密钥以启用单词释义功能。</p>
+                                    <button id="open-options-btn" style="
+                                        background-color: #4CAF50;
+                                        color: white;
+                                        border: none;
+                                        border-radius: 4px;
+                                        padding: 8px 16px;
+                                        font-size: 14px;
+                                        cursor: pointer;
+                                        margin-top: 10px;
+                                    ">打开设置页面</button>
+                                </div>
+                            `, position);
+                            
+                            // 添加打开设置页面的点击事件
+                            setTimeout(() => {
+                                const openOptionsBtn = document.getElementById('open-options-btn');
+                                if (openOptionsBtn) {
+                                    openOptionsBtn.addEventListener('click', () => {
+                                        this.openOptionsPage();
+                                    });
+                                }
+                            }, 100);
+                            
+                            return;
+                        }
+                        
+                        if (!this.aiService && this.settings.apiKey) {
+                            this.aiService = createAIService(this.settings.aiModel, this.settings.apiKey);
+                        }
+                    }
+                    
+                    if (!this.aiService) {
+                        console.error('无法创建 AI 服务');
+                        this.wordPopup.show(word, '无法初始化 AI 服务，请检查设置和网络连接。', position);
+                        return;
+                    }
+                    
+                    console.log(`调用 AI 服务获取单词 "${word}" 的释义，上下文: "${this.currentSubtitle}"`);
+                    
+                    // 获取单词释义
+                    const definition = await this.aiService.getWordDefinition(
+                        word, 
+                        this.currentSubtitle,
+                        this.settings.targetLanguage
+                    );
+                    
+
+                    // 显示单词释义
+                    this.wordPopup.show(word, definition, position);
+                } catch (error: any) {
+                    console.error('获取单词释义失败:', error);
+                    const errorMessage = error.message || '未知错误';
+                    this.wordPopup.show(word, `获取释义失败: ${errorMessage}`, position);
+                }
+            });
+        });
     }
 
     /**
@@ -299,5 +556,12 @@ export class YouTubeSubtitleHandler {
                 }
             });
         });
+    }
+
+    /**
+     * 打开选项页面
+     */
+    private openOptionsPage() {
+        browser.runtime.openOptionsPage();
     }
 } 
