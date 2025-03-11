@@ -23,8 +23,10 @@ export default defineBackground(() => {
     
     // 检查单词是否已存在
     if (vocabulary[word]) {
-      // 如果单词已存在，添加新的上下文
-      vocabulary[word].contexts.push(context);
+      // 如果单词已存在，添加新的上下文（如果不重复）
+      if (!vocabulary[word].contexts.includes(context)) {
+        vocabulary[word].contexts.push(context);
+      }
     } else {
       // 如果单词不存在，创建新条目
       vocabulary[word] = {
@@ -36,6 +38,9 @@ export default defineBackground(() => {
     
     // 保存更新后的生词本
     await browser.storage.local.set({ vocabulary });
+    
+    // 返回更新后的单词条目
+    return vocabulary[word];
   }
   
   // 获取生词本
