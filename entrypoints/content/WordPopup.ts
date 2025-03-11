@@ -4,6 +4,9 @@
  * 用于在用户点击单词时显示单词的详细释义。
  */
 
+// 引入 marked 库进行 Markdown 渲染
+import {marked} from 'marked';
+
 export class WordPopup {
   private popupElement: HTMLElement | null = null;
   private closeTimeout: number | null = null;
@@ -11,6 +14,9 @@ export class WordPopup {
   constructor() {
     // 创建弹出元素
     this.createPopupElement();
+    
+    // 初始化 marked 配置
+    this.initMarked();
     
     // 监听点击事件，点击弹出框外部时关闭
     document.addEventListener('click', (event) => {
@@ -20,6 +26,18 @@ export class WordPopup {
           !(event.target as HTMLElement).classList.contains('acquire-language-word')) {
         this.hide();
       }
+    });
+  }
+  
+  /**
+   * 初始化 marked 配置
+   */
+  private initMarked() {
+    // 配置 marked 选项
+    marked.setOptions({
+      gfm: true, // 启用 GitHub 风格的 Markdown
+      breaks: true, // 将换行符转换为 <br>
+      silent: true, // 忽略错误
     });
   }
   
@@ -312,6 +330,58 @@ export class WordPopup {
         color: #666;
         font-size: 13px;
       }
+      
+      /* Markdown 样式 */
+      .acquire-language-popup-content strong {
+        font-weight: 600;
+        color: #2c3e50;
+      }
+      
+      .acquire-language-popup-content em {
+        font-style: italic;
+        color: #555;
+      }
+      
+      .acquire-language-popup-content code {
+        font-family: monospace;
+        background-color: #f5f5f5;
+        padding: 2px 4px;
+        border-radius: 3px;
+        font-size: 90%;
+        color: #e74c3c;
+      }
+      
+      .acquire-language-popup-content h2, 
+      .acquire-language-popup-content h3 {
+        font-size: 16px;
+        margin-top: 15px;
+        margin-bottom: 8px;
+        color: #2c3e50;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 5px;
+      }
+      
+      .acquire-language-popup-content h4 {
+        font-size: 15px;
+        margin-top: 12px;
+        margin-bottom: 6px;
+        color: #2c3e50;
+      }
+      
+      .acquire-language-popup-content ul, 
+      .acquire-language-popup-content ol {
+        margin: 8px 0;
+        padding-left: 20px;
+      }
+      
+      .acquire-language-popup-content li {
+        margin-bottom: 5px;
+      }
+      
+      .acquire-language-popup-content p {
+        margin: 8px 0;
+        line-height: 1.5;
+      }
     `;
     
     // 添加到文档头部
@@ -420,109 +490,8 @@ export class WordPopup {
     try {
       console.log('格式化单词释义:', definition);
       
-      // 分割成段落
-      let paragraphs = definition.split(/\n+/);
-      paragraphs = paragraphs.map(p => p.trim()).filter(p => p);
-      
-      // 识别结构
-      let sections = {
-        basicMeaning: [],
-        contextMeaning: [],
-        partOfSpeech: [],
-        examples: []
-      };
-      
-      let currentSection = null;
-      
-      // 第一遍：识别各个部分
-      for (let paragraph of paragraphs) {
-        // 识别部分标题
-        if (paragraph.includes('单词的基本含义') || paragraph.includes('基本含义') || /^1\./.test(paragraph)) {
-          currentSection = 'basicMeaning';
-          continue;
-        } else if (paragraph.includes('在当前上下文中的具体含义') || paragraph.includes('上下文含义') || /^2\./.test(paragraph)) {
-          currentSection = 'contextMeaning';
-          continue;
-        } else if (paragraph.includes('词性') || /^3\./.test(paragraph)) {
-          currentSection = 'partOfSpeech';
-          continue;
-        } else if (paragraph.includes('例句') || /^4\./.test(paragraph)) {
-          currentSection = 'examples';
-          continue;
-        }
-        
-        // 如果已经识别了部分，添加内容
-        if (currentSection && paragraph) {
-          sections[currentSection].push(paragraph);
-        }
-      }
-      
-      // 如果没有识别出结构，使用简单的分段显示
-      if (!currentSection) {
-        return paragraphs.map(p => `<p class="acquire-language-popup-paragraph">${p}</p>`).join('');
-      }
-      
-      // 构建格式化的 HTML
-      let html = '';
-      
-      // 基本含义部分
-      if (sections.basicMeaning.length > 0) {
-        html += `<h3 class="acquire-language-popup-section-title">基本含义</h3>`;
-        html += sections.basicMeaning.map(p => {
-          // 移除可能的编号
-          p = p.replace(/^\d+[\.\)]\s*/, '');
-          return `<div class="acquire-language-popup-item">${p}</div>`;
-        }).join('');
-      }
-      
-      // 上下文含义部分
-      if (sections.contextMeaning.length > 0) {
-        html += `<h3 class="acquire-language-popup-section-title">上下文含义</h3>`;
-        html += sections.contextMeaning.map(p => {
-          p = p.replace(/^\d+[\.\)]\s*/, '');
-          return `<div class="acquire-language-popup-item">${p}</div>`;
-        }).join('');
-      }
-      
-      // 词性部分
-      if (sections.partOfSpeech.length > 0) {
-        html += `<h3 class="acquire-language-popup-section-title">词性</h3>`;
-        html += sections.partOfSpeech.map(p => {
-          p = p.replace(/^\d+[\.\)]\s*/, '');
-          return `<div class="acquire-language-popup-item">${p}</div>`;
-        }).join('');
-      }
-      
-      // 例句部分
-      if (sections.examples.length > 0) {
-        html += `<h3 class="acquire-language-popup-section-title">例句</h3>`;
-        html += sections.examples.map(p => {
-          // 处理例句，分离英文和中文翻译
-          p = p.replace(/^\d+[\.\)]\s*/, '');
-          
-          // 尝试分离英文例句和中文翻译
-          const parts = p.split(/[（(]|[)）]/);
-          if (parts.length >= 2) {
-            const english = parts[0].trim();
-            const chinese = parts[1].trim();
-            return `
-              <div class="acquire-language-popup-example">
-                <div class="acquire-language-popup-example-english">${english}</div>
-                <div class="acquire-language-popup-example-chinese">${chinese}</div>
-              </div>
-            `;
-          }
-          
-          return `<div class="acquire-language-popup-item">${p}</div>`;
-        }).join('');
-      }
-      
-      // 如果没有生成任何内容，返回原始文本
-      if (!html) {
-        return paragraphs.map(p => `<p class="acquire-language-popup-paragraph">${p}</p>`).join('');
-      }
-      
-      return html;
+      // 使用 marked 库渲染 Markdown
+      return marked.parse(definition).toString();
     } catch (error) {
       console.error('格式化单词释义失败:', error);
       // 出错时返回原始内容，但使用段落格式
@@ -636,7 +605,7 @@ export class WordPopup {
           context: definition
         }).then(() => {
           // 显示保存成功提示
-          if (saveButton instanceof HTMLElement) {
+          if (saveButton instanceof HTMLButtonElement) {
             saveButton.textContent = '已添加';
             saveButton.disabled = true;
             

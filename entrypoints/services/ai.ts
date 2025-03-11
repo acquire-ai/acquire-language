@@ -27,11 +27,20 @@ export class DeepSeekAIService implements AIService {
 请根据以下上下文，解释单词 "${word}" 的含义。
 上下文: "${context}"
 请用${this.getLanguageName(nativeLanguage)}回答，简洁明了地解释这个单词在当前上下文中的含义。
-请提供以下信息：
-1. 单词的基本含义
-2. 在当前上下文中的具体含义
-3. 词性 (名词、动词、形容词等)
-4. 一到两个例句
+请提供以下信息，并使用Markdown格式：
+
+## 基本含义
+简要说明单词的基本含义
+
+## 上下文含义
+在当前上下文中的具体含义
+
+## 词性
+词性 (名词、动词、形容词等)
+
+## 例句
+1. 一个例句
+2. 另一个例句
 `;
       
       // 调用 DeepSeek API
@@ -142,11 +151,20 @@ export class GPT4oMiniAIService implements AIService {
 请根据以下上下文，解释单词 "${word}" 的含义。
 上下文: "${context}"
 请用${this.getLanguageName(nativeLanguage)}回答，简洁明了地解释这个单词在当前上下文中的含义。
-请提供以下信息：
-1. 单词的基本含义
-2. 在当前上下文中的具体含义
-3. 词性 (名词、动词、形容词等)
-4. 一到两个例句
+请提供以下信息，并使用Markdown格式：
+
+## 基本含义
+简要说明单词的基本含义
+
+## 上下文含义
+在当前上下文中的具体含义
+
+## 词性
+词性 (名词、动词、形容词等)
+
+## 例句
+1. 一个例句 (中文翻译)
+2. 另一个例句 (中文翻译)
 `;
       
       // 调用 OpenAI API
