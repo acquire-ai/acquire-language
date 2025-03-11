@@ -236,6 +236,82 @@ export class WordPopup {
         background-color: #cccccc;
         cursor: not-allowed;
       }
+      
+      /* 新增样式 - 格式化单词释义 */
+      .acquire-language-popup-section-title {
+        font-weight: 600;
+        color: #2c3e50;
+        margin: 12px 0 8px 0;
+        padding-bottom: 4px;
+        border-bottom: 1px solid #eee;
+        font-size: 15px;
+      }
+      
+      .acquire-language-popup-section-title:first-child {
+        margin-top: 0;
+      }
+      
+      .acquire-language-popup-item {
+        margin: 8px 0;
+        padding-left: 15px;
+        position: relative;
+      }
+      
+      .acquire-language-popup-item:before {
+        content: "•";
+        position: absolute;
+        left: 0;
+        color: #4CAF50;
+      }
+      
+      .acquire-language-popup-paragraph {
+        margin: 8px 0;
+        line-height: 1.5;
+      }
+      
+      .acquire-language-popup-error {
+        color: #e74c3c;
+        padding: 10px;
+        text-align: center;
+      }
+      
+      /* 例句样式 */
+      .acquire-language-popup-section-title + .acquire-language-popup-paragraph,
+      .acquire-language-popup-section-title + .acquire-language-popup-item {
+        font-style: italic;
+        color: #555;
+      }
+      
+      /* 词性样式 */
+      .acquire-language-popup-section-title:nth-of-type(3) + .acquire-language-popup-paragraph,
+      .acquire-language-popup-section-title:nth-of-type(3) + .acquire-language-popup-item {
+        font-weight: 500;
+        color: #3498db;
+      }
+      
+      /* 例句样式 */
+      .acquire-language-popup-example {
+        margin: 10px 0;
+        padding-left: 15px;
+        position: relative;
+      }
+      
+      .acquire-language-popup-example:before {
+        content: "•";
+        position: absolute;
+        left: 0;
+        color: #4CAF50;
+      }
+      
+      .acquire-language-popup-example-english {
+        font-style: italic;
+        margin-bottom: 4px;
+      }
+      
+      .acquire-language-popup-example-chinese {
+        color: #666;
+        font-size: 13px;
+      }
     `;
     
     // 添加到文档头部
@@ -302,6 +378,9 @@ export class WordPopup {
       this.closeTimeout = null;
     }
     
+    // 格式化释义内容
+    const formattedDefinition = this.formatDefinition(definition);
+    
     // 设置内容
     this.popupElement.innerHTML = `
       <div class="acquire-language-popup-header">
@@ -309,7 +388,7 @@ export class WordPopup {
         <button class="acquire-language-popup-close">×</button>
       </div>
       <div class="acquire-language-popup-content">
-        ${definition}
+        ${formattedDefinition}
       </div>
       <div class="acquire-language-popup-footer">
         <button class="acquire-language-popup-save">添加到生词本</button>
@@ -325,6 +404,133 @@ export class WordPopup {
     
     // 添加事件监听
     this.addEventListeners(word, definition);
+  }
+  
+  /**
+   * 格式化单词释义
+   * @param definition AI 返回的单词释义
+   * @returns 格式化后的 HTML
+   */
+  private formatDefinition(definition: string): string {
+    // 如果定义为空或出错，直接返回
+    if (!definition || definition.includes('获取') && definition.includes('失败')) {
+      return `<div class="acquire-language-popup-error">${definition}</div>`;
+    }
+
+    try {
+      console.log('格式化单词释义:', definition);
+      
+      // 分割成段落
+      let paragraphs = definition.split(/\n+/);
+      paragraphs = paragraphs.map(p => p.trim()).filter(p => p);
+      
+      // 识别结构
+      let sections = {
+        basicMeaning: [],
+        contextMeaning: [],
+        partOfSpeech: [],
+        examples: []
+      };
+      
+      let currentSection = null;
+      
+      // 第一遍：识别各个部分
+      for (let paragraph of paragraphs) {
+        // 识别部分标题
+        if (paragraph.includes('单词的基本含义') || paragraph.includes('基本含义') || /^1\./.test(paragraph)) {
+          currentSection = 'basicMeaning';
+          continue;
+        } else if (paragraph.includes('在当前上下文中的具体含义') || paragraph.includes('上下文含义') || /^2\./.test(paragraph)) {
+          currentSection = 'contextMeaning';
+          continue;
+        } else if (paragraph.includes('词性') || /^3\./.test(paragraph)) {
+          currentSection = 'partOfSpeech';
+          continue;
+        } else if (paragraph.includes('例句') || /^4\./.test(paragraph)) {
+          currentSection = 'examples';
+          continue;
+        }
+        
+        // 如果已经识别了部分，添加内容
+        if (currentSection && paragraph) {
+          sections[currentSection].push(paragraph);
+        }
+      }
+      
+      // 如果没有识别出结构，使用简单的分段显示
+      if (!currentSection) {
+        return paragraphs.map(p => `<p class="acquire-language-popup-paragraph">${p}</p>`).join('');
+      }
+      
+      // 构建格式化的 HTML
+      let html = '';
+      
+      // 基本含义部分
+      if (sections.basicMeaning.length > 0) {
+        html += `<h3 class="acquire-language-popup-section-title">基本含义</h3>`;
+        html += sections.basicMeaning.map(p => {
+          // 移除可能的编号
+          p = p.replace(/^\d+[\.\)]\s*/, '');
+          return `<div class="acquire-language-popup-item">${p}</div>`;
+        }).join('');
+      }
+      
+      // 上下文含义部分
+      if (sections.contextMeaning.length > 0) {
+        html += `<h3 class="acquire-language-popup-section-title">上下文含义</h3>`;
+        html += sections.contextMeaning.map(p => {
+          p = p.replace(/^\d+[\.\)]\s*/, '');
+          return `<div class="acquire-language-popup-item">${p}</div>`;
+        }).join('');
+      }
+      
+      // 词性部分
+      if (sections.partOfSpeech.length > 0) {
+        html += `<h3 class="acquire-language-popup-section-title">词性</h3>`;
+        html += sections.partOfSpeech.map(p => {
+          p = p.replace(/^\d+[\.\)]\s*/, '');
+          return `<div class="acquire-language-popup-item">${p}</div>`;
+        }).join('');
+      }
+      
+      // 例句部分
+      if (sections.examples.length > 0) {
+        html += `<h3 class="acquire-language-popup-section-title">例句</h3>`;
+        html += sections.examples.map(p => {
+          // 处理例句，分离英文和中文翻译
+          p = p.replace(/^\d+[\.\)]\s*/, '');
+          
+          // 尝试分离英文例句和中文翻译
+          const parts = p.split(/[（(]|[)）]/);
+          if (parts.length >= 2) {
+            const english = parts[0].trim();
+            const chinese = parts[1].trim();
+            return `
+              <div class="acquire-language-popup-example">
+                <div class="acquire-language-popup-example-english">${english}</div>
+                <div class="acquire-language-popup-example-chinese">${chinese}</div>
+              </div>
+            `;
+          }
+          
+          return `<div class="acquire-language-popup-item">${p}</div>`;
+        }).join('');
+      }
+      
+      // 如果没有生成任何内容，返回原始文本
+      if (!html) {
+        return paragraphs.map(p => `<p class="acquire-language-popup-paragraph">${p}</p>`).join('');
+      }
+      
+      return html;
+    } catch (error) {
+      console.error('格式化单词释义失败:', error);
+      // 出错时返回原始内容，但使用段落格式
+      return definition.split(/\n+/).map(p => {
+        p = p.trim();
+        return p ? `<p class="acquire-language-popup-paragraph">${p}</p>` : '';
+      }).join('');
+    }
   }
   
   /**
