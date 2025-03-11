@@ -245,7 +245,7 @@ interface VocabularyData {
 
 AI 服务模块负责与 AI 模型（如 OpenAI GPT-4o-mini 或 DeepSeek）交互，提供以下功能：
 
-- **单词释义**：根据上下文获取单词的详细释义
+- **单词释义**：根据上下文获取单词的详细释义，使用用户的母语解释目标语言中的单词
 - **文本翻译**：将字幕文本翻译成用户的母语
 
 ```typescript
@@ -264,6 +264,35 @@ export function createAIService(model: string, apiKey: string): AIService {
       return new GPT4oMiniAIService(apiKey);
     default:
       return new DeepSeekAIService(apiKey);
+  }
+}
+
+// 示例：获取单词释义
+async getWordDefinition(word: string, context: string, targetLanguage: string): Promise<string> {
+  try {
+    // 从存储中获取设置，获取用户的母语
+    const result = await browser.storage.local.get('settings');
+    const settings = result.settings || { nativeLanguage: 'zh-CN' };
+    const nativeLanguage = settings.nativeLanguage;
+    
+    // 构建提示
+    const prompt = `
+请根据以下上下文，解释单词 "${word}" 的含义。
+上下文: "${context}"
+请用${this.getLanguageName(nativeLanguage)}回答，简洁明了地解释这个单词在当前上下文中的含义。
+请提供以下信息：
+1. 单词的基本含义
+2. 在当前上下文中的具体含义
+3. 词性 (名词、动词、形容词等)
+4. 一到两个例句
+`;
+    
+    // 调用 AI API
+    const response = await this.callAPI(prompt);
+    return response;
+  } catch (error) {
+    console.error('获取单词释义失败:', error);
+    return `获取 "${word}" 的释义失败`;
   }
 }
 ```
@@ -324,6 +353,8 @@ private setPosition(position: { x: number, y: number }) {
    - 用户点击字幕中的单词
    - 字幕处理器捕获点击事件，获取单词和上下文
    - 调用 AI 服务获取单词释义
+   - AI 服务从存储中获取用户的母语设置
+   - AI 服务使用用户的母语解释目标语言中的单词
    - 显示单词释义弹出框
    - 用户可以将单词添加到生词本
 
