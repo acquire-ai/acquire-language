@@ -1,8 +1,8 @@
 /**
  * DeepSeek AI 服务实现
  */
-import { AIService, AIServiceConfig } from '../../core/types/ai';
-import { getLanguageName } from '../../core/utils';
+import {AIService, AIServiceConfig} from '@/core/types/ai.ts';
+import {getLanguageName} from '@/core/utils';
 
 export class DeepSeekAIService implements AIService {
   private apiKey: string;
@@ -36,9 +36,8 @@ export class DeepSeekAIService implements AIService {
 `;
       
       // 调用 DeepSeek API
-      const response = await this.callAPI(prompt);
-      return response;
-    } catch (error) {
+      return await this.callAPI(prompt);
+    } catch (error: any) {
       console.error('获取单词释义失败:', error);
       return `获取 "${word}" 的释义失败: ${error.message}`;
     }
@@ -55,9 +54,8 @@ export class DeepSeekAIService implements AIService {
 `;
       
       // 调用 DeepSeek API
-      const response = await this.callAPI(prompt);
-      return response;
-    } catch (error) {
+      return await this.callAPI(prompt);
+    } catch (error: any) {
       console.error('翻译文本失败:', error);
       return `翻译失败: ${error.message}`;
     }

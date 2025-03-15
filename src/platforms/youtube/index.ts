@@ -1,9 +1,9 @@
 /**
  * YouTube 平台处理器
  */
-import { PlatformHandler, SubtitleHandler } from '../../core/types/platform';
-import { AIService } from '../../core/types/ai';
-import { isYouTubeVideoUrl } from '../../core/utils';
+import { PlatformHandler, SubtitleHandler } from '@/core/types/platform.ts';
+import { AIService } from '@/core/types/ai.ts';
+import { isYouTubeVideoUrl } from '@/core/utils';
 import { YouTubeSubtitleHandler } from './subtitle-handler';
 
 /**

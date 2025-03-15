@@ -2,8 +2,8 @@
  * 习得语言 (Acquire Language) 后台脚本
  */
 import { defineBackground } from 'wxt/sandbox';
-import { StorageManager } from '../core/storage';
-import { Word } from '../core/types/storage';
+import { StorageManager } from '@/core/storage';
+import { Word } from '@/core/types/storage';
 
 export default defineBackground(() => {
   console.log('习得语言 (Acquire Language) 背景脚本已加载', { id: browser.runtime.id });

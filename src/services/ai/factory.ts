@@ -1,7 +1,7 @@
 /**
  * AI 服务工厂
  */
-import { AIService, AIServiceConfig } from '../../core/types/ai';
+import { AIService, AIServiceConfig } from '@/core/types/ai.ts';
 import { DeepSeekAIService } from './deepseek';
 
 /**

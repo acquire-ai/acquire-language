@@ -155,7 +155,7 @@ export class WordPopup {
         this.saveWord(word);
         saveButton.textContent = '已保存';
         saveButton.style.color = '#27ae60';
-        saveButton.disabled = true;
+        (saveButton as HTMLButtonElement).disabled = true;
       });
     }
     

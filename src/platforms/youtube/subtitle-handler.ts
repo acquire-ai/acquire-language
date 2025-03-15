@@ -4,9 +4,9 @@
  * 这个类负责查找 YouTube 字幕，并以更美观的方式显示它们。
  * 它使用 MutationObserver 监听字幕变化，并定期检查字幕内容。
  */
-import { SubtitleHandler } from '../../core/types/platform';
-import { AIService } from '../../core/types/ai';
-import { WordPopup } from '../../components/word-popup';
+import { SubtitleHandler } from '@/core/types/platform.ts';
+import { AIService } from '@/core/types/ai.ts';
+import { WordPopup } from '@/components/word-popup';
 
 export class YouTubeSubtitleHandler implements SubtitleHandler {
     private subtitleContainer: HTMLElement | null = null;
@@ -402,7 +402,7 @@ export class YouTubeSubtitleHandler implements SubtitleHandler {
                     
                     // 显示单词释义
                     this.wordPopup.show(word, definition, position);
-                } catch (error) {
+                } catch (error: any) {
                     console.error('获取单词释义失败:', error);
                     this.wordPopup.show(word, `获取释义失败: ${error.message}`, position);
                 }

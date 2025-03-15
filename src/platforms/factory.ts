@@ -1,8 +1,8 @@
 /**
  * 平台工厂
  */
-import { PlatformHandler } from '../core/types/platform';
-import { isYouTubeVideoUrl } from '../core/utils';
+import { PlatformHandler } from '@/core/types/platform';
+import { isYouTubeVideoUrl } from '@/core/utils';
 import { YouTubePlatformHandler } from './youtube';
 
 /**

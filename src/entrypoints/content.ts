@@ -5,9 +5,9 @@
  * 它检测 YouTube 视频页面，并在视频播放器加载后启动字幕增强功能。
  */
 import { defineContentScript } from 'wxt/sandbox';
-import { createPlatformHandler } from '../platforms';
-import { createAIService } from '../services/ai';
-import { StorageManager } from '../core/storage';
+import { createPlatformHandler } from '@/platforms';
+import { createAIService } from '@/services/ai';
+import { StorageManager } from '@/core/storage';
 
 export default defineContentScript({
   matches: ['*://*.youtube.com/*'],
