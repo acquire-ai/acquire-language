@@ -1,4 +1,9 @@
+/**
+ * 习得语言 (Acquire Language) 后台脚本
+ */
 import { defineBackground } from 'wxt/sandbox';
+import { StorageManager } from '../core/storage';
+import { Word } from '../core/types/storage';
 
 export default defineBackground(() => {
   console.log('习得语言 (Acquire Language) 背景脚本已加载', { id: browser.runtime.id });
@@ -18,8 +23,8 @@ export default defineBackground(() => {
   });
   
   // 保存单词到生词本
-  async function saveWordToVocabulary(word: string, context: string) {
-    const vocabulary = await getVocabulary();
+  async function saveWordToVocabulary(word: string, context: string): Promise<Word> {
+    const vocabulary = await StorageManager.getVocabulary();
     
     // 检查单词是否已存在
     if (vocabulary[word]) {
@@ -37,15 +42,9 @@ export default defineBackground(() => {
     }
     
     // 保存更新后的生词本
-    await browser.storage.local.set({ vocabulary });
+    await StorageManager.saveVocabulary(vocabulary);
     
     // 返回更新后的单词条目
     return vocabulary[word];
-  }
-  
-  // 获取生词本
-  async function getVocabulary() {
-    const result = await browser.storage.local.get('vocabulary');
-    return result.vocabulary || {};
   }
 });

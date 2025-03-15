@@ -5,20 +5,22 @@
  * 它检测 YouTube 视频页面，并在视频播放器加载后启动字幕增强功能。
  */
 import { defineContentScript } from 'wxt/sandbox';
-import { YouTubeSubtitleHandler } from './content/youtube.ts';
+import { createPlatformHandler } from '../platforms';
+import { createAIService } from '../services/ai';
+import { StorageManager } from '../core/storage';
 
 export default defineContentScript({
   matches: ['*://*.youtube.com/*'],
   
-  main() {
+  async main() {
+    console.log('习得语言 (Acquire Language) 内容脚本已加载');
 
     if (window.location.pathname.includes('/watch')) {
-
       if (document.readyState === 'complete') {
-        initializeHandler();
+        await initializeHandler();
       } else {
-        window.addEventListener('load', () => {
-          initializeHandler();
+        window.addEventListener('load', async () => {
+          await initializeHandler();
         });
       }
       
@@ -35,13 +37,13 @@ export default defineContentScript({
       let lastUrl = window.location.href;
       
       // 使用 MutationObserver 监听 DOM 变化，可能表示 URL 变化
-      new MutationObserver(() => {
+      new MutationObserver(async () => {
         if (lastUrl !== window.location.href) {
           lastUrl = window.location.href;
 
           if (window.location.pathname.includes('/watch')) {
             console.log('检测到新的 YouTube 视频页面，重新初始化字幕处理器');
-            initializeHandler();
+            await initializeHandler();
           }
         }
       }).observe(document, { subtree: true, childList: true });
@@ -50,31 +52,54 @@ export default defineContentScript({
     /**
      * 初始化字幕处理器
      */
-    function initializeHandler() {
-
+    async function initializeHandler() {
       // 等待视频播放器加载
-      waitForVideoPlayer();
+      await waitForVideoPlayer();
     }
     
     /**
      * 等待视频播放器加载
      */
-    function waitForVideoPlayer() {
-      const checkForVideoPlayer = setInterval(() => {
-        const videoPlayer = document.querySelector('video');
-        if (videoPlayer) {
+    async function waitForVideoPlayer() {
+      return new Promise<void>((resolve) => {
+        const checkForVideoPlayer = setInterval(async () => {
+          const videoPlayer = document.querySelector('video');
+          if (videoPlayer) {
+            clearInterval(checkForVideoPlayer);
+            clearTimeout(timeout);
+            
+            // 获取设置
+            const settings = await StorageManager.getSettings();
+            
+            // 创建 AI 服务
+            const aiService = createAIService(settings.aiModel, {
+              apiKey: settings.apiKey,
+            });
+            
+            // 创建平台处理器
+            const platformHandler = createPlatformHandler(window.location.href);
+            
+            if (platformHandler) {
+              // 初始化平台处理器
+              await platformHandler.initialize();
+              
+              // 创建字幕处理器
+              const subtitleHandler = platformHandler.createSubtitleHandler(aiService);
+              
+              // 初始化字幕处理器
+              await subtitleHandler.initialize();
+            }
+            
+            resolve();
+          }
+        }, 1000);
+        
+        // 设置超时，避免无限等待
+        const timeout = setTimeout(() => {
           clearInterval(checkForVideoPlayer);
-          
-          // 初始化 YouTube 字幕处理器
-          new YouTubeSubtitleHandler();
-        }
-      }, 1000);
-      
-      // 设置超时，避免无限等待
-      setTimeout(() => {
-        clearInterval(checkForVideoPlayer);
-        new YouTubeSubtitleHandler();
-      }, 10000);
+          resolve();
+        }, 10000);
+      });
     }
   },
 });
