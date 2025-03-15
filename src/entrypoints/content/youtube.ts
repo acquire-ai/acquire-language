@@ -4,8 +4,8 @@
  * 这个类负责查找 YouTube 字幕，并以更美观的方式显示它们。
  * 它使用 MutationObserver 监听字幕变化，并定期检查字幕内容。
  */
-import { WordPopup } from './WordPopup';
-import { createAIService } from '../services/ai';
+import { WordPopup } from './WordPopup.ts';
+import { createAIService } from '../services/ai.ts';
 
 export class YouTubeSubtitleHandler {
     private subtitleContainer: HTMLElement | null = null;

@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import Options from './Options';
-import '../popup/style.css'; // 复用 popup 的样式
+import Options from './Options.tsx';
+import '@/src/entrypoints/popup/style.css'; // 复用 popup 的样式
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

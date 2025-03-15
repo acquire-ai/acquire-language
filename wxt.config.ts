@@ -6,6 +6,7 @@ import tailwindcss from '@tailwindcss/vite';
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
+  srcDir: 'src',
   // 使用 Chrome 扩展 API
   extensionApi: 'chrome',
   

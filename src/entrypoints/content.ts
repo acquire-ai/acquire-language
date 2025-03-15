@@ -5,7 +5,7 @@
  * 它检测 YouTube 视频页面，并在视频播放器加载后启动字幕增强功能。
  */
 import { defineContentScript } from 'wxt/sandbox';
-import { YouTubeSubtitleHandler } from './content/youtube';
+import { YouTubeSubtitleHandler } from './content/youtube.ts';
 
 export default defineContentScript({
   matches: ['*://*.youtube.com/*'],

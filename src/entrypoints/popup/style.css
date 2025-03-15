@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import "../../../node_modules/tailwindcss";
 
 /* 保留一些自定义样式 */
 :root {
