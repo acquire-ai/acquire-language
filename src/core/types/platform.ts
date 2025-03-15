@@ -7,9 +7,6 @@ import { AIService } from './ai';
  * 字幕处理器接口
  */
 export interface SubtitleHandler {
-  /**
-   * 初始化字幕处理器
-   */
   initialize(): Promise<void>;
   
   /**
@@ -19,14 +16,8 @@ export interface SubtitleHandler {
    */
   processSubtitle(text: string): string;
   
-  /**
-   * 添加单词点击事件
-   */
   addWordClickEvents(): void;
   
-  /**
-   * 销毁字幕处理器
-   */
   destroy(): void;
 }
 
@@ -41,9 +32,6 @@ export interface PlatformHandler {
    */
   isSupported(url: string): boolean;
   
-  /**
-   * 初始化平台处理器
-   */
   initialize(): Promise<void>;
   
   /**

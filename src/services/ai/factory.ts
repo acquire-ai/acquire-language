@@ -1,8 +1,9 @@
 /**
  * AI 服务工厂
  */
-import { AIService, AIServiceConfig } from '@/core/types/ai.ts';
+import { AIService, AIServiceConfig } from '../../core/types/ai';
 import { DeepSeekAIService } from './deepseek';
+import { GPT4oMiniAIService } from './gpt';
 
 /**
  * 创建 AI 服务
@@ -14,6 +15,8 @@ export function createAIService(type: string, config: AIServiceConfig): AIServic
   switch (type) {
     case 'deepseek':
       return new DeepSeekAIService(config);
+    case 'gpt-4o-mini':
+      return new GPT4oMiniAIService(config);
     default:
       console.warn(`未知的 AI 服务类型: ${type}，使用默认的 DeepSeek 服务`);
       return new DeepSeekAIService(config);

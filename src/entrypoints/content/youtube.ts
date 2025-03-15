@@ -30,12 +30,10 @@ export class YouTubeSubtitleHandler {
     }
 
     async loadSettings() {
-        console.log('加载设置...');
         try {
             // 从存储中获取设置
             const result = await browser.storage.local.get('settings');
-            console.log('从存储中获取的设置:', result);
-            
+
             this.settings = result.settings || {
                 nativeLanguage: 'zh-CN',
                 targetLanguage: 'en',
@@ -51,7 +49,6 @@ export class YouTubeSubtitleHandler {
                 console.log(`使用 API 密钥初始化 AI 服务，模型: ${this.settings.aiModel}`);
                 try {
                     this.aiService = createAIService(this.settings.aiModel, this.settings.apiKey);
-                    console.log('AI 服务初始化成功');
                 } catch (error) {
                     console.error('初始化 AI 服务失败:', error);
                 }
@@ -294,7 +291,6 @@ export class YouTubeSubtitleHandler {
 
         // 只有当字幕变化且不为空时才更新
         if (newSubtitle && newSubtitle !== this.currentSubtitle) {
-            console.log('检测到字幕变化:', newSubtitle);
             this.currentSubtitle = newSubtitle;
             this.updateSubtitle(newSubtitle);
         }
@@ -307,12 +303,10 @@ export class YouTubeSubtitleHandler {
         // 查找视频播放器区域
         const videoPlayer = document.querySelector('.html5-video-player');
         if (!videoPlayer) {
-            console.log('未找到视频播放器区域，将在稍后重试');
             setTimeout(() => this.observeVideoPlayerArea(), 1000);
             return;
         }
 
-        console.log('找到视频播放器区域，开始观察');
 
         // 创建 MutationObserver
         this.containerObserver = new MutationObserver((mutations) => {
@@ -345,7 +339,6 @@ export class YouTubeSubtitleHandler {
             subtree: true
         });
 
-        console.log('开始观察视频播放器区域的变化');
     }
 
     /**
@@ -360,7 +353,6 @@ export class YouTubeSubtitleHandler {
         }
 
         if (!this.originalSubtitleContainer) {
-            console.log('没有找到原始字幕容器，无法观察字幕变化');
             return;
         }
 
@@ -379,7 +371,6 @@ export class YouTubeSubtitleHandler {
      */
     private startObserving() {
         if (!this.originalSubtitleContainer || !this.observer) {
-            console.log('无法开始观察，字幕容器或观察者不存在');
             return;
         }
 
@@ -391,7 +382,6 @@ export class YouTubeSubtitleHandler {
             attributes: true
         });
 
-        console.log('MutationObserver 已设置');
     }
 
     /**
