@@ -179,7 +179,9 @@ export class YouTubeSubtitleHandler implements SubtitleHandler {
         if (this.settings.subtitleSettings.position === 'top') {
             this.subtitleContainer.style.top = `${videoRect.top + 10}px`;
         } else {
-            this.subtitleContainer.style.bottom = `${window.innerHeight - videoRect.bottom + 10}px`;
+            // 调整底部位置，避免遮挡控制栏
+            // YouTube控制栏高度约为40-45px，我们设置60px的间距以确保不会遮挡
+            this.subtitleContainer.style.bottom = `${window.innerHeight - videoRect.bottom + 60}px`;
         }
         
         // 监听窗口大小变化，更新字幕位置
@@ -220,7 +222,8 @@ export class YouTubeSubtitleHandler implements SubtitleHandler {
             this.subtitleContainer.style.top = `${videoRect.top + 10}px`;
             this.subtitleContainer.style.bottom = 'auto';
         } else {
-            this.subtitleContainer.style.bottom = `${window.innerHeight - videoRect.bottom + 10}px`;
+            // 调整底部位置，避免遮挡控制栏
+            this.subtitleContainer.style.bottom = `${window.innerHeight - videoRect.bottom + 60}px`;
             this.subtitleContainer.style.top = 'auto';
         }
     }
