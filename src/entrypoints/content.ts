@@ -23,16 +23,10 @@ export default defineContentScript({
           await initializeHandler();
         });
       }
-      
-      // 监听 URL 变化（YouTube 是单页应用）
+
       monitorUrlChanges();
-    } else {
-      console.log('当前不是 YouTube 视频页面，不初始化字幕处理器');
     }
     
-    /**
-     * 监听 URL 变化
-     */
     function monitorUrlChanges() {
       let lastUrl = window.location.href;
       
@@ -49,11 +43,7 @@ export default defineContentScript({
       }).observe(document, { subtree: true, childList: true });
     }
     
-    /**
-     * 初始化字幕处理器
-     */
     async function initializeHandler() {
-      // 等待视频播放器加载
       await waitForVideoPlayer();
     }
     
