@@ -4,28 +4,18 @@
  * 这个类负责查找 YouTube 字幕，并以更美观的方式显示它们。
  * 它使用 MutationObserver 监听字幕变化，并定期检查字幕内容。
  */
-import { SubtitleHandler } from '@/core/types/platform.ts';
-import { AIService } from '@/core/types/ai.ts';
-import { WordPopup } from '@/components/word-popup';
+import { BaseSubtitleHandler } from '../base/subtitle-handler';
+import { AIService } from '../../core/types/ai';
 
-export class YouTubeSubtitleHandler implements SubtitleHandler {
-    private subtitleContainer: HTMLElement | null = null;
+export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     private originalSubtitleContainer: HTMLElement | null = null;
-    private currentSubtitle: string = '';
     private observer: MutationObserver | null = null;
     private containerObserver: MutationObserver | null = null;
     private lastCheckTime: number = 0;
     private checkInterval: number = 500;
-    private wordPopup: WordPopup;
-    private aiService: AIService;
-    private settings: any = null;
 
     constructor(aiService: AIService) {
-        // 保存 AI 服务
-        this.aiService = aiService;
-        
-        // 创建单词弹出组件
-        this.wordPopup = new WordPopup();
+        super(aiService);
     }
 
     /**
@@ -46,33 +36,6 @@ export class YouTubeSubtitleHandler implements SubtitleHandler {
         
         // 定期检查字幕内容
         this.startPeriodicCheck();
-    }
-
-    /**
-     * 加载设置
-     */
-    private async loadSettings() {
-        try {
-            const result = await browser.storage.local.get('settings');
-            this.settings = result.settings || {
-                nativeLanguage: 'zh-CN',
-                targetLanguage: 'en-US',
-                languageLevel: 'B1',
-                aiModel: 'deepseek',
-                apiKey: '',
-                subtitleSettings: {
-                    fontSize: 16,
-                    position: 'bottom',
-                    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                    textColor: '#ffffff',
-                    opacity: 0.9,
-                },
-            };
-            
-            console.log('已加载设置:', this.settings);
-        } catch (error) {
-            console.error('加载设置失败:', error);
-        }
     }
 
     /**
@@ -110,14 +73,14 @@ export class YouTubeSubtitleHandler implements SubtitleHandler {
         this.hideYouTubeSubtitles();
         
         // 创建自定义字幕容器
-        this.subtitleContainer = document.createElement('div');
-        this.subtitleContainer.id = 'acquire-language-subtitle';
+        this.container = document.createElement('div');
+        this.container.id = 'acquire-language-subtitle';
         
         // 设置样式
         this.applySubtitleStyles();
         
         // 添加到文档
-        document.body.appendChild(this.subtitleContainer);
+        document.body.appendChild(this.container);
         
         // 添加字幕悬停事件 - 暂停视频
         this.addSubtitleHoverEvents();
@@ -147,7 +110,7 @@ export class YouTubeSubtitleHandler implements SubtitleHandler {
      * 应用字幕样式
      */
     private applySubtitleStyles() {
-        if (!this.subtitleContainer) return;
+        if (!this.container) return;
         
         // 获取视频播放器
         const videoPlayer = document.querySelector('video');
@@ -157,7 +120,7 @@ export class YouTubeSubtitleHandler implements SubtitleHandler {
         const videoRect = videoPlayer.getBoundingClientRect();
         
         // 设置字幕容器样式
-        this.subtitleContainer.style.cssText = `
+        this.container.style.cssText = `
             position: absolute;
             z-index: 1000;
             left: ${videoRect.left}px;
@@ -177,11 +140,11 @@ export class YouTubeSubtitleHandler implements SubtitleHandler {
         
         // 根据设置设置字幕位置
         if (this.settings.subtitleSettings.position === 'top') {
-            this.subtitleContainer.style.top = `${videoRect.top + 10}px`;
+            this.container.style.top = `${videoRect.top + 10}px`;
         } else {
             // 调整底部位置，避免遮挡控制栏
             // YouTube控制栏高度约为40-45px，我们设置60px的间距以确保不会遮挡
-            this.subtitleContainer.style.bottom = `${window.innerHeight - videoRect.bottom + 60}px`;
+            this.container.style.bottom = `${window.innerHeight - videoRect.bottom + 60}px`;
         }
         
         // 监听窗口大小变化，更新字幕位置
@@ -204,7 +167,7 @@ export class YouTubeSubtitleHandler implements SubtitleHandler {
      * 更新字幕位置
      */
     private updateSubtitlePosition() {
-        if (!this.subtitleContainer) return;
+        if (!this.container) return;
         
         // 获取视频播放器
         const videoPlayer = document.querySelector('video');
@@ -214,17 +177,17 @@ export class YouTubeSubtitleHandler implements SubtitleHandler {
         const videoRect = videoPlayer.getBoundingClientRect();
         
         // 更新字幕容器位置
-        this.subtitleContainer.style.left = `${videoRect.left}px`;
-        this.subtitleContainer.style.width = `${videoRect.width}px`;
+        this.container.style.left = `${videoRect.left}px`;
+        this.container.style.width = `${videoRect.width}px`;
         
         // 根据设置更新字幕位置
         if (this.settings.subtitleSettings.position === 'top') {
-            this.subtitleContainer.style.top = `${videoRect.top + 10}px`;
-            this.subtitleContainer.style.bottom = 'auto';
+            this.container.style.top = `${videoRect.top + 10}px`;
+            this.container.style.bottom = 'auto';
         } else {
             // 调整底部位置，避免遮挡控制栏
-            this.subtitleContainer.style.bottom = `${window.innerHeight - videoRect.bottom + 60}px`;
-            this.subtitleContainer.style.top = 'auto';
+            this.container.style.bottom = `${window.innerHeight - videoRect.bottom + 60}px`;
+            this.container.style.top = 'auto';
         }
     }
 
@@ -232,13 +195,13 @@ export class YouTubeSubtitleHandler implements SubtitleHandler {
      * 添加字幕悬停事件 - 暂停视频
      */
     private addSubtitleHoverEvents() {
-        if (!this.subtitleContainer) return;
+        if (!this.container) return;
         
         // 记录视频播放状态
         let wasPlaying = false;
         
         // 鼠标进入字幕区域时暂停视频
-        this.subtitleContainer.addEventListener('mouseenter', () => {
+        this.container.addEventListener('mouseenter', () => {
             const video = document.querySelector('video');
             if (video) {
                 wasPlaying = !video.paused;
@@ -249,7 +212,7 @@ export class YouTubeSubtitleHandler implements SubtitleHandler {
         });
         
         // 鼠标离开字幕区域时恢复视频播放
-        this.subtitleContainer.addEventListener('mouseleave', () => {
+        this.container.addEventListener('mouseleave', () => {
             const video = document.querySelector('video');
             if (video && wasPlaying) {
                 video.play();
@@ -334,8 +297,8 @@ export class YouTubeSubtitleHandler implements SubtitleHandler {
         const processedText = this.processSubtitle(originalText);
         
         // 更新字幕容器
-        if (this.subtitleContainer) {
-            this.subtitleContainer.innerHTML = processedText;
+        if (this.container) {
+            this.container.innerHTML = processedText;
             
             // 添加单词点击事件
             this.addWordClickEvents();
@@ -372,14 +335,14 @@ export class YouTubeSubtitleHandler implements SubtitleHandler {
      * 添加单词点击事件
      */
     addWordClickEvents() {
-        if (!this.subtitleContainer) return;
+        if (!this.container) return;
         
         // 获取所有单词元素
-        const wordElements = this.subtitleContainer.querySelectorAll('.acquire-language-word');
+        const wordElements = this.container.querySelectorAll('.acquire-language-word');
         
         // 为每个单词添加点击事件
-        wordElements.forEach(element => {
-            element.addEventListener('click', async (event) => {
+        wordElements.forEach((element: Element) => {
+            element.addEventListener('click', async (event: Event) => {
                 // 阻止事件冒泡
                 event.stopPropagation();
                 
@@ -428,13 +391,7 @@ export class YouTubeSubtitleHandler implements SubtitleHandler {
             this.containerObserver = null;
         }
         
-        // 移除字幕容器
-        if (this.subtitleContainer) {
-            this.subtitleContainer.remove();
-            this.subtitleContainer = null;
-        }
-        
-        // 销毁单词弹出组件
-        this.wordPopup.destroy();
+        // 调用基类的销毁方法
+        super.destroy();
     }
 } 

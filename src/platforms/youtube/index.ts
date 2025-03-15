@@ -1,15 +1,16 @@
 /**
  * YouTube 平台处理器
  */
-import { PlatformHandler, SubtitleHandler } from '@/core/types/platform.ts';
-import { AIService } from '@/core/types/ai.ts';
-import { isYouTubeVideoUrl } from '@/core/utils';
+import { SubtitleHandler } from '../../core/types/platform';
+import { AIService } from '../../core/types/ai';
+import { isYouTubeVideoUrl } from '../../core/utils';
+import { BasePlatformHandler } from '../base/platform-handler';
 import { YouTubeSubtitleHandler } from './subtitle-handler';
 
 /**
  * YouTube 平台处理器
  */
-export class YouTubePlatformHandler implements PlatformHandler {
+export class YouTubePlatformHandler extends BasePlatformHandler {
   /**
    * 检查是否支持当前URL
    * @param url 当前URL
