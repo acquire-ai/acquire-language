@@ -11,7 +11,7 @@ import { StorageManager } from "@/core/storage";
 
 export default defineContentScript({
   matches: ["*://*.youtube.com/*"],
-
+  runAt: "document_idle",
   async main() {
     console.log("习得语言 (Acquire Language) 内容脚本已加载");
 
@@ -23,7 +23,6 @@ export default defineContentScript({
 
     // 检查是否是视频页面
     if (window.location.pathname.includes("/watch")) {
-
       if (document.readyState === "complete") {
         await initializeHandler();
       } else {
@@ -35,25 +34,73 @@ export default defineContentScript({
       monitorUrlChanges();
     }
 
-    // 监听来自背景脚本的消息
-    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-      // 处理字幕请求检测消息
-      if (message.type === "SUBTITLE_REQUEST_DETECTED") {
+    // 监听字幕请求事件
+    window.addEventListener("acquireLanguageSubtitleData", (event: any) => {
+      // 处理字幕数据
 
-        if (!subtitleHandler) {
-          initializeHandler().then(() => {
-            // 初始化完成后处理字幕请求
-            processSubtitleRequest(message.data);
-          });
-          return true;
-        }
-
-        processSubtitleRequest(message.data);
+      // 如果字幕处理器已初始化，则处理字幕请求
+      if (subtitleHandler) {
+        processSubtitleRequest(event.detail);
+      } else {
+        // 否则先初始化处理器，再处理字幕请求
+        initializeHandler().then(() => {
+          processSubtitleRequest(event.detail);
+        });
       }
-
-      // 返回 true 表示将异步发送响应
-      return true;
     });
+
+    // 在页面加载完成后，尝试恢复字幕
+    window.addEventListener("load", () => {
+      setTimeout(notifyPageLoaded, 2000); // 延迟2秒，确保页面完全加载
+    });
+
+    // 监听 YouTube 导航事件（SPA 页面切换）
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (
+          mutation.type === "childList" &&
+          document.location.pathname.includes("/watch")
+        ) {
+          // 检测到导航到视频页面
+          setTimeout(notifyPageLoaded, 2000);
+          break;
+        }
+      }
+    });
+
+    // 开始观察 body 元素的变化
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+
+    // 通知背景脚本页面已加载
+    function notifyPageLoaded() {
+      // 获取当前视频ID
+      const videoId = getVideoIdFromUrl(window.location.href);
+      if (!videoId) return;
+
+      // 发送消息到背景脚本
+      chrome.runtime
+        .sendMessage({
+          type: "PAGE_LOADED",
+          data: { videoId },
+        })
+        .catch((err) => {
+          console.error("发送页面加载消息失败:", err);
+        });
+    }
+
+    // 从URL中获取视频ID
+    function getVideoIdFromUrl(url: string): string | null {
+      try {
+        const urlObj = new URL(url);
+        return urlObj.searchParams.get("v");
+      } catch (e) {
+        console.error("解析URL失败:", e);
+        return null;
+      }
+    }
 
     // 处理字幕请求
     function processSubtitleRequest(data: any) {
@@ -83,6 +130,20 @@ export default defineContentScript({
       );
     }
 
+    // 监听来自背景脚本的消息
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+      if (message.type === "SUBTITLE_REQUEST_DETECTED") {
+        // 创建并分发字幕数据事件
+        const event = new CustomEvent("acquireLanguageSubtitleData", {
+          detail: message.data,
+        });
+        window.dispatchEvent(event);
+        sendResponse({ success: true });
+        return true;
+      }
+      return false;
+    });
+
     function monitorUrlChanges() {
       let lastUrl = window.location.href;
 
@@ -95,6 +156,9 @@ export default defineContentScript({
             // 清除已处理的请求缓存
             processedSubtitleRequests.clear();
             await initializeHandler();
+
+            // 在URL变化后也尝试恢复字幕
+            setTimeout(notifyPageLoaded, 2000);
           }
         }
       }).observe(document, { subtree: true, childList: true });
@@ -109,7 +173,6 @@ export default defineContentScript({
      */
     async function waitForVideoPlayer() {
       return new Promise<void>((resolve) => {
-
         const checkForVideoPlayer = setInterval(async () => {
           const videoPlayer = document.querySelector("video");
           if (videoPlayer) {

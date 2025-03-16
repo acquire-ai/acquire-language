@@ -39,7 +39,6 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
    * 初始化字幕处理器
    */
   async initialize(): Promise<void> {
-    console.log("初始化字幕处理器");
 
     // 加载设置
     await this.loadSettings();
@@ -70,7 +69,6 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
       if (subsToggleElement) {
         const isSubtitleEnabled =
           subsToggleElement.getAttribute("aria-pressed") === "true";
-        console.log("初始字幕状态:", isSubtitleEnabled);
 
         // 更新字幕状态
         this.subtitleEnabled = isSubtitleEnabled;
@@ -109,19 +107,16 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     // 创建自定义字幕容器
     this.container = document.createElement("div");
     this.container.id = "acquire-language-subtitle";
-    console.log("已创建字幕容器元素:", this.container);
 
     // 设置样式
     this.applySubtitleStyles();
 
     // 添加到文档
     document.body.appendChild(this.container);
-    console.log("已将字幕容器添加到文档");
 
     // 添加字幕悬停事件 - 暂停视频
     this.addSubtitleHoverEvents();
 
-    console.log("字幕容器创建完成");
   }
 
   /**
@@ -143,7 +138,6 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
             }
         `;
     document.head.appendChild(style);
-    console.log("已添加样式以隐藏原始字幕");
   }
 
   /**
@@ -162,11 +156,9 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
       return;
     }
 
-    console.log("应用字幕样式");
 
     // 获取视频播放器尺寸和位置
     const videoRect = videoPlayer.getBoundingClientRect();
-    console.log("视频播放器尺寸:", videoRect);
 
     // 设置字幕容器样式
     const cssText = `
@@ -187,26 +179,22 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
             user-select: none;
         `;
     this.container.style.cssText = cssText;
-    console.log("已设置字幕容器样式:", cssText);
 
     // 根据设置设置字幕位置
     if (this.settings.subtitleSettings.position === "top") {
       this.container.style.top = `${videoRect.top + 10}px`;
-      console.log("字幕位置: 顶部");
     } else {
       // 调整底部位置，避免遮挡控制栏
       // YouTube控制栏高度约为40-45px，我们设置60px的间距以确保不会遮挡
       this.container.style.bottom = `${
         window.innerHeight - videoRect.bottom + 60
       }px`;
-      console.log("字幕位置: 底部");
     }
 
     // 监听窗口大小变化，更新字幕位置
     window.addEventListener("resize", () => {
       this.updateSubtitlePosition();
     });
-    console.log("已添加窗口大小变化监听器");
 
     // 监听视频播放器大小变化
     this.containerObserver = new MutationObserver(() => {
@@ -217,7 +205,6 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
       attributes: true,
       attributeFilter: ["style", "class"],
     });
-    console.log("已添加视频播放器大小变化监听器");
   }
 
   /**
@@ -284,16 +271,13 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
    * 监听注入脚本发送的事件
    */
   private listenToInjectedScript() {
-    console.log("开始监听字幕事件");
 
     // 监听字幕数据事件
     window.addEventListener(
       "acquireLanguageSubtitleData",
       async (event: any) => {
-        console.log("收到 acquireLanguageSubtitleData 事件");
         const { url, lang, videoId } = event.detail;
 
-        console.log("收到字幕数据:", { url, lang, videoId });
 
         // 检查是否已经处理过这个字幕请求
         if (
@@ -301,41 +285,33 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
           this.currentLang === lang &&
           this.subtitleData.length > 0
         ) {
-          console.log("已经处理过这个字幕请求，跳过");
           return;
         }
 
         // 保存字幕信息
         this.currentVideoId = videoId;
         this.currentLang = lang;
-        console.log("已保存字幕信息:", { videoId, lang });
 
         // 缓存字幕 URL
         if (!this.subtitleCache[videoId]) {
           this.subtitleCache[videoId] = {};
         }
         this.subtitleCache[videoId][lang] = url;
-        console.log("已缓存字幕 URL");
 
         // 获取字幕内容
-        console.log("开始获取字幕内容");
         await this.fetchSubtitle(url);
-        console.log("字幕内容获取完成");
 
         // 启用字幕
         this.subtitleEnabled = true;
-        console.log("已启用字幕");
 
         // 显示字幕容器
         if (this.container) {
           this.container.style.display = "block";
-          console.log("已显示字幕容器");
         } else {
           console.error("字幕容器不存在，无法显示");
         }
       }
     );
-    console.log("已添加 acquireLanguageSubtitleData 事件监听器");
 
     // 添加一个方法来手动检查字幕状态
     const checkSubtitleStatus = () => {
@@ -347,17 +323,14 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
 
         // 如果字幕状态变化
         if (this.subtitleEnabled !== isSubtitleEnabled) {
-          console.log("字幕状态变化:", isSubtitleEnabled);
           this.subtitleEnabled = isSubtitleEnabled;
 
           // 如果字幕被禁用，清空字幕显示
           if (!isSubtitleEnabled && this.container) {
-            console.log("字幕被禁用，清空字幕显示");
             this.container.innerHTML = "";
             this.container.style.display = "none";
           } else if (isSubtitleEnabled && this.container) {
             // 如果字幕被启用，显示字幕容器
-            console.log("字幕被启用，显示字幕容器");
             this.container.style.display = "block";
 
             // 如果有字幕数据但没有显示，尝试重新显示
@@ -365,7 +338,6 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
               this.subtitleData.length > 0 &&
               this.container.innerHTML === ""
             ) {
-              console.log("有字幕数据但没有显示，尝试重新显示");
               this.checkCurrentTime();
             }
           }
@@ -384,29 +356,20 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
    */
   private async fetchSubtitle(url: string) {
     try {
-      console.log("开始获取字幕内容:", url);
 
       // 检查是否已经缓存了这个字幕
       const cacheKey = `subtitle:${url}`;
       const cachedData = sessionStorage.getItem(cacheKey);
       if (cachedData) {
-        console.log("使用缓存的字幕数据");
         try {
           this.subtitleData = JSON.parse(cachedData);
-          console.log(
-            "成功解析缓存的字幕数据，共",
-            this.subtitleData.length,
-            "条"
-          );
           this.currentSubtitleIndex = -1;
           return;
         } catch (e) {
           console.error("解析缓存的字幕数据失败:", e);
-          // 缓存数据解析失败，继续获取新数据
         }
       }
 
-      console.log("通过 background 脚本获取字幕内容");
       // 使用 background 脚本获取字幕内容，避免跨域问题
       const response = await new Promise<any>((resolve, reject) => {
         chrome.runtime.sendMessage(
@@ -428,29 +391,23 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
       }
 
       const subtitleContent = response.data;
-      console.log("获取字幕成功，长度:", subtitleContent.length);
 
       // 解析字幕内容
       if (url.includes("fmt=srv3") || url.includes("fmt=json3")) {
         // JSON 格式字幕
-        console.log("检测到 JSON 格式字幕，开始解析");
         this.parseJsonSubtitle(subtitleContent);
       } else if (url.includes("fmt=vtt")) {
         // WebVTT 格式字幕
-        console.log("检测到 WebVTT 格式字幕，开始解析");
         this.subtitleData = this.parseVTT(subtitleContent);
       } else {
         // 默认尝试解析为 JSON，如果失败则尝试解析为 WebVTT
-        console.log("未知字幕格式，尝试解析为 JSON");
         try {
           this.parseJsonSubtitle(subtitleContent);
         } catch (e) {
-          console.log("解析 JSON 失败，尝试解析为 WebVTT");
           this.subtitleData = this.parseVTT(subtitleContent);
         }
       }
 
-      console.log("字幕解析完成，共", this.subtitleData.length, "条");
 
       // 输出前5条字幕内容用于调试
       if (this.subtitleData.length > 0) {
@@ -465,7 +422,6 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
       // 缓存字幕数据到 sessionStorage
       try {
         sessionStorage.setItem(cacheKey, JSON.stringify(this.subtitleData));
-        console.log("已缓存字幕数据到 sessionStorage");
       } catch (e) {
         console.warn("缓存字幕数据失败:", e);
       }
@@ -488,7 +444,6 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
 
       // 检查是否有字幕数据
       if (!data.events) {
-        console.error("JSON 字幕格式不正确，缺少 events 字段");
         return;
       }
 
@@ -1020,13 +975,11 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
    * 尝试预加载字幕
    */
   private tryPreloadSubtitles() {
-    console.log("准备尝试预加载字幕");
     // 延迟执行，确保页面已完全加载
     setTimeout(() => {
       // 获取视频ID
       const videoId = this.getVideoIdFromUrl(window.location.href);
       if (!videoId) {
-        console.log("无法获取视频ID，取消预加载字幕");
         return;
       }
 
