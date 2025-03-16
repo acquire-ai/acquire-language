@@ -16,23 +16,49 @@
 
 ```
 acquire-language/
-├── assets/              # 静态资源文件
-├── entrypoints/         # 扩展的各个入口点
-│   ├── background.ts    # 后台脚本
-│   ├── content.ts       # 内容脚本（注入到网页中）
-│   ├── content/         # 内容脚本相关模块
-│   │   └── youtube.ts   # YouTube 字幕处理器
-│   ├── options/         # 选项页面
-│   ├── popup/           # 弹出窗口
-│   ├── services/        # 服务模块
-│   └── vocabulary/      # 生词本页面
-├── public/              # 公共资源
-├── .wxt/                # WXT 配置和缓存
-├── node_modules/        # 依赖包
-├── package.json         # 项目配置和依赖
-├── tsconfig.json        # TypeScript 配置
-├── tailwind.config.js   # Tailwind CSS 配置
-└── wxt.config.ts        # WXT 配置
+├── src/                           # 源代码目录
+│   ├── core/                      # 核心模块
+│   │   ├── types/                 # 类型定义
+│   │   │   ├── ai.ts              # AI服务相关类型
+│   │   │   ├── platform.ts        # 平台和字幕处理器接口
+│   │   │   └── storage.ts         # 存储相关类型
+│   │   ├── storage/               # 存储相关
+│   │   │   └── index.ts           # 存储管理器
+│   │   └── utils/                 # 工具函数
+│   │       └── index.ts           # 通用工具函数
+│   ├── services/                  # 服务模块
+│   │   ├── ai/                    # AI服务
+│   │   │   ├── index.ts           # 服务入口
+│   │   │   ├── factory.ts         # 工厂方法
+│   │   │   ├── deepseek.ts        # DeepSeek实现
+│   │   │   └── gpt.ts             # GPT4o-mini实现
+│   ├── platforms/                 # 视频平台处理模块
+│   │   ├── base/                  # 基础类和接口
+│   │   │   ├── platform-handler.ts # 平台处理器基类
+│   │   │   └── subtitle-handler.ts # 字幕处理基类
+│   │   ├── youtube/               # YouTube平台实现
+│   │   │   ├── index.ts           # YouTube平台处理器
+│   │   │   └── subtitle-handler.ts # YouTube字幕处理器
+│   │   ├── factory.ts             # 平台工厂
+│   │   └── index.ts               # 平台模块入口
+│   ├── components/                # UI组件
+│   │   └── word-popup/            # 单词弹出组件
+│   │       └── index.ts           # 单词弹出组件实现
+│   ├── assets/                    # 静态资源
+│   │   └── icons/                 # 图标资源
+│   └── entrypoints/              # 扩展入口点
+│       ├── background.ts          # 后台脚本
+│       ├── content.ts             # 内容脚本
+│       ├── popup/                 # 弹出窗口
+│       ├── options/               # 选项页面
+│       └── vocabulary/            # 生词本页面
+├── public/                        # 公共资源
+├── .wxt/                          # WXT配置和缓存
+├── node_modules/                  # 依赖包
+├── package.json                   # 项目配置和依赖
+├── tsconfig.json                  # TypeScript配置
+├── tailwind.config.js             # Tailwind CSS配置
+└── wxt.config.ts                  # WXT配置
 ```
 
 ## 核心模块说明
