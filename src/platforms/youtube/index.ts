@@ -1,9 +1,9 @@
 /**
  * YouTube 平台处理器
  */
-import { SubtitleHandler } from '../../core/types/platform';
-import { AIService } from '../../core/types/ai';
-import { isYouTubeVideoUrl } from '../../core/utils';
+import { SubtitleHandler } from '@/core/types/platform.ts';
+import { AIService } from '@/core/types/ai.ts';
+import { isYouTubeVideoUrl } from '@/core/utils';
 import { BasePlatformHandler } from '../base/platform-handler';
 import { YouTubeSubtitleHandler } from './subtitle-handler';
 
@@ -25,7 +25,6 @@ export class YouTubePlatformHandler extends BasePlatformHandler {
    */
   async initialize(): Promise<void> {
     console.log('初始化 YouTube 平台处理器');
-    // 这里可以添加 YouTube 平台特定的初始化逻辑
   }
   
   /**
