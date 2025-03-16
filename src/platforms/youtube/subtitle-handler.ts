@@ -274,7 +274,7 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     /**
      * 更新字幕
      */
-    private updateSubtitle() {
+    updateSubtitle(): void {
         // 更新上次检查时间
         this.lastCheckTime = Date.now();
         
@@ -288,10 +288,10 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
         const originalText = this.originalSubtitleContainer.textContent || '';
         
         // 如果字幕没有变化，则不更新
-        if (originalText === this.currentSubtitle) return;
+        if (originalText === this._currentSubtitle) return;
         
         // 更新当前字幕
-        this.currentSubtitle = originalText;
+        this._currentSubtitle = originalText;
         
         // 处理字幕
         const processedText = this.processSubtitle(originalText);
@@ -362,7 +362,7 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
                     // 调用 AI 服务获取释义
                     const definition = await this.aiService.getWordDefinition(
                         word, 
-                        this.currentSubtitle,
+                        this._currentSubtitle,
                         this.settings.targetLanguage
                     );
                     
