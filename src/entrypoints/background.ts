@@ -5,26 +5,9 @@ import { defineBackground } from "wxt/sandbox";
 import { StorageManager } from "@/core/storage";
 import { Word } from "@/core/types/storage";
 
-// 字幕数据接口
-interface SubtitleData {
-  url: string;
-  lang: string;
-  videoId: string;
-  timestamp: number;
-}
-
 export default defineBackground(() => {
   // 用于存储已处理的字幕请求，避免重复处理
   const processedSubtitleRequests = new Set<string>();
-
-  // 存储最近处理的字幕数据，用于页面刷新后恢复
-  const recentSubtitles = new Map<string, SubtitleData>();
-
-  // 加载已保存的字幕数据
-  loadSavedSubtitles();
-
-  // 定期保存字幕数据到存储
-  setInterval(saveRecentSubtitles, 30000); // 每30秒保存一次
 
   // 使用 webRequest API 监听字幕请求
   chrome.webRequest.onBeforeRequest.addListener(
@@ -71,17 +54,6 @@ export default defineBackground(() => {
         processedSubtitleRequests.add(requestKey);
         processedSubtitleRequests.add(url);
 
-        // 存储最近的字幕数据
-        recentSubtitles.set(requestKey, {
-          url: urlObject.href,
-          lang,
-          videoId,
-          timestamp: Date.now(),
-        });
-
-        // 保存到存储以便页面刷新后恢复
-        saveRecentSubtitles();
-
         // 限制缓存大小
         if (processedSubtitleRequests.size > 100) {
           const iterator = processedSubtitleRequests.values();
@@ -110,40 +82,6 @@ export default defineBackground(() => {
 
   // 监听来自内容脚本的消息
   browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    // 处理页面加载完成消息，尝试恢复字幕
-    if (
-      message.type === "PAGE_LOADED" &&
-      message.data &&
-      message.data.videoId
-    ) {
-      const videoId = message.data.videoId;
-      // 查找该视频的最近字幕
-      for (const [key, data] of recentSubtitles.entries()) {
-        if (data.videoId === videoId) {
-          // 发送字幕数据到内容脚本
-          try {
-            if (sender.tab && sender.tab.id) {
-              chrome.tabs.sendMessage(sender.tab.id, {
-                type: "SUBTITLE_REQUEST_DETECTED",
-                data: {
-                  url: data.url,
-                  lang: data.lang,
-                  videoId: data.videoId,
-                },
-              });
-              sendResponse({ success: true });
-              return true;
-            }
-          } catch (err) {
-            console.error("恢复字幕失败:", err);
-          }
-          break;
-        }
-      }
-      sendResponse({ success: false, reason: "没有找到该视频的字幕数据" });
-      return true;
-    }
-
     // 在这里处理消息
     if (message.type === "SAVE_WORD") {
       // 保存单词到生词本
@@ -207,51 +145,5 @@ export default defineBackground(() => {
 
     // 返回更新后的单词条目
     return vocabulary[word];
-  }
-
-  // 保存最近的字幕数据到存储
-  async function saveRecentSubtitles() {
-    try {
-      // 只保留最近24小时内的字幕数据
-      const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
-      const subtitlesToSave: Record<string, any> = {};
-
-      for (const [key, data] of recentSubtitles.entries()) {
-        if (data.timestamp > oneDayAgo) {
-          subtitlesToSave[key] = data;
-        } else {
-          recentSubtitles.delete(key);
-        }
-      }
-
-      // 保存到存储
-      await browser.storage.local.set({ recentSubtitles: subtitlesToSave });
-    } catch (e) {
-      console.error("保存字幕数据失败:", e);
-    }
-  }
-
-  // 从存储加载字幕数据
-  async function loadSavedSubtitles() {
-    try {
-      const result = await browser.storage.local.get("recentSubtitles");
-      if (result.recentSubtitles) {
-        // 只加载最近24小时内的字幕数据
-        const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
-
-        for (const [key, data] of Object.entries(result.recentSubtitles)) {
-          const subtitleData = data as SubtitleData;
-          if (subtitleData.timestamp > oneDayAgo) {
-            recentSubtitles.set(key, subtitleData);
-            processedSubtitleRequests.add(key);
-            if (subtitleData.url) {
-              processedSubtitleRequests.add(subtitleData.url);
-            }
-          }
-        }
-      }
-    } catch (e) {
-      console.error("加载字幕数据失败:", e);
-    }
   }
 });
