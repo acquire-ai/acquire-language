@@ -8,7 +8,7 @@
  * @returns Promise
  */
 export function delay(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 /**
@@ -18,19 +18,19 @@ export function delay(ms: number): Promise<void> {
  * @returns 元素或null
  */
 export async function waitForElement(
-  selector: string,
-  timeout = 10000
+    selector: string,
+    timeout = 10000
 ): Promise<Element | null> {
-  const startTime = Date.now();
-  
-  while (Date.now() - startTime < timeout) {
-    const element = document.querySelector(selector);
-    if (element) return element;
-    await delay(100);
-  }
-  
-  console.warn(`等待元素 ${selector} 超时`);
-  return null;
+    const startTime = Date.now();
+
+    while (Date.now() - startTime < timeout) {
+        const element = document.querySelector(selector);
+        if (element) return element;
+        await delay(100);
+    }
+
+    console.warn(`等待元素 ${selector} 超时`);
+    return null;
 }
 
 /**
@@ -40,10 +40,10 @@ export async function waitForElement(
  * @returns 是否匹配
  */
 export function isUrlMatch(url: string, patterns: string[]): boolean {
-  return patterns.some(pattern => {
-    const regex = new RegExp(pattern.replace(/\*/g, '.*'));
-    return regex.test(url);
-  });
+    return patterns.some(pattern => {
+        const regex = new RegExp(pattern.replace(/\*/g, '.*'));
+        return regex.test(url);
+    });
 }
 
 /**
@@ -52,7 +52,7 @@ export function isUrlMatch(url: string, patterns: string[]): boolean {
  * @returns 是否为YouTube视频页面
  */
 export function isYouTubeVideoUrl(url: string): boolean {
-  return /youtube\.com\/watch/.test(url);
+    return /youtube\.com\/watch/.test(url);
 }
 
 /**
@@ -61,16 +61,16 @@ export function isYouTubeVideoUrl(url: string): boolean {
  * @returns 语言名称
  */
 export function getLanguageName(code: string): string {
-  const languages: Record<string, string> = {
-    'en-US': '英语',
-    'zh-CN': '中文',
-    'ja-JP': '日语',
-    'ko-KR': '韩语',
-    'fr-FR': '法语',
-    'de-DE': '德语',
-    'es-ES': '西班牙语',
-    'ru-RU': '俄语',
-  };
-  
-  return languages[code] || code;
+    const languages: Record<string, string> = {
+        'en-US': '英语',
+        'zh-CN': '中文',
+        'ja-JP': '日语',
+        'ko-KR': '韩语',
+        'fr-FR': '法语',
+        'de-DE': '德语',
+        'es-ES': '西班牙语',
+        'ru-RU': '俄语',
+    };
+
+    return languages[code] || code;
 } 
