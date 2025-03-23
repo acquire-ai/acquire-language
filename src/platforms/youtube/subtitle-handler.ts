@@ -272,7 +272,8 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
             if (message.type === "ACQ_SUBTITLE_FETCHED") {
                 const {url, lang, videoId, response} = message.data;
                 console.log("Get subtitle from background script", url, lang, videoId);
-
+                // TODO: change subtitle format by change param fmt=srv3 to fmt=json3
+                // or using separate function to parse subtitle
                 // 解析字幕
                 this.parseSubtitle(response);
 
