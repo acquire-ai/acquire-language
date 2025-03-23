@@ -6,15 +6,12 @@ import {StorageManager} from "@/core/storage";
 import {Word} from "@/core/types/storage";
 
 export default defineBackground(() => {
-    // 用于存储已处理的字幕请求，避免重复处理
     const processedSubtitleRequests = new Set<string>();
 
-    // 使用 webRequest API 监听字幕请求
     chrome.webRequest.onBeforeRequest.addListener(
         (details) => {
-            // 只处理 GET 请求
             if (details.method !== "GET") return;
-
+            
             const url = details.url;
 
             // 检查是否是字幕请求
@@ -22,27 +19,19 @@ export default defineBackground(() => {
                 return;
             }
 
-            // 检查是否已经处理过这个请求
-            if (processedSubtitleRequests.has(url)) {
-                return;
-            }
-
             try {
                 const urlObject = new URL(url);
 
-                // 获取字幕语言
                 const lang =
                     urlObject.searchParams.get("tlang") ||
                     urlObject.searchParams.get("lang") ||
                     "";
 
-                // 获取视频ID
                 const videoId =
                     urlObject.searchParams.get("v") ||
                     urlObject.pathname.split("/").pop() ||
                     "";
 
-                // 创建唯一标识符
                 const requestKey = `${videoId}:${lang}`;
 
                 // 检查是否已处理过这个组合
@@ -52,7 +41,6 @@ export default defineBackground(() => {
 
                 // 标记为已处理
                 processedSubtitleRequests.add(requestKey);
-                processedSubtitleRequests.add(url);
 
                 // 限制缓存大小
                 if (processedSubtitleRequests.size > 100) {
