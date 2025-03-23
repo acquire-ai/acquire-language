@@ -14,7 +14,6 @@ export default defineBackground(() => {
             
             const url = details.url;
 
-            // 检查是否是字幕请求
             if (!url.includes("/api/timedtext") && !url.includes("timedtext")) {
                 return;
             }
@@ -34,15 +33,11 @@ export default defineBackground(() => {
 
                 const requestKey = `${videoId}:${lang}`;
 
-                // 检查是否已处理过这个组合
                 if (processedSubtitleRequests.has(requestKey)) {
                     return;
                 }
 
-                // 标记为已处理
-                processedSubtitleRequests.add(requestKey);
-
-                // 限制缓存大小
+                // limit cache size
                 if (processedSubtitleRequests.size > 100) {
                     const iterator = processedSubtitleRequests.values();
                     for (let i = 0; i < 50; i++) {
@@ -50,23 +45,25 @@ export default defineBackground(() => {
                     }
                 }
 
-                // 发送消息到内容脚本
+                // send message to content script
                 if (details.tabId > 0) {
-                    try {
-                        chrome.tabs.sendMessage(details.tabId, {
-                            type: "SUBTITLE_REQUEST_DETECTED",
-                            data: {url: urlObject.href, lang, videoId},
-                        });
-                    } catch (err) {
-                        console.error("发送字幕请求消息失败:", err);
-                    }
+                    chrome.tabs.sendMessage(details.tabId, {
+                        type: "SUBTITLE_REQUEST_DETECTED",
+                        data: {url: urlObject.href, lang, videoId},
+                    }).catch(err => {
+                        console.error("send message to content script failed:", err);
+                    });
                 }
+
+                // mark as processed
+                processedSubtitleRequests.add(requestKey);
             } catch (e) {
-                console.error("处理字幕请求失败:", e);
+                console.error("Failed to capture subtitle request:", e);
             }
         },
         {urls: ["*://*.youtube.com/*timedtext*", "*://*.youtube.com/api/*"]}
     );
+
 
     // 监听来自内容脚本的消息
     browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
