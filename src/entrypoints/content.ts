@@ -1,8 +1,8 @@
 /**
  * 习得语言 (Acquire Language) 内容脚本
  *
- * 这个脚本在 YouTube 页面上运行，负责初始化字幕处理器。
- * 它检测 YouTube 视频页面，并在视频播放器加载后启动字幕增强功能。
+ * 这个脚本在各平台页面上运行，负责初始化字幕处理器。
+ * 它检测各平台视频页面，并在视频播放器加载后启动字幕增强功能。
  */
 import {defineContentScript} from "wxt/sandbox";
 import {createPlatformHandler} from "@/platforms";
@@ -13,8 +13,13 @@ export default defineContentScript({
     matches: ["*://*.youtube.com/*"],
 
     async main() {
-        // 字幕处理器
         let subtitleHandler: any = null;
+        
+        const settings = await StorageManager.getSettings();
+        
+        const aiService = createAIService(settings.aiModel, {
+            apiKey: settings.apiKey,
+        });
 
         const processedSubtitleRequests = new Set<string>();
 
@@ -31,7 +36,6 @@ export default defineContentScript({
         }
 
         chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-            // need to request subtitles when catching xhr requests
             if (message.type === "SUBTITLE_REQUEST_DETECTED") {
                 if (!subtitleHandler) {
                     initializeHandler().then(() => {
@@ -47,11 +51,9 @@ export default defineContentScript({
             return true;
         });
 
-        // 处理字幕请求
         function processSubtitleRequest(data: any) {
             const {url, lang, videoId} = data;
 
-            // 创建一个唯一标识符，用于去重
             const requestKey = `${videoId}:${lang}`;
 
             if (processedSubtitleRequests.has(requestKey)) {
@@ -64,7 +66,6 @@ export default defineContentScript({
                 processedSubtitleRequests.clear();
             }
 
-            // 触发自定义事件，让字幕处理器处理
             window.dispatchEvent(
                 new CustomEvent("acquireLanguageSubtitleData", {
                     detail: {url, lang, videoId},
@@ -73,15 +74,14 @@ export default defineContentScript({
         }
 
         function monitorUrlChanges() {
+            // when the url changes, we need to clear the processed subtitle requests
             let lastUrl = window.location.href;
 
-            // 使用 MutationObserver 监听 DOM 变化，可能表示 URL 变化
             new MutationObserver(async () => {
                 if (lastUrl !== window.location.href) {
                     lastUrl = window.location.href;
 
                     if (window.location.pathname.includes("/watch")) {
-                        // 清除已处理的请求缓存
                         processedSubtitleRequests.clear();
                         await initializeHandler();
                     }
@@ -105,14 +105,6 @@ export default defineContentScript({
                         clearTimeout(timeout);
 
                         try {
-                            // 获取设置
-                            const settings = await StorageManager.getSettings();
-
-                            // 创建 AI 服务
-                            const aiService = createAIService(settings.aiModel, {
-                                apiKey: settings.apiKey,
-                            });
-
                             // 创建平台处理器
                             const platformHandler = createPlatformHandler(
                                 window.location.href
