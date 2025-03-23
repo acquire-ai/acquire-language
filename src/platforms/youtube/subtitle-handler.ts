@@ -22,12 +22,11 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     private subtitleEnabled: boolean = false;
     private subtitleData: SubtitleItem[] = [];
     private currentSubtitleIndex: number = -1;
-    private checkInterval: number = 500;
     private checkIntervalId: number | null = null;
     // 字幕时间偏移量（毫秒），负值表示提前显示
     private timeOffset: number = 0; // 默认不偏移
     // 是否启用自适应偏移
-    private adaptiveOffset: boolean = true;
+    private adaptiveOffset: boolean = false;
     // 记录最近的字幕切换时间，用于自适应调整
     private lastSubtitleChangeTime: number = 0;
 
@@ -46,7 +45,7 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
         this.createSubtitleContainer();
 
         // 监听字幕事件
-        this.listenToInjectedScript();
+        this.listenToBackgroundScript();
 
         // 开始定期检查视频时间，更新当前字幕
         this.startPeriodicCheck();
@@ -265,36 +264,17 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     }
 
     /**
-     * 监听注入脚本发送的事件
+     * listen to the event sent by content script
      */
-    private listenToInjectedScript() {
-        // 监听字幕数据事件
-        window.addEventListener(
-            "acquireLanguageSubtitleData",
-            async (event: any) => {
-                const {url, lang, videoId} = event.detail;
+    private listenToBackgroundScript() {
 
-                // 检查是否已经处理过这个字幕请求
-                if (
-                    this.currentVideoId === videoId &&
-                    this.currentLang === lang &&
-                    this.subtitleData.length > 0
-                ) {
-                    return;
-                }
+        chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+            if (message.type === "ACQ_SUBTITLE_FETCHED") {
+                const {url, lang, videoId, response} = message.data;
+                console.log("Get subtitle from background script", url, lang, videoId);
 
-                // 保存字幕信息
-                this.currentVideoId = videoId;
-                this.currentLang = lang;
-
-                // 缓存字幕 URL
-                if (!this.subtitleCache[videoId]) {
-                    this.subtitleCache[videoId] = {};
-                }
-                this.subtitleCache[videoId][lang] = url;
-
-                // 获取字幕内容
-                await this.fetchSubtitle(url);
+                // 解析字幕
+                this.parseSubtitle(response);
 
                 // 启用字幕
                 this.subtitleEnabled = true;
@@ -305,8 +285,11 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
                 } else {
                     console.error("字幕容器不存在，无法显示");
                 }
+
             }
-        );
+
+            return true;
+        });
 
         // 添加一个方法来手动检查字幕状态
         const checkSubtitleStatus = () => {
@@ -343,6 +326,24 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
         // 定期检查字幕状态，降低频率到 2 秒一次
         setInterval(checkSubtitleStatus, 2000);
         console.log("已设置定期检查字幕状态");
+    }
+
+    private parseSubtitle(response: string) {
+        if (response.includes("fmt=srv3") || response.includes("fmt=json3")) {
+            this.parseJsonSubtitle(response);
+        } else if (response.includes("fmt=vtt")) {
+            this.parseVTT(response);
+        }
+
+        // 输出前5条字幕内容用于调试
+        if (this.subtitleData.length > 0) {
+            console.log("前5条字幕内容:");
+            for (let i = 0; i < Math.min(5, this.subtitleData.length); i++) {
+                console.log(
+                    `[${i}] ${this.subtitleData[i].start}-${this.subtitleData[i].end}: ${this.subtitleData[i].text}`
+                );
+            }
+        }
     }
 
     /**

@@ -6,11 +6,15 @@ import {StorageManager} from "@/core/storage";
 import {Word} from "@/core/types/storage";
 
 export default defineBackground(() => {
-    const processedSubtitleRequests = new Set<string>();
 
     chrome.webRequest.onBeforeRequest.addListener(
         (details) => {
             if (details.method !== "GET") return;
+
+            // ignore requests from chrome extension
+            if (details.initiator?.startsWith("chrome-extension://")) {
+                return;
+            }
             
             const url = details.url;
 
@@ -31,32 +35,20 @@ export default defineBackground(() => {
                     urlObject.pathname.split("/").pop() ||
                     "";
 
-                const requestKey = `${videoId}:${lang}`;
 
-                if (processedSubtitleRequests.has(requestKey)) {
-                    return;
-                }
-
-                // limit cache size
-                if (processedSubtitleRequests.size > 100) {
-                    const iterator = processedSubtitleRequests.values();
-                    for (let i = 0; i < 50; i++) {
-                        processedSubtitleRequests.delete(iterator.next().value as string);
-                    }
-                }
 
                 // send message to content script
                 if (details.tabId > 0) {
-                    chrome.tabs.sendMessage(details.tabId, {
-                        type: "SUBTITLE_REQUEST_DETECTED",
-                        data: {url: urlObject.href, lang, videoId},
-                    }).catch(err => {
-                        console.error("send message to content script failed:", err);
-                    });
+                    fetchSubtitle(urlObject.href)
+                        .then(subtitleContent => {
+                            chrome.tabs.sendMessage(details.tabId, {
+                                type: "ACQ_SUBTITLE_FETCHED",
+                                data: {url: urlObject.href, lang, videoId, response: subtitleContent},
+                            }).catch(err => console.error("Failed to send message to content script:", err));
+                        })
+                        .catch(err => console.error("Failed to fetch subtitle:", err));
                 }
 
-                // mark as processed
-                processedSubtitleRequests.add(requestKey);
             } catch (e) {
                 console.error("Failed to capture subtitle request:", e);
             }
@@ -78,29 +70,6 @@ export default defineBackground(() => {
             return true; // 表示将异步发送响应
         }
 
-        // 处理获取字幕的消息
-        if (message.type === "fetchSubtitle") {
-            // 获取字幕内容
-            fetch(message.url)
-                .then((response) => {
-                    if (!response.ok) {
-                        throw new Error(
-                            `获取字幕失败: ${response.status} ${response.statusText}`
-                        );
-                    }
-                    return response.text();
-                })
-                .then((text) => {
-                    sendResponse({data: text});
-                })
-                .catch((error) => {
-                    console.error("获取字幕失败:", error);
-                    sendResponse({error: error.message});
-                });
-
-            // 返回 true 表示将异步发送响应
-            return true;
-        }
     });
 
     // 保存单词到生词本
@@ -132,3 +101,17 @@ export default defineBackground(() => {
         return vocabulary[word];
     }
 });
+
+
+async function fetchSubtitle(url: string) {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch subtitle: ${response.status} ${response.statusText}`);
+        }
+        return await response.text();
+    } catch (error) {
+        console.error("Failed to fetch subtitle:", error);
+        throw error;
+    }
+}
