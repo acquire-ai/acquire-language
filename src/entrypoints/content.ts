@@ -62,7 +62,7 @@ export default defineContentScript({
 
             processedSubtitleRequests.add(requestKey);
 
-            if (processedSubtitleRequests.size > 50) {
+            if (processedSubtitleRequests.size > 100) {
                 processedSubtitleRequests.clear();
             }
 
