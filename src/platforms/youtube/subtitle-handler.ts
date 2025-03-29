@@ -259,8 +259,9 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
                 const {url, lang, videoId, response} = message.data;
                 console.log("Get subtitle from background script", url, lang, videoId);
                 console.log(response)
-                // TODO: 重构下面函数或者步骤， 实现优先支持自动生成字幕的影子阅读，为其他类型字幕提供降级方案。
-                // 并且优先使用 video.js 的插件来实现， 比如 videojs-youtube
+                // TODO: 重构下面函数或者步骤， 考虑引入合适的第三方库来实现
+                // 对于通用平台可以只考虑支持整句字幕同步播放，
+                // 但也应考虑到后续，可能需要支持 YouTube 专有格式 json3 来实现高亮当前单词，影子跟读效果
                 this.parseSubtitle(response);
 
                 // 启用字幕
@@ -338,7 +339,7 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
      * 解析 JSON 格式字幕
      * @param jsonContent JSON 字幕内容
      */
-    // TODO:  refactor: videojs-youtube 或者 'youtube-caption-extractor 或者其他第三库来处理 YouTube 的专有字幕格式。（选择插件的时候需要考虑到以后可能支持词组级别时间戳来支持影子阅读， 但是现在不要实现影子阅读）
+    // TODO:  refactor: （选择插件的时候需要考虑到以后可能支持词组级别时间戳来支持影子阅读， 但是现在不要实现影子阅读）
     private parseJsonSubtitle(jsonContent: string) {
 
 
@@ -393,9 +394,8 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     /**
      * 开始定期检查视频时间，更新当前字幕
      */
-    // TODO: 重构使用已有第三库来实现， 我们选择 videojs-youtube
+    // TODO: 重构使用已有第三库来实现， 
     // 我要求保留 YouTube 默认播放器， 只是想改变字幕显示方式， 也就是后面为我点击单词显示释义的功能，以及双字幕功能提供可能
-    // 请分析使用videojs-youtube 能否办到， 或者我们得使用其他第三方库
     private startPeriodicCheck() {
         // 清除之前的定时器
         if (this.checkIntervalId !== null) {
@@ -434,7 +434,7 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
      * 检查当前视频时间，更新字幕
      */
 
-    // TODO: 重构使用已有第三库来实现， 我们选择 videojs-youtube
+    // TODO: 重构使用已有第三库来实现，
     // 使用第三库以后，它甚至可能会被删除
     private checkCurrentTime() {
         // 如果字幕被禁用或没有字幕数据，不更新字幕
