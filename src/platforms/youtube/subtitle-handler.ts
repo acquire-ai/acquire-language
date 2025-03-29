@@ -16,19 +16,11 @@ interface SubtitleItem {
 
 export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     private containerObserver: MutationObserver | null = null;
-    private subtitleCache: { [videoId: string]: { [lang: string]: string } } = {};
     private currentVideoId: string = "";
     private currentLang: string = "";
     private subtitleEnabled: boolean = false;
     private subtitleData: SubtitleItem[] = [];
-    private currentSubtitleIndex: number = -1;
     private checkIntervalId: number | null = null;
-    // 字幕时间偏移量（毫秒），负值表示提前显示
-    private timeOffset: number = 0; // 默认不偏移
-    // 是否启用自适应偏移
-    private adaptiveOffset: boolean = false;
-    // 记录最近的字幕切换时间，用于自适应调整
-    private lastSubtitleChangeTime: number = 0;
 
     constructor(aiService: AIService) {
         super(aiService);
@@ -268,7 +260,7 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
                 console.log("Get subtitle from background script", url, lang, videoId);
                 console.log(response)
                 // TODO: 重构下面函数或者步骤， 实现优先支持自动生成字幕的影子阅读，为其他类型字幕提供降级方案。
-                // 并且优先使用 video.js 的插件来实现， 比如 videojs-youtube + videojs-subtitle-sync
+                // 并且优先使用 video.js 的插件来实现， 比如 videojs-youtube
                 this.parseSubtitle(response);
 
                 // 启用字幕
@@ -326,8 +318,8 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     private parseSubtitle(response: string) {
         if (response.includes("fmt=srv3") || response.includes("fmt=json3")) {
             this.parseJsonSubtitle(response);
-        } else if (response.includes("fmt=vtt")) {
-            this.parseVTT(response);
+        } else {
+            console.log("unsupported subtitle format: ", response);
         }
 
         // 输出前5条字幕内容用于调试
@@ -341,92 +333,15 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
         }
     }
 
-    /**
-     * 获取字幕内容
-     * @param url 字幕URL
-     */
-    private async fetchSubtitle(url: string) {
-        try {
-            // 检查是否已经缓存了这个字幕
-            const cacheKey = `subtitle:${url}`;
-            const cachedData = sessionStorage.getItem(cacheKey);
-            if (cachedData) {
-                try {
-                    this.subtitleData = JSON.parse(cachedData);
-                    this.currentSubtitleIndex = -1;
-                    return;
-                } catch (e) {
-                    console.error("解析缓存的字幕数据失败:", e);
-                }
-            }
-
-            // 使用 background 脚本获取字幕内容，避免跨域问题
-            const response = await new Promise<any>((resolve, reject) => {
-                chrome.runtime.sendMessage(
-                    {type: "fetchSubtitle", url},
-                    (response) => {
-                        if (chrome.runtime.lastError) {
-                            reject(chrome.runtime.lastError);
-                        } else if (response.error) {
-                            reject(new Error(response.error));
-                        } else {
-                            resolve(response);
-                        }
-                    }
-                );
-            });
-
-            if (!response.data) {
-                throw new Error("获取字幕失败: 没有返回数据");
-            }
-
-            const subtitleContent = response.data;
-
-            // 解析字幕内容
-            if (url.includes("fmt=srv3") || url.includes("fmt=json3")) {
-                // JSON 格式字幕
-                this.parseJsonSubtitle(subtitleContent);
-            } else if (url.includes("fmt=vtt")) {
-                // WebVTT 格式字幕
-                this.subtitleData = this.parseVTT(subtitleContent);
-            } else {
-                // 默认尝试解析为 JSON，如果失败则尝试解析为 WebVTT
-                try {
-                    this.parseJsonSubtitle(subtitleContent);
-                } catch (e) {
-                    this.subtitleData = this.parseVTT(subtitleContent);
-                }
-            }
-
-            // 输出前5条字幕内容用于调试
-            if (this.subtitleData.length > 0) {
-                console.log("前5条字幕内容:");
-                for (let i = 0; i < Math.min(5, this.subtitleData.length); i++) {
-                    console.log(
-                        `[${i}] ${this.subtitleData[i].start}-${this.subtitleData[i].end}: ${this.subtitleData[i].text}`
-                    );
-                }
-            }
-
-            // 缓存字幕数据到 sessionStorage
-            try {
-                sessionStorage.setItem(cacheKey, JSON.stringify(this.subtitleData));
-            } catch (e) {
-                console.warn("缓存字幕数据失败:", e);
-            }
-
-            // 重置当前字幕索引
-            this.currentSubtitleIndex = -1;
-        } catch (error) {
-            console.error("获取字幕失败:", error);
-        }
-    }
 
     /**
      * 解析 JSON 格式字幕
      * @param jsonContent JSON 字幕内容
      */
+    // TODO:  refactor: videojs-youtube 或者 'youtube-caption-extractor 或者其他第三库来处理 YouTube 的专有字幕格式。（选择插件的时候需要考虑到以后可能支持词组级别时间戳来支持影子阅读， 但是现在不要实现影子阅读）
     private parseJsonSubtitle(jsonContent: string) {
+
+
         try {
             // 解析 JSON
             const data = JSON.parse(jsonContent);
@@ -472,126 +387,15 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
         }
     }
 
-    /**
-     * 解析 VTT 字幕
-     * @param vttContent VTT 字幕内容
-     * @returns 解析后的字幕数据
-     */
-    private parseVTT(vttContent: string): SubtitleItem[] {
-        const subtitles: SubtitleItem[] = [];
 
-        // 按行分割
-        const lines = vttContent.split("\n");
 
-        let currentSubtitle: Partial<SubtitleItem> | null = null;
-
-        // 跳过 WEBVTT 头部
-        let i = 0;
-        while (i < lines.length && !lines[i].includes("-->")) {
-            i++;
-        }
-
-        // 解析字幕
-        for (; i < lines.length; i++) {
-            const line = lines[i].trim();
-
-            // 空行表示一个字幕的结束
-            if (line === "") {
-                if (currentSubtitle && currentSubtitle.text) {
-                    subtitles.push(currentSubtitle as SubtitleItem);
-                }
-                currentSubtitle = null;
-                continue;
-            }
-
-            // 解析时间戳行
-            if (line.includes("-->")) {
-                const [startTime, endTime] = this.parseTimeLine(line);
-                currentSubtitle = {
-                    start: startTime,
-                    end: endTime,
-                    text: "",
-                };
-                continue;
-            }
-
-            // 解析文本行
-            if (currentSubtitle) {
-                if (currentSubtitle.text) {
-                    currentSubtitle.text += " " + line;
-                } else {
-                    currentSubtitle.text = line;
-                }
-            }
-        }
-
-        // 添加最后一个字幕
-        if (currentSubtitle && currentSubtitle.text) {
-            subtitles.push(currentSubtitle as SubtitleItem);
-        }
-
-        return subtitles;
-    }
-
-    /**
-     * 解析时间戳行
-     * @param line 时间戳行，如 "00:00:10.500 --> 00:00:13.000"
-     * @returns [开始时间（毫秒）, 结束时间（毫秒）]
-     */
-    private parseTimeLine(line: string): [number, number] {
-        const parts = line.split("-->").map((part) => part.trim());
-        if (parts.length !== 2) {
-            return [0, 0];
-        }
-
-        return [
-            this.timeToMilliseconds(parts[0]),
-            this.timeToMilliseconds(parts[1].split(" ")[0]), // 去除可能的样式设置
-        ];
-    }
-
-    /**
-     * 将时间字符串转换为毫秒
-     * @param timeStr 时间字符串，如 "00:00:10.500"
-     * @returns 毫秒
-     */
-    private timeToMilliseconds(timeStr: string): number {
-        // 处理 VTT 格式的时间戳
-        const parts = timeStr.split(":");
-
-        if (parts.length === 3) {
-            // 格式: 00:00:10.500
-            const [hours, minutes, seconds] = parts;
-            const [secondsInt, millisecondsStr] = seconds.split(".");
-            const milliseconds = millisecondsStr
-                ? parseInt(millisecondsStr.padEnd(3, "0").substring(0, 3))
-                : 0;
-
-            return (
-                parseInt(hours) * 3600000 +
-                parseInt(minutes) * 60000 +
-                parseInt(secondsInt) * 1000 +
-                milliseconds
-            );
-        } else if (parts.length === 2) {
-            // 格式: 00:10.500
-            const [minutes, seconds] = parts;
-            const [secondsInt, millisecondsStr] = seconds.split(".");
-            const milliseconds = millisecondsStr
-                ? parseInt(millisecondsStr.padEnd(3, "0").substring(0, 3))
-                : 0;
-
-            return (
-                parseInt(minutes) * 60000 + parseInt(secondsInt) * 1000 + milliseconds
-            );
-        }
-
-        return 0;
-    }
 
     /**
      * 开始定期检查视频时间，更新当前字幕
      */
+    // TODO: 重构使用已有第三库来实现， 我们选择 videojs-youtube
+    // 我要求保留 YouTube 默认播放器， 只是想改变字幕显示方式， 也就是后面为我点击单词显示释义的功能，以及双字幕功能提供可能
+    // 请分析使用videojs-youtube 能否办到， 或者我们得使用其他第三方库
     private startPeriodicCheck() {
         // 清除之前的定时器
         if (this.checkIntervalId !== null) {
@@ -629,6 +433,9 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     /**
      * 检查当前视频时间，更新字幕
      */
+
+    // TODO: 重构使用已有第三库来实现， 我们选择 videojs-youtube
+    // 使用第三库以后，它甚至可能会被删除
     private checkCurrentTime() {
         // 如果字幕被禁用或没有字幕数据，不更新字幕
         if (!this.subtitleEnabled) {
@@ -655,36 +462,6 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
         // 如果索引没有变化，不更新字幕
         if (index === this.currentSubtitleIndex) return;
 
-        // 如果启用了自适应偏移，并且索引变化了，记录当前时间用于自适应调整
-        if (
-            this.adaptiveOffset &&
-            index !== -1 &&
-            this.currentSubtitleIndex !== -1
-        ) {
-            const now = performance.now();
-            const subtitle = this.subtitleData[index];
-
-            // 如果是第一次切换或者距离上次切换超过1秒，才进行调整
-            if (
-                this.lastSubtitleChangeTime > 0 &&
-                now - this.lastSubtitleChangeTime < 1000
-            ) {
-                // 计算实际切换时间与预期切换时间的差值
-                const expectedSwitchTime = subtitle.start;
-                const actualSwitchTime = currentTime;
-                const difference = actualSwitchTime - expectedSwitchTime;
-
-                // 如果差值超过100ms，调整偏移量
-                if (Math.abs(difference) > 100) {
-                    // 逐渐调整偏移量，避免剧烈变化
-                    this.timeOffset = Math.round(
-                        this.timeOffset * 0.8 + difference * 0.2
-                    );
-                }
-            }
-
-            this.lastSubtitleChangeTime = now;
-        }
 
         // 更新当前字幕索引
         this.currentSubtitleIndex = index;

@@ -22,7 +22,8 @@
     "marked": "^15.0.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "subtitle": "^4.2.2-alpha.0"
+    "subtitle": "^4.2.2-alpha.0",
+    "videojs-youtube": "^3.0.1"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",
