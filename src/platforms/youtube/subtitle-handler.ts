@@ -2,7 +2,7 @@
  * YouTube 字幕处理器
  *
  * 这个类负责获取 YouTube 字幕，并以更美观的方式显示它们。
- * 它使用注入脚本拦截 YouTube 的字幕请求，获取完整的字幕数据。
+ * 它使用webRequest拦截 YouTube 的字幕请求，获取完整的字幕数据。
  */
 import {BaseSubtitleHandler} from "../base/subtitle-handler";
 import {AIService} from "@/core/types/ai.ts";
@@ -120,8 +120,6 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
      * 隐藏 YouTube 原始字幕
      */
     private hideYouTubeSubtitles() {
-        console.log("隐藏 YouTube 原始字幕");
-        // 添加样式以隐藏原始字幕
         const style = document.createElement("style");
         style.textContent = `
             .ytp-caption-segment {
@@ -180,7 +178,6 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
         if (this.settings.subtitleSettings.position === "top") {
             this.container.style.top = `${videoRect.top + 10}px`;
         } else {
-            // 调整底部位置，避免遮挡控制栏
             // YouTube控制栏高度约为40-45px，我们设置60px的间距以确保不会遮挡
             this.container.style.bottom = `${
                 window.innerHeight - videoRect.bottom + 60
@@ -239,10 +236,8 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     private addSubtitleHoverEvents() {
         if (!this.container) return;
 
-        // 记录视频播放状态
         let wasPlaying = false;
 
-        // 鼠标进入字幕区域时暂停视频
         this.container.addEventListener("mouseenter", () => {
             const video = document.querySelector("video");
             if (video) {
@@ -253,7 +248,6 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
             }
         });
 
-        // 鼠标离开字幕区域时恢复视频播放
         this.container.addEventListener("mouseleave", () => {
             const video = document.querySelector("video");
             if (video && wasPlaying) {
@@ -272,9 +266,9 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
             if (message.type === "ACQ_SUBTITLE_FETCHED") {
                 const {url, lang, videoId, response} = message.data;
                 console.log("Get subtitle from background script", url, lang, videoId);
-                // TODO: change subtitle format by change param fmt=srv3 to fmt=json3
-                // or using separate function to parse subtitle
-                // 解析字幕
+                console.log(response)
+                // TODO: 重构下面函数或者步骤， 实现优先支持自动生成字幕的影子阅读，为其他类型字幕提供降级方案。
+                // 并且优先使用 video.js 的插件来实现， 比如 videojs-youtube + videojs-subtitle-sync
                 this.parseSubtitle(response);
 
                 // 启用字幕
