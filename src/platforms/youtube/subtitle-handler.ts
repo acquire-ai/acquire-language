@@ -259,9 +259,6 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
             if (message.type === "ACQ_SUBTITLE_FETCHED") {
                 const {url, lang, videoId, response} = message.data;
                 console.log("Get subtitle from background script", url, lang, videoId);
-                // TODO: 重构下面函数或者步骤， 考虑引入合适的第三方库来实现
-                // 对于通用平台可以只考虑支持整句字幕同步播放，
-                // 但也应考虑到后续，可能需要支持 YouTube 专有格式 json3 来实现高亮当前单词，影子跟读效果
                 this.parseSubtitle(response);
 
                 // 启用字幕
@@ -395,14 +392,18 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
      * 检查当前视频时间，更新字幕
      */
     private checkCurrentTime() {
+        console.log("检查当前时间，更新字幕");
         if (!this.subtitleEnabled || this.subtitleData.length === 0) {
             return;
         }
 
         const videoPlayer = document.querySelector("video");
         if (!videoPlayer) return;
+        
+        if (videoPlayer.paused) {
+            return;
+        }
 
-        // 获取当前时间（毫秒），移除偏移量处理
         const currentTime = videoPlayer.currentTime * 1000;
 
         // 查找当前时间对应的字幕索引
@@ -713,7 +714,6 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
                             if (!this.subtitleData.length) {
                                 // 如果没有加载到字幕数据，恢复原始状态
                                 (subsToggleElement as HTMLElement).click();
-                            } else {
                             }
                         }, 2000);
                     } catch (e) {
