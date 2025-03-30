@@ -19,8 +19,9 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     private currentVideoId: string = "";
     private currentLang: string = "";
     private subtitleEnabled: boolean = false;
-    private subtitleData: SubtitleItem[] = [];
+    private subtitleData: any[] = [];
     private checkIntervalId: number | null = null;
+    private currentSubtitleIndex: number = -1;
 
     constructor(aiService: AIService) {
         super(aiService);
@@ -258,7 +259,6 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
             if (message.type === "ACQ_SUBTITLE_FETCHED") {
                 const {url, lang, videoId, response} = message.data;
                 console.log("Get subtitle from background script", url, lang, videoId);
-                console.log(response)
                 // TODO: 重构下面函数或者步骤， 考虑引入合适的第三方库来实现
                 // 对于通用平台可以只考虑支持整句字幕同步播放，
                 // 但也应考虑到后续，可能需要支持 YouTube 专有格式 json3 来实现高亮当前单词，影子跟读效果
@@ -317,55 +317,36 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     }
 
     private parseSubtitle(response: string) {
-        if (response.includes("fmt=srv3") || response.includes("fmt=json3")) {
-            this.parseJsonSubtitle(response);
+        this.subtitleData  = this.parseJsonSubtitle(response);
+        if (this.subtitleData  && this.subtitleData .length > 0) {
+            console.log(`解析成功，获取到 ${this.subtitleData.length} 条字幕`);
         } else {
-            console.log("unsupported subtitle format: ", response);
+            console.warn("字幕解析结果为空");
         }
 
-        // 输出前5条字幕内容用于调试
-        if (this.subtitleData.length > 0) {
-            console.log("前5条字幕内容:");
-            for (let i = 0; i < Math.min(5, this.subtitleData.length); i++) {
-                console.log(
-                    `[${i}] ${this.subtitleData[i].start}-${this.subtitleData[i].end}: ${this.subtitleData[i].text}`
-                );
-            }
-        }
     }
-
 
     /**
      * 解析 JSON 格式字幕
      * @param jsonContent JSON 字幕内容
      */
-    // TODO:  refactor: （选择插件的时候需要考虑到以后可能支持词组级别时间戳来支持影子阅读， 但是现在不要实现影子阅读）
-    private parseJsonSubtitle(jsonContent: string) {
-
-
+    private parseJsonSubtitle(jsonContent: string): SubtitleItem[] {
         try {
-            // 解析 JSON
             const data = JSON.parse(jsonContent);
 
-            // 检查是否有字幕数据
             if (!data.events) {
-                return;
+                return [];
             }
 
-            // 清空字幕数据
-            this.subtitleData = [];
+            const subtitles: SubtitleItem[] = [];
 
-            // 解析字幕数据
             for (const event of data.events) {
-                // 跳过没有文本的事件
                 if (!event.segs) continue;
 
-                // 获取开始时间和持续时间
                 const start = event.tStartMs || 0;
                 const duration = event.dDurationMs || 0;
                 const end = start + duration;
 
-                // 拼接文本
                 let text = "";
                 for (const seg of event.segs) {
                     if (seg.utf8) {
@@ -373,95 +354,62 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
                     }
                 }
 
-                // 跳过空文本
                 if (!text.trim()) continue;
 
-                // 添加到字幕数据
-                this.subtitleData.push({
+                subtitles.push({
                     start,
                     end,
                     text: text.trim(),
                 });
             }
+            
+            return subtitles;
         } catch (error) {
-            console.error("解析 JSON 字幕失败:", error);
+            console.error("Failed to parse json subtitle:", error);
+            return [];
         }
     }
-
-
-
 
     /**
      * 开始定期检查视频时间，更新当前字幕
      */
-    // TODO: 重构使用已有第三库来实现， 
-    // 我要求保留 YouTube 默认播放器， 只是想改变字幕显示方式， 也就是后面为我点击单词显示释义的功能，以及双字幕功能提供可能
     private startPeriodicCheck() {
         // 清除之前的定时器
         if (this.checkIntervalId !== null) {
             cancelAnimationFrame(this.checkIntervalId as unknown as number);
         }
 
-        // 上次检查的时间戳
-        let lastCheckTime = 0;
-        // 目标检查间隔（毫秒）
-        const targetInterval = 60; // 约 16.7fps，足够流畅且不会过度消耗资源
-
-        // 使用 requestAnimationFrame 代替 setInterval，提高性能和精确度
+        // 使用 requestAnimationFrame 实现更精确的同步
         const checkFrame = (timestamp: number) => {
-            // 计算距离上次检查的时间
-            const elapsed = timestamp - lastCheckTime;
-
-            // 如果距离上次检查的时间超过目标间隔，执行检查
-            if (elapsed >= targetInterval) {
-                this.checkCurrentTime();
-                lastCheckTime = timestamp;
-            }
-
-            // 继续下一帧检查
+            this.checkCurrentTime();
             if (this.checkIntervalId !== null) {
                 requestAnimationFrame(checkFrame);
             }
         };
 
         // 启动帧检查
-        this.checkIntervalId = window.requestAnimationFrame(
-            checkFrame
-        ) as unknown as number;
+        this.checkIntervalId = window.requestAnimationFrame(checkFrame) as unknown as number;
     }
 
     /**
      * 检查当前视频时间，更新字幕
      */
-
-    // TODO: 重构使用已有第三库来实现，
-    // 使用第三库以后，它甚至可能会被删除
     private checkCurrentTime() {
-        // 如果字幕被禁用或没有字幕数据，不更新字幕
-        if (!this.subtitleEnabled) {
+        if (!this.subtitleEnabled || this.subtitleData.length === 0) {
             return;
         }
 
-        if (this.subtitleData.length === 0) {
-            return;
-        }
-
-        // 获取视频播放器
         const videoPlayer = document.querySelector("video");
-        if (!videoPlayer) {
-            return;
-        }
+        if (!videoPlayer) return;
 
-        // 获取当前时间（毫秒），并应用偏移量
+        // 获取当前时间（毫秒），移除偏移量处理
         const currentTime = videoPlayer.currentTime * 1000;
-        const adjustedTime = currentTime - this.timeOffset;
 
         // 查找当前时间对应的字幕索引
-        const index = this.findSubtitleIndex(adjustedTime);
+        const index = this.findSubtitleIndex(currentTime);
 
         // 如果索引没有变化，不更新字幕
         if (index === this.currentSubtitleIndex) return;
-
 
         // 更新当前字幕索引
         this.currentSubtitleIndex = index;
@@ -481,7 +429,7 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
         // 触发字幕变化事件
         window.dispatchEvent(
             new CustomEvent("acquireLanguageSubtitleChanged", {
-                detail: {text: subtitle.text},
+                detail: { text: subtitle.text },
             })
         );
     }
