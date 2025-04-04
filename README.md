@@ -1,16 +1,16 @@
-# 习得语言 (Acquire Language)
+# Acquire Language
 
-一个帮助用户通过观看视频学习语言的 Chrome 扩展。
+A Chrome extension that helps users learn languages through video content.
 
-## 功能特点
+## Features
 
-- **视频字幕增强**：在 YouTube 视频上显示增强的字幕，支持单词查询和翻译
-- **单词释义**：鼠标悬停在单词上显示释义，结合上下文理解单词含义
-- **生词本**：点击单词将其添加到生词本，保存单词及其上下文
-- **智能翻译**：使用 AI 模型提供准确的字幕翻译
-- **个性化设置**：根据用户语言水平和偏好提供定制化体验
+- **Enhanced Video Subtitles**: Display enhanced subtitles on YouTube videos with word lookup and translation support
+- **Word Definitions**: Hover over words to see definitions and understand them in context
+- **Vocabulary Notebook**: Click on words to add them to your vocabulary notebook, saving both the word and its context
+- **Smart Translation**: Utilize AI models for accurate subtitle translation
+- **Personalized Settings**: Customize your experience based on your language level and preferences
 
-## 技术栈
+## Tech Stack
 
 - React
 - TypeScript
@@ -18,36 +18,35 @@
 - Vite
 - WXT (Web Extension Tools)
 
-## 开发
+## Development
 
-### 安装依赖
+### Install Dependencies
 
 ```bash
 npm install
 ```
 
-### 开发模式
+### Development Mode
 
 ```bash
 npm run dev
 ```
 
-### 构建扩展
+### Build Extension
 
 ```bash
 npm run build
 ```
 
-## 使用方法
+## Usage
 
-1. 在 Chrome 浏览器中加载已解压的扩展
-2. 打开扩展设置页面，配置您的语言偏好和 API 密钥
-3. 访问 YouTube 视频页面，开始学习
+1. Load the unpacked extension in Chrome
+2. Open the extension settings page to configure your language preferences and API key
+3. Visit YouTube video pages to start learning
 
-## 设置选项
+## Settings
 
-- **母语和目标语言**：选择您的母语和想要学习的语言
-- **语言水平**：设置您的语言水平 (A1-C2)
-- **AI 模型**：选择用于翻译和单词释义的 AI 模型
-- **字幕设置**：自定义字幕的大小、位置、颜色和透明度
-
+- **Native and Target Languages**: Select your native language and the language you want to learn
+- **Language Level**: Set your language proficiency level (A1-C2)
+- **AI Model**: Choose the AI model for translation and word definitions
+- **Subtitle Settings**: Customize subtitle size, position, color, and transparency
