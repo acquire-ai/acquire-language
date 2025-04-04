@@ -1,78 +1,78 @@
-# 习得语言 (Acquire Language) 开发文档
+# Acquire Language Development Documentation
 
-## 项目概述
+## Project Overview
 
-习得语言（Acquire Language）是一个 Chrome 扩展，旨在帮助用户通过观看视频（目前支持 YouTube）学习语言。扩展通过增强视频字幕、提供单词释义、生词本等功能，为语言学习者创造沉浸式学习环境。
+Acquire Language is a Chrome extension designed to help users learn languages through video content (currently supporting YouTube). The extension creates an immersive learning environment by enhancing video subtitles, providing word definitions, and offering a vocabulary notebook.
 
-## 技术栈
+## Tech Stack
 
-- **前端框架**：React 19
-- **开发语言**：TypeScript
-- **样式**：Tailwind CSS
-- **构建工具**：WXT (Web Extension Tools)
-- **打包工具**：Vite
+- **Frontend Framework**: React 19
+- **Development Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Build Tool**: WXT (Web Extension Tools)
+- **Bundler**: Vite
 
-## 项目结构
+## Project Structure
 
 ```
 acquire-language/
-├── src/                           # 源代码目录
-│   ├── core/                      # 核心模块
-│   │   ├── types/                 # 类型定义
-│   │   │   ├── ai.ts              # AI服务相关类型
-│   │   │   ├── platform.ts        # 平台和字幕处理器接口
-│   │   │   └── storage.ts         # 存储相关类型
-│   │   ├── storage/               # 存储相关
-│   │   │   └── index.ts           # 存储管理器
-│   │   └── utils/                 # 工具函数
-│   │       └── index.ts           # 通用工具函数
-│   ├── services/                  # 服务模块
-│   │   ├── ai/                    # AI服务
-│   │   │   ├── index.ts           # 服务入口
-│   │   │   ├── factory.ts         # 工厂方法
-│   │   │   ├── deepseek.ts        # DeepSeek实现
-│   │   │   └── gpt.ts             # GPT4o-mini实现
-│   ├── platforms/                 # 视频平台处理模块
-│   │   ├── base/                  # 基础类和接口
-│   │   │   ├── platform-handler.ts # 平台处理器基类
-│   │   │   └── subtitle-handler.ts # 字幕处理基类
-│   │   ├── youtube/               # YouTube平台实现
-│   │   │   ├── index.ts           # YouTube平台处理器
-│   │   │   └── subtitle-handler.ts # YouTube字幕处理器
-│   │   ├── factory.ts             # 平台工厂
-│   │   └── index.ts               # 平台模块入口
-│   ├── components/                # UI组件
-│   │   └── word-popup/            # 单词弹出组件
-│   │       └── index.ts           # 单词弹出组件实现
-│   ├── assets/                    # 静态资源
-│   │   └── icons/                 # 图标资源
-│   └── entrypoints/              # 扩展入口点
-│       ├── background.ts          # 后台脚本
-│       ├── content.ts             # 内容脚本
-│       ├── popup/                 # 弹出窗口
-│       ├── options/               # 选项页面
-│       └── vocabulary/            # 生词本页面
-├── public/                        # 公共资源
-├── .wxt/                          # WXT配置和缓存
-├── node_modules/                  # 依赖包
-├── package.json                   # 项目配置和依赖
-├── tsconfig.json                  # TypeScript配置
-├── tailwind.config.js             # Tailwind CSS配置
-└── wxt.config.ts                  # WXT配置
+├── src/                           # Source code directory
+│   ├── core/                      # Core modules
+│   │   ├── types/                 # Type definitions
+│   │   │   ├── ai.ts              # AI service types
+│   │   │   ├── platform.ts        # Platform and subtitle handler interfaces
+│   │   │   └── storage.ts         # Storage types
+│   │   ├── storage/               # Storage related
+│   │   │   └── index.ts           # Storage manager
+│   │   └── utils/                 # Utility functions
+│   │       └── index.ts           # Common utilities
+│   ├── services/                  # Service modules
+│   │   ├── ai/                    # AI services
+│   │   │   ├── index.ts           # Service entry
+│   │   │   ├── factory.ts         # Factory methods
+│   │   │   ├── deepseek.ts        # DeepSeek implementation
+│   │   │   └── gpt.ts             # GPT4o-mini implementation
+│   │   ├── platforms/             # Video platform handlers
+│   │   │   ├── base/              # Base classes and interfaces
+│   │   │   │   ├── platform-handler.ts # Platform handler base class
+│   │   │   │   └── subtitle-handler.ts # Subtitle handler base class
+│   │   │   ├── youtube/           # YouTube platform implementation
+│   │   │   │   ├── index.ts       # YouTube platform handler
+│   │   │   │   └── subtitle-handler.ts # YouTube subtitle handler
+│   │   │   ├── factory.ts         # Platform factory
+│   │   │   └── index.ts           # Platform module entry
+│   │   ├── components/            # UI components
+│   │   │   └── word-popup/        # Word popup component
+│   │   │       └── index.ts       # Word popup implementation
+│   │   ├── assets/                # Static assets
+│   │   │   └── icons/             # Icon resources
+│   │   └── entrypoints/           # Extension entry points
+│   │       ├── background.ts      # Background script
+│   │       ├── content.ts         # Content script
+│   │       ├── popup/             # Popup window
+│   │       ├── options/           # Options page
+│   │       └── vocabulary/        # Vocabulary notebook page
+│   ├── public/                    # Public resources
+│   ├── .wxt/                      # WXT config and cache
+│   ├── node_modules/              # Dependencies
+│   ├── package.json               # Project config and dependencies
+│   ├── tsconfig.json              # TypeScript config
+│   ├── tailwind.config.js         # Tailwind CSS config
+│   └── wxt.config.ts              # WXT config
 ```
 
-## 核心模块说明
+## Core Modules
 
-### 1. 后台脚本 (background.ts)
+### 1. Background Script (background.ts)
 
-后台脚本在扩展的生命周期内持续运行，负责：
+The background script runs throughout the extension's lifecycle, responsible for:
 
-- 处理来自内容脚本的消息
-- 管理生词本数据（保存、获取）
-- 提供全局状态管理
+- Handling messages from content scripts
+- Managing vocabulary data (save, retrieve)
+- Providing global state management
 
 ```typescript
-// 示例：保存单词到生词本
+// Example: Save word to vocabulary
 async function saveWordToVocabulary(word: string, context: string) {
   const vocabulary = await getVocabulary();
   
@@ -90,136 +90,63 @@ async function saveWordToVocabulary(word: string, context: string) {
 }
 ```
 
-### 2. 内容脚本 (content.ts)
+### 2. Content Script (content.ts)
 
-内容脚本注入到匹配的网页中（目前是 YouTube 视频页面），负责：
+The content script is injected into matching web pages (currently YouTube video pages), responsible for:
 
-- 检测 YouTube 视频页面
-- 初始化字幕处理器
-- 监听 URL 变化（YouTube 是单页应用）
+- Detecting YouTube video pages
+- Initializing subtitle handlers
+- Monitoring URL changes (YouTube is a SPA)
 
 ```typescript
-// 示例：初始化字幕处理器
+// Example: Initialize subtitle handler
 function initializeHandler() {
-  // 等待视频播放器加载
+  // Wait for video player to load
   waitForVideoPlayer();
 }
 ```
 
-### 3. YouTube 字幕处理器 (youtube.ts)
+### 3. YouTube Subtitle Handler (youtube.ts)
 
-YouTube 字幕处理器是扩展的核心功能模块，负责：
+The YouTube subtitle handler is the core functional module, responsible for:
 
-- 查找并处理 YouTube 原始字幕
-- 创建自定义字幕容器
-- 监听字幕变化
-- 提供字幕增强功能（单词查询、翻译等）
-- 注入和管理样式
-- **单词点击交互**：使字幕中的单词可点击，点击后显示单词释义
-- **集成 AI 服务**：调用 AI 模型获取单词的上下文相关释义
-- **鼠标悬停暂停**：当鼠标悬停在字幕上时自动暂停视频，离开时恢复播放
+- Finding and processing YouTube's original subtitles
+- Creating custom subtitle containers
+- Monitoring subtitle changes
+- Providing subtitle enhancement features (word lookup, translation)
+- Injecting and managing styles
+- **Word Click Interaction**: Making words in subtitles clickable, showing definitions on click
+- **AI Service Integration**: Calling AI models for context-aware word definitions
+- **Hover Pause**: Automatically pausing video when hovering over subtitles, resuming on mouse leave
 
 ```typescript
-// 示例：创建自定义字幕容器
+// Example: Create custom subtitle container
 private createSubtitleContainer() {
-  // 查找原始字幕容器
+  // Find original subtitle container
   this.findOriginalSubtitleContainer();
-  // 隐藏 YouTube 原始字幕
+  // Hide YouTube's original subtitles
   this.hideYouTubeSubtitles();
 
-  // 创建自定义字幕容器
+  // Create custom subtitle container
   this.subtitleContainer = document.createElement('div');
   this.subtitleContainer.id = 'acquire-language-subtitle';
   
-  // 添加到文档
+  // Add to document
   document.body.appendChild(this.subtitleContainer);
 }
 ```
 
-```typescript
-// 示例：添加单词点击事件
-private addWordClickEvents() {
-  if (!this.subtitleContainer) return;
-  
-  const wordElements = this.subtitleContainer.querySelectorAll('.acquire-language-word');
-  
-  wordElements.forEach(element => {
-    element.addEventListener('click', async (event) => {
-      // 阻止事件冒泡
-      event.stopPropagation();
-      
-      // 获取单词和位置
-      const word = element.getAttribute('data-word') || '';
-      const rect = element.getBoundingClientRect();
-      const position = {
-        x: rect.left + window.scrollX,
-        y: rect.bottom + window.scrollY + 10
-      };
-      
-      // 显示加载状态
-      this.wordPopup.showLoading(word, position);
-      
-      // 获取单词释义
-      try {
-        // 调用 AI 服务获取释义
-        const definition = await this.aiService.getWordDefinition(
-          word, 
-          this.currentSubtitle,
-          this.settings.targetLanguage
-        );
-        
-        // 显示单词释义
-        this.wordPopup.show(word, definition, position);
-      } catch (error) {
-        console.error('获取单词释义失败:', error);
-        this.wordPopup.show(word, `获取释义失败: ${error.message}`, position);
-      }
-    });
-  });
-}
-```
+### 4. Options Page (options/)
+
+The options page allows users to customize extension behavior, including:
+
+- Setting native and target languages
+- Setting language proficiency level (A1-C2)
+- Configuring AI model and API key
+- Customizing subtitle styles (size, position, color, opacity)
 
 ```typescript
-// 示例：添加字幕悬停事件 - 暂停视频
-private addSubtitleHoverEvents() {
-  if (!this.subtitleContainer) return;
-
-  // 记录视频播放状态
-  let wasPlaying = false;
-
-  // 鼠标进入字幕区域时暂停视频
-  this.subtitleContainer.addEventListener('mouseenter', () => {
-    const video = document.querySelector('video');
-    if (video) {
-      wasPlaying = !video.paused;
-      if (wasPlaying) {
-        video.pause();
-      }
-    }
-  });
-
-  // 鼠标离开字幕区域时恢复视频播放
-  this.subtitleContainer.addEventListener('mouseleave', () => {
-    const video = document.querySelector('video');
-    if (video && wasPlaying) {
-      video.play();
-      wasPlaying = false;
-    }
-  });
-}
-```
-
-### 4. 选项页面 (options/)
-
-选项页面允许用户自定义扩展的行为，包括：
-
-- 设置母语和目标语言
-- 设置语言水平 (A1-C2)
-- 配置 AI 模型和 API 密钥
-- 自定义字幕样式（大小、位置、颜色、透明度）
-
-```typescript
-// 设置接口
+// Settings interface
 interface Settings {
   nativeLanguage: string;
   targetLanguage: string;
@@ -236,52 +163,52 @@ interface Settings {
 }
 ```
 
-### 5. 生词本页面 (vocabulary/)
+### 5. Vocabulary Notebook Page (vocabulary/)
 
-生词本页面显示用户保存的单词，提供以下功能：
+The vocabulary notebook page displays saved words, providing:
 
-- 查看保存的单词列表
-- 查看单词的上下文
-- 删除单词
-- 搜索单词
+- View saved word list
+- View word contexts
+- Delete words
+- Search words
 
 ```typescript
-// 单词接口
+// Word interface
 interface Word {
   word: string;
   contexts: string[];
   createdAt: string;
 }
 
-// 生词本接口
+// Vocabulary interface
 interface VocabularyData {
   [key: string]: Word;
 }
 ```
 
-### 6. 弹出窗口 (popup/)
+### 6. Popup Window (popup/)
 
-弹出窗口是用户点击扩展图标时显示的界面，提供快速访问：
+The popup window appears when clicking the extension icon, providing quick access to:
 
-- 打开 YouTube
-- 访问生词本
-- 打开设置页面
+- Open YouTube
+- Access vocabulary notebook
+- Open settings page
 
-### 7. AI 服务 (ai.ts)
+### 7. AI Service (ai.ts)
 
-AI 服务模块负责与 AI 模型（如 OpenAI GPT-4o-mini 或 DeepSeek）交互，提供以下功能：
+The AI service module handles interactions with AI models (like OpenAI GPT-4o-mini or DeepSeek), providing:
 
-- **单词释义**：根据上下文获取单词的详细释义，使用用户的母语解释目标语言中的单词
-- **文本翻译**：将字幕文本翻译成用户的母语
+- **Word Definitions**: Get detailed word definitions based on context, explaining target language words in the user's native language
+- **Text Translation**: Translate subtitle text to the user's native language
 
 ```typescript
-// AI 服务接口
+// AI service interface
 export interface AIService {
   getWordDefinition(word: string, context: string, targetLanguage: string): Promise<string>;
   translateText(text: string, sourceLanguage: string, targetLanguage: string): Promise<string>;
 }
 
-// 创建 AI 服务
+// Create AI service
 export function createAIService(model: string, apiKey: string): AIService {
   switch (model) {
     case 'deepseek':
@@ -292,205 +219,144 @@ export function createAIService(model: string, apiKey: string): AIService {
       return new DeepSeekAIService(apiKey);
   }
 }
-
-// 示例：获取单词释义
-async getWordDefinition(word: string, context: string, targetLanguage: string): Promise<string> {
-  try {
-    // 从存储中获取设置，获取用户的母语
-    const result = await browser.storage.local.get('settings');
-    const settings = result.settings || { nativeLanguage: 'zh-CN' };
-    const nativeLanguage = settings.nativeLanguage;
-    
-    // 构建提示
-    const prompt = `
-请根据以下上下文，解释单词 "${word}" 的含义。
-上下文: "${context}"
-请用${this.getLanguageName(nativeLanguage)}回答，简洁明了地解释这个单词在当前上下文中的含义。
-请提供以下信息：
-1. 单词的基本含义
-2. 在当前上下文中的具体含义
-3. 词性 (名词、动词、形容词等)
-4. 一到两个例句
-`;
-    
-    // 调用 AI API
-    const response = await this.callAPI(prompt);
-    return response;
-  } catch (error) {
-    console.error('获取单词释义失败:', error);
-    return `获取 "${word}" 的释义失败`;
-  }
-}
 ```
 
-### 8. 单词弹出组件 (WordPopup.ts)
+## Data Flow
 
-单词弹出组件负责显示单词的详细释义，提供以下功能：
+1. **Subtitle Processing Flow**:
+   - Content script detects YouTube video page
+   - Initializes YouTubeSubtitleHandler
+   - Handler finds and hides original subtitles
+   - Creates custom subtitle container
+   - Monitors subtitle changes and updates display
 
-- **显示加载状态**：在获取释义时显示加载动画
-- **显示单词释义**：以美观的方式展示单词的释义、例句和翻译
-- **添加到生词本**：允许用户将单词添加到生词本
-- **智能定位**：根据字幕位置自动调整弹出框位置，避免遮挡字幕
+2. **Word Saving Flow**:
+   - User clicks word in subtitles
+   - Content script sends message to background script
+   - Background script saves word to browser.storage.local
+   - Vocabulary page reads and displays data from storage
 
-```typescript
-// 示例：智能定位弹出框
-private setPosition(position: { x: number, y: number }) {
-  // ... 其他代码 ...
-  
-  // 如果找到字幕容器，将弹出框放在字幕上方
-  if (subtitleContainer) {
-    const subtitleRect = subtitleContainer.getBoundingClientRect();
-    
-    // 计算弹出框应该放置的垂直位置 - 字幕容器上方留出一定间距
-    const topPosition = subtitleRect.top + window.scrollY - popupRect.height - 20;
-    
-    // 如果计算出的位置是负数（超出屏幕顶部），则放在字幕下方
-    if (topPosition < 0) {
-      this.popupElement.style.top = `${subtitleRect.bottom + window.scrollY + 20}px`;
-    } else {
-      this.popupElement.style.top = `${topPosition}px`;
-    }
-  }
-  // ... 其他代码 ...
-}
-```
+3. **Settings Flow**:
+   - User modifies settings in options page
+   - Settings saved to browser.storage.local
+   - Content and background scripts read and apply settings
 
-## 数据流
+4. **Word Definition Flow**:
+   - User clicks word in subtitles
+   - Subtitle handler captures click event, gets word and context
+   - Calls AI service for word definition
+   - AI service gets user's native language from storage
+   - AI service explains target language word in user's native language
+   - Shows word definition popup
+   - User can add word to vocabulary notebook
 
-1. **字幕处理流程**：
-   - 内容脚本检测 YouTube 视频页面
-   - 初始化 YouTubeSubtitleHandler
-   - 处理器查找并隐藏原始字幕
-   - 创建自定义字幕容器
-   - 监听字幕变化并更新显示
+## Development Guide
 
-2. **单词保存流程**：
-   - 用户在字幕中点击单词
-   - 内容脚本发送消息到后台脚本
-   - 后台脚本保存单词到 browser.storage.local
-   - 生词本页面从 storage 读取数据并显示
+### Adding New Features
 
-3. **设置流程**：
-   - 用户在选项页面修改设置
-   - 设置保存到 browser.storage.local
-   - 内容脚本和后台脚本读取设置并应用
+1. **Support New Video Platform**:
+   - Add new matching rules in `entrypoints/content.ts`
+   - Create new subtitle handler (similar to `YouTubeSubtitleHandler`)
+   - Implement platform-specific subtitle finding and processing logic
 
-4. **单词释义流程**：
-   - 用户点击字幕中的单词
-   - 字幕处理器捕获点击事件，获取单词和上下文
-   - 调用 AI 服务获取单词释义
-   - AI 服务从存储中获取用户的母语设置
-   - AI 服务使用用户的母语解释目标语言中的单词
-   - 显示单词释义弹出框
-   - 用户可以将单词添加到生词本
+2. **Add New Language**:
+   - Add new language to `LANGUAGES` array in `entrypoints/options/Options.tsx`
 
-## 开发指南
+3. **Extend Vocabulary Features**:
+   - Modify `Word` interface to add new properties
+   - Update `Vocabulary.tsx` component to display new properties
+   - Update saving logic in background script
 
-### 添加新功能
+4. **Support New AI Model**:
+   - Create new AI service class in `ai.ts`, implementing `AIService` interface
+   - Add new model support in `createAIService` function
+   - Add new model option in options page
 
-1. **支持新的视频平台**：
-   - 在 `entrypoints/content.ts` 中添加新的匹配规则
-   - 创建新的字幕处理器（类似 `YouTubeSubtitleHandler`）
-   - 实现平台特定的字幕查找和处理逻辑
+5. **Enhance Word Definition Features**:
+   - Modify AI prompts for more detailed word information
+   - Update `WordPopup` component to display richer content
+   - Add pronunciation, images, and other multimedia content
 
-2. **添加新的语言**：
-   - 在 `entrypoints/options/Options.tsx` 的 `LANGUAGES` 数组中添加新语言
+### Debugging Tips
 
-3. **扩展生词本功能**：
-   - 修改 `Word` 接口添加新属性
-   - 更新 `Vocabulary.tsx` 组件显示新属性
-   - 在后台脚本中更新保存逻辑
+1. **View Extension Logs**:
+   - Open Chrome extension management page (`chrome://extensions`)
+   - Click "View" button for the extension
+   - Select "Background page" or other views to check console logs
 
-4. **支持新的 AI 模型**：
-   - 在 `ai.ts` 中创建新的 AI 服务类，实现 `AIService` 接口
-   - 在 `createAIService` 函数中添加新模型的支持
-   - 在选项页面中添加新模型选项
+2. **Debug Content Scripts**:
+   - Open Developer Tools on YouTube page
+   - Check console logs
+   - Use breakpoints to debug JavaScript
 
-5. **增强单词释义功能**：
-   - 修改 AI 提示以获取更详细的单词信息
-   - 更新 `WordPopup` 组件以显示更丰富的内容
-   - 添加发音、图片等多媒体内容
+3. **Test Setting Changes**:
+   - Refresh YouTube page after modifying settings to apply changes
+   - Check if settings are correctly saved in `browser.storage.local`
 
-### 调试技巧
+## Build and Release
 
-1. **查看扩展日志**：
-   - 打开 Chrome 扩展管理页面 (`chrome://extensions`)
-   - 点击扩展的"查看视图"按钮
-   - 选择"背景页"或其他视图查看控制台日志
-
-2. **调试内容脚本**：
-   - 在 YouTube 页面打开开发者工具
-   - 查看控制台日志
-   - 使用断点调试 JavaScript
-
-3. **测试设置变更**：
-   - 修改设置后，刷新 YouTube 页面以应用新设置
-   - 检查 `browser.storage.local` 中的设置是否正确保存
-
-## 构建和发布
-
-### 开发模式
+### Development Mode
 
 ```bash
 npm run dev
 ```
 
-这将启动 WXT 开发服务器，自动重新加载扩展。
+This starts the WXT development server with automatic extension reloading.
 
-### 构建生产版本
+### Production Build
 
 ```bash
 npm run build
 ```
 
-这将在 `.output` 目录中生成生产版本的扩展。
+This generates a production version of the extension in the `.output` directory.
 
-### 打包扩展
+### Package Extension
 
 ```bash
 npm run zip
 ```
 
-这将创建一个可以上传到 Chrome Web Store 的 ZIP 文件。
+This creates a ZIP file ready for upload to Chrome Web Store.
 
-## 贡献指南
+## Contributing Guide
 
-1. Fork 项目仓库
-2. 创建功能分支 (`git checkout -b feature/amazing-feature`)
-3. 提交更改 (`git commit -m 'Add some amazing feature'`)
-4. 推送到分支 (`git push origin feature/amazing-feature`)
-5. 创建 Pull Request
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add some amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Create Pull Request
 
-## 常见问题
+## FAQ
 
-1. **字幕不显示**：
-   - 检查 YouTube 是否启用了字幕
-   - 检查控制台是否有错误
-   - 尝试刷新页面
+1. **Subtitles Not Displaying**:
+   - Check if YouTube subtitles are enabled
+   - Check console for errors
+   - Try refreshing the page
 
-2. **设置不生效**：
-   - 确保保存设置后刷新 YouTube 页面
-   - 检查 `browser.storage.local` 中的设置是否正确保存
+2. **Settings Not Taking Effect**:
+   - Ensure to refresh YouTube page after saving settings
+   - Check if settings are correctly saved in `browser.storage.local`
 
-3. **扩展加载失败**：
-   - 检查 `manifest.json` 是否有语法错误
-   - 确保所有依赖都已安装 (`npm install`) 
+3. **Extension Fails to Load**:
+   - Check `manifest.json` for syntax errors
+   - Ensure all dependencies are installed (`npm install`)
 
-## 用户体验功能
+## User Experience Features
 
-扩展提供了多种增强用户体验的功能：
+The extension provides various features to enhance user experience:
 
-1. **字幕增强**：
-   - 美观的字幕显示
-   - 单词可点击，获取释义
-   - 鼠标悬停效果，突出显示单词
+1. **Subtitle Enhancement**:
+   - Beautiful subtitle display
+   - Clickable words with definitions
+   - Word highlighting on hover
 
-2. **学习辅助**：
-   - 鼠标悬停在字幕上时自动暂停视频，方便用户专注学习
-   - 离开字幕区域时自动恢复播放
-   - 单词释义弹出框智能定位，避免遮挡字幕
+2. **Learning Assistance**:
+   - Automatic video pause on subtitle hover for focused learning
+   - Automatic play resume on mouse leave
+   - Smart word definition popup positioning to avoid subtitle overlap
 
-3. **生词本管理**：
-   - 一键添加单词到生词本
-   - 保存单词的上下文
-   - 方便后续复习 
+3. **Vocabulary Management**:
+   - One-click word addition to vocabulary
+   - Context preservation
+   - Easy review access 
