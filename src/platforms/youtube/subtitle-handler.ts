@@ -2,7 +2,7 @@
  * YouTube 字幕处理器
  *
  * 这个类负责获取 YouTube 字幕，并以更美观的方式显示它们。
- * 它使用注入脚本拦截 YouTube 的字幕请求，获取完整的字幕数据。
+ * 它使用webRequest拦截 YouTube 的字幕请求，获取完整的字幕数据。
  */
 import {BaseSubtitleHandler} from "../base/subtitle-handler";
 import {AIService} from "@/core/types/ai.ts";
@@ -16,20 +16,12 @@ interface SubtitleItem {
 
 export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     private containerObserver: MutationObserver | null = null;
-    private subtitleCache: { [videoId: string]: { [lang: string]: string } } = {};
     private currentVideoId: string = "";
     private currentLang: string = "";
     private subtitleEnabled: boolean = false;
-    private subtitleData: SubtitleItem[] = [];
-    private currentSubtitleIndex: number = -1;
-    private checkInterval: number = 500;
+    private subtitleData: any[] = [];
     private checkIntervalId: number | null = null;
-    // 字幕时间偏移量（毫秒），负值表示提前显示
-    private timeOffset: number = 0; // 默认不偏移
-    // 是否启用自适应偏移
-    private adaptiveOffset: boolean = true;
-    // 记录最近的字幕切换时间，用于自适应调整
-    private lastSubtitleChangeTime: number = 0;
+    private currentSubtitleIndex: number = -1;
 
     constructor(aiService: AIService) {
         super(aiService);
@@ -46,7 +38,7 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
         this.createSubtitleContainer();
 
         // 监听字幕事件
-        this.listenToInjectedScript();
+        this.listenToBackgroundScript();
 
         // 开始定期检查视频时间，更新当前字幕
         this.startPeriodicCheck();
@@ -121,8 +113,6 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
      * 隐藏 YouTube 原始字幕
      */
     private hideYouTubeSubtitles() {
-        console.log("隐藏 YouTube 原始字幕");
-        // 添加样式以隐藏原始字幕
         const style = document.createElement("style");
         style.textContent = `
             .ytp-caption-segment {
@@ -181,7 +171,6 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
         if (this.settings.subtitleSettings.position === "top") {
             this.container.style.top = `${videoRect.top + 10}px`;
         } else {
-            // 调整底部位置，避免遮挡控制栏
             // YouTube控制栏高度约为40-45px，我们设置60px的间距以确保不会遮挡
             this.container.style.bottom = `${
                 window.innerHeight - videoRect.bottom + 60
@@ -240,10 +229,8 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     private addSubtitleHoverEvents() {
         if (!this.container) return;
 
-        // 记录视频播放状态
         let wasPlaying = false;
 
-        // 鼠标进入字幕区域时暂停视频
         this.container.addEventListener("mouseenter", () => {
             const video = document.querySelector("video");
             if (video) {
@@ -254,7 +241,6 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
             }
         });
 
-        // 鼠标离开字幕区域时恢复视频播放
         this.container.addEventListener("mouseleave", () => {
             const video = document.querySelector("video");
             if (video && wasPlaying) {
@@ -265,36 +251,15 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     }
 
     /**
-     * 监听注入脚本发送的事件
+     * listen to the event sent by content script
      */
-    private listenToInjectedScript() {
-        // 监听字幕数据事件
-        window.addEventListener(
-            "acquireLanguageSubtitleData",
-            async (event: any) => {
-                const {url, lang, videoId} = event.detail;
+    private listenToBackgroundScript() {
 
-                // 检查是否已经处理过这个字幕请求
-                if (
-                    this.currentVideoId === videoId &&
-                    this.currentLang === lang &&
-                    this.subtitleData.length > 0
-                ) {
-                    return;
-                }
-
-                // 保存字幕信息
-                this.currentVideoId = videoId;
-                this.currentLang = lang;
-
-                // 缓存字幕 URL
-                if (!this.subtitleCache[videoId]) {
-                    this.subtitleCache[videoId] = {};
-                }
-                this.subtitleCache[videoId][lang] = url;
-
-                // 获取字幕内容
-                await this.fetchSubtitle(url);
+        chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+            if (message.type === "ACQ_SUBTITLE_FETCHED") {
+                const {url, lang, videoId, response} = message.data;
+                console.log("Get subtitle from background script", url, lang, videoId);
+                this.parseSubtitle(response);
 
                 // 启用字幕
                 this.subtitleEnabled = true;
@@ -305,8 +270,11 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
                 } else {
                     console.error("字幕容器不存在，无法显示");
                 }
+
             }
-        );
+
+            return true;
+        });
 
         // 添加一个方法来手动检查字幕状态
         const checkSubtitleStatus = () => {
@@ -345,115 +313,37 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
         console.log("已设置定期检查字幕状态");
     }
 
-    /**
-     * 获取字幕内容
-     * @param url 字幕URL
-     */
-    private async fetchSubtitle(url: string) {
-        try {
-            // 检查是否已经缓存了这个字幕
-            const cacheKey = `subtitle:${url}`;
-            const cachedData = sessionStorage.getItem(cacheKey);
-            if (cachedData) {
-                try {
-                    this.subtitleData = JSON.parse(cachedData);
-                    this.currentSubtitleIndex = -1;
-                    return;
-                } catch (e) {
-                    console.error("解析缓存的字幕数据失败:", e);
-                }
-            }
-
-            // 使用 background 脚本获取字幕内容，避免跨域问题
-            const response = await new Promise<any>((resolve, reject) => {
-                chrome.runtime.sendMessage(
-                    {type: "fetchSubtitle", url},
-                    (response) => {
-                        if (chrome.runtime.lastError) {
-                            reject(chrome.runtime.lastError);
-                        } else if (response.error) {
-                            reject(new Error(response.error));
-                        } else {
-                            resolve(response);
-                        }
-                    }
-                );
-            });
-
-            if (!response.data) {
-                throw new Error("获取字幕失败: 没有返回数据");
-            }
-
-            const subtitleContent = response.data;
-
-            // 解析字幕内容
-            if (url.includes("fmt=srv3") || url.includes("fmt=json3")) {
-                // JSON 格式字幕
-                this.parseJsonSubtitle(subtitleContent);
-            } else if (url.includes("fmt=vtt")) {
-                // WebVTT 格式字幕
-                this.subtitleData = this.parseVTT(subtitleContent);
-            } else {
-                // 默认尝试解析为 JSON，如果失败则尝试解析为 WebVTT
-                try {
-                    this.parseJsonSubtitle(subtitleContent);
-                } catch (e) {
-                    this.subtitleData = this.parseVTT(subtitleContent);
-                }
-            }
-
-            // 输出前5条字幕内容用于调试
-            if (this.subtitleData.length > 0) {
-                console.log("前5条字幕内容:");
-                for (let i = 0; i < Math.min(5, this.subtitleData.length); i++) {
-                    console.log(
-                        `[${i}] ${this.subtitleData[i].start}-${this.subtitleData[i].end}: ${this.subtitleData[i].text}`
-                    );
-                }
-            }
-
-            // 缓存字幕数据到 sessionStorage
-            try {
-                sessionStorage.setItem(cacheKey, JSON.stringify(this.subtitleData));
-            } catch (e) {
-                console.warn("缓存字幕数据失败:", e);
-            }
-
-            // 重置当前字幕索引
-            this.currentSubtitleIndex = -1;
-        } catch (error) {
-            console.error("获取字幕失败:", error);
+    private parseSubtitle(response: string) {
+        this.subtitleData  = this.parseJsonSubtitle(response);
+        if (this.subtitleData  && this.subtitleData .length > 0) {
+            console.log(`解析成功，获取到 ${this.subtitleData.length} 条字幕`);
+        } else {
+            console.warn("字幕解析结果为空");
         }
+
     }
 
     /**
      * 解析 JSON 格式字幕
      * @param jsonContent JSON 字幕内容
      */
-    private parseJsonSubtitle(jsonContent: string) {
+    private parseJsonSubtitle(jsonContent: string): SubtitleItem[] {
         try {
-            // 解析 JSON
             const data = JSON.parse(jsonContent);
 
-            // 检查是否有字幕数据
             if (!data.events) {
-                return;
+                return [];
             }
 
-            // 清空字幕数据
-            this.subtitleData = [];
+            const subtitles: SubtitleItem[] = [];
 
-            // 解析字幕数据
             for (const event of data.events) {
-                // 跳过没有文本的事件
                 if (!event.segs) continue;
 
-                // 获取开始时间和持续时间
                 const start = event.tStartMs || 0;
                 const duration = event.dDurationMs || 0;
                 const end = start + duration;
 
-                // 拼接文本
                 let text = "";
                 for (const seg of event.segs) {
                     if (seg.utf8) {
@@ -461,136 +351,20 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
                     }
                 }
 
-                // 跳过空文本
                 if (!text.trim()) continue;
 
-                // 添加到字幕数据
-                this.subtitleData.push({
+                subtitles.push({
                     start,
                     end,
                     text: text.trim(),
                 });
             }
+            
+            return subtitles;
         } catch (error) {
-            console.error("解析 JSON 字幕失败:", error);
+            console.error("Failed to parse json subtitle:", error);
+            return [];
         }
-    }
-
-    /**
-     * 解析 VTT 字幕
-     * @param vttContent VTT 字幕内容
-     * @returns 解析后的字幕数据
-     */
-    private parseVTT(vttContent: string): SubtitleItem[] {
-        const subtitles: SubtitleItem[] = [];
-
-        // 按行分割
-        const lines = vttContent.split("\n");
-
-        let currentSubtitle: Partial<SubtitleItem> | null = null;
-
-        // 跳过 WEBVTT 头部
-        let i = 0;
-        while (i < lines.length && !lines[i].includes("-->")) {
-            i++;
-        }
-
-        // 解析字幕
-        for (; i < lines.length; i++) {
-            const line = lines[i].trim();
-
-            // 空行表示一个字幕的结束
-            if (line === "") {
-                if (currentSubtitle && currentSubtitle.text) {
-                    subtitles.push(currentSubtitle as SubtitleItem);
-                }
-                currentSubtitle = null;
-                continue;
-            }
-
-            // 解析时间戳行
-            if (line.includes("-->")) {
-                const [startTime, endTime] = this.parseTimeLine(line);
-                currentSubtitle = {
-                    start: startTime,
-                    end: endTime,
-                    text: "",
-                };
-                continue;
-            }
-
-            // 解析文本行
-            if (currentSubtitle) {
-                if (currentSubtitle.text) {
-                    currentSubtitle.text += " " + line;
-                } else {
-                    currentSubtitle.text = line;
-                }
-            }
-        }
-
-        // 添加最后一个字幕
-        if (currentSubtitle && currentSubtitle.text) {
-            subtitles.push(currentSubtitle as SubtitleItem);
-        }
-
-        return subtitles;
-    }
-
-    /**
-     * 解析时间戳行
-     * @param line 时间戳行，如 "00:00:10.500 --> 00:00:13.000"
-     * @returns [开始时间（毫秒）, 结束时间（毫秒）]
-     */
-    private parseTimeLine(line: string): [number, number] {
-        const parts = line.split("-->").map((part) => part.trim());
-        if (parts.length !== 2) {
-            return [0, 0];
-        }
-
-        return [
-            this.timeToMilliseconds(parts[0]),
-            this.timeToMilliseconds(parts[1].split(" ")[0]), // 去除可能的样式设置
-        ];
-    }
-
-    /**
-     * 将时间字符串转换为毫秒
-     * @param timeStr 时间字符串，如 "00:00:10.500"
-     * @returns 毫秒
-     */
-    private timeToMilliseconds(timeStr: string): number {
-        // 处理 VTT 格式的时间戳
-        const parts = timeStr.split(":");
-
-        if (parts.length === 3) {
-            // 格式: 00:00:10.500
-            const [hours, minutes, seconds] = parts;
-            const [secondsInt, millisecondsStr] = seconds.split(".");
-            const milliseconds = millisecondsStr
-                ? parseInt(millisecondsStr.padEnd(3, "0").substring(0, 3))
-                : 0;
-
-            return (
-                parseInt(hours) * 3600000 +
-                parseInt(minutes) * 60000 +
-                parseInt(secondsInt) * 1000 +
-                milliseconds
-            );
-        } else if (parts.length === 2) {
-            // 格式: 00:10.500
-            const [minutes, seconds] = parts;
-            const [secondsInt, millisecondsStr] = seconds.split(".");
-            const milliseconds = millisecondsStr
-                ? parseInt(millisecondsStr.padEnd(3, "0").substring(0, 3))
-                : 0;
-
-            return (
-                parseInt(minutes) * 60000 + parseInt(secondsInt) * 1000 + milliseconds
-            );
-        }
-
-        return 0;
     }
 
     /**
@@ -602,93 +376,41 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
             cancelAnimationFrame(this.checkIntervalId as unknown as number);
         }
 
-        // 上次检查的时间戳
-        let lastCheckTime = 0;
-        // 目标检查间隔（毫秒）
-        const targetInterval = 60; // 约 16.7fps，足够流畅且不会过度消耗资源
-
-        // 使用 requestAnimationFrame 代替 setInterval，提高性能和精确度
+        // 使用 requestAnimationFrame 实现更精确的同步
         const checkFrame = (timestamp: number) => {
-            // 计算距离上次检查的时间
-            const elapsed = timestamp - lastCheckTime;
-
-            // 如果距离上次检查的时间超过目标间隔，执行检查
-            if (elapsed >= targetInterval) {
-                this.checkCurrentTime();
-                lastCheckTime = timestamp;
-            }
-
-            // 继续下一帧检查
+            this.checkCurrentTime();
             if (this.checkIntervalId !== null) {
                 requestAnimationFrame(checkFrame);
             }
         };
 
         // 启动帧检查
-        this.checkIntervalId = window.requestAnimationFrame(
-            checkFrame
-        ) as unknown as number;
+        this.checkIntervalId = window.requestAnimationFrame(checkFrame) as unknown as number;
     }
 
     /**
      * 检查当前视频时间，更新字幕
      */
     private checkCurrentTime() {
-        // 如果字幕被禁用或没有字幕数据，不更新字幕
-        if (!this.subtitleEnabled) {
+        console.log("检查当前时间，更新字幕");
+        if (!this.subtitleEnabled || this.subtitleData.length === 0) {
             return;
         }
 
-        if (this.subtitleData.length === 0) {
-            return;
-        }
-
-        // 获取视频播放器
         const videoPlayer = document.querySelector("video");
-        if (!videoPlayer) {
+        if (!videoPlayer) return;
+        
+        if (videoPlayer.paused) {
             return;
         }
 
-        // 获取当前时间（毫秒），并应用偏移量
         const currentTime = videoPlayer.currentTime * 1000;
-        const adjustedTime = currentTime - this.timeOffset;
 
         // 查找当前时间对应的字幕索引
-        const index = this.findSubtitleIndex(adjustedTime);
+        const index = this.findSubtitleIndex(currentTime);
 
         // 如果索引没有变化，不更新字幕
         if (index === this.currentSubtitleIndex) return;
-
-        // 如果启用了自适应偏移，并且索引变化了，记录当前时间用于自适应调整
-        if (
-            this.adaptiveOffset &&
-            index !== -1 &&
-            this.currentSubtitleIndex !== -1
-        ) {
-            const now = performance.now();
-            const subtitle = this.subtitleData[index];
-
-            // 如果是第一次切换或者距离上次切换超过1秒，才进行调整
-            if (
-                this.lastSubtitleChangeTime > 0 &&
-                now - this.lastSubtitleChangeTime < 1000
-            ) {
-                // 计算实际切换时间与预期切换时间的差值
-                const expectedSwitchTime = subtitle.start;
-                const actualSwitchTime = currentTime;
-                const difference = actualSwitchTime - expectedSwitchTime;
-
-                // 如果差值超过100ms，调整偏移量
-                if (Math.abs(difference) > 100) {
-                    // 逐渐调整偏移量，避免剧烈变化
-                    this.timeOffset = Math.round(
-                        this.timeOffset * 0.8 + difference * 0.2
-                    );
-                }
-            }
-
-            this.lastSubtitleChangeTime = now;
-        }
 
         // 更新当前字幕索引
         this.currentSubtitleIndex = index;
@@ -708,7 +430,7 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
         // 触发字幕变化事件
         window.dispatchEvent(
             new CustomEvent("acquireLanguageSubtitleChanged", {
-                detail: {text: subtitle.text},
+                detail: { text: subtitle.text },
             })
         );
     }
@@ -992,7 +714,6 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
                             if (!this.subtitleData.length) {
                                 // 如果没有加载到字幕数据，恢复原始状态
                                 (subsToggleElement as HTMLElement).click();
-                            } else {
                             }
                         }, 2000);
                     } catch (e) {
