@@ -1,21 +1,21 @@
-import {useEffect, useState} from 'react';
+import { useEffect, useState } from 'react';
 
-// 语言水平选项
+// Language proficiency levels
 const LANGUAGE_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 
-// 语言选项
+// Language options
 const LANGUAGES = [
-    {code: 'zh-CN', name: '中文 (简体)'},
-    {code: 'en', name: 'English'},
-    {code: 'ja', name: '日本語'},
-    {code: 'ko', name: '한국어'},
-    {code: 'fr', name: 'Français'},
-    {code: 'de', name: 'Deutsch'},
-    {code: 'es', name: 'Español'},
-    {code: 'ru', name: 'Русский'},
+    { code: 'zh-CN', name: '中文 (简体)' },
+    { code: 'en', name: 'English' },
+    { code: 'ja', name: '日本語' },
+    { code: 'ko', name: '한국어' },
+    { code: 'fr', name: 'Français' },
+    { code: 'de', name: 'Deutsch' },
+    { code: 'es', name: 'Español' },
+    { code: 'ru', name: 'Русский' },
 ];
 
-// 设置接口
+// Settings interface
 interface Settings {
     nativeLanguage: string;
     targetLanguage: string;
@@ -31,7 +31,7 @@ interface Settings {
     };
 }
 
-// 默认设置
+// Default settings
 const DEFAULT_SETTINGS: Settings = {
     nativeLanguage: 'zh-CN',
     targetLanguage: 'en',
@@ -52,7 +52,6 @@ function Options() {
     const [isSaving, setIsSaving] = useState(false);
     const [saveMessage, setSaveMessage] = useState('');
 
-    // 加载设置
     useEffect(() => {
         const loadSettings = async () => {
             const result = await browser.storage.local.get('settings');
@@ -64,23 +63,22 @@ function Options() {
         loadSettings();
     }, []);
 
-    // 保存设置
     const saveSettings = async () => {
         setIsSaving(true);
         try {
-            await browser.storage.local.set({settings});
-            setSaveMessage('设置已保存');
+            await browser.storage.local.set({ settings });
+            setSaveMessage('Settings saved');
             setTimeout(() => setSaveMessage(''), 3000);
         } catch (error) {
-            setSaveMessage(`保存失败: ${error}`);
+            setSaveMessage(`Failed to save: ${error}`);
         } finally {
             setIsSaving(false);
         }
     };
 
-    // 处理输入变化
+    // Handle input changes
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const {name, value} = e.target;
+        const { name, value } = e.target;
 
         if (name.includes('.')) {
             const [parent, child] = name.split('.');
@@ -99,9 +97,9 @@ function Options() {
         }
     };
 
-    // 处理范围输入变化
+    // Handle range input changes
     const handleRangeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const {name, value} = e.target;
+        const { name, value } = e.target;
         const [parent, child] = name.split('.');
 
         setSettings(prev => ({
@@ -116,13 +114,13 @@ function Options() {
     return (
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-6">
             <div className="max-w-3xl mx-auto">
-                <h1 className="text-3xl font-bold mb-8 text-center">习得语言 - 设置</h1>
+                <h1 className="text-3xl font-bold mb-8 text-center">Acquire Language - Settings</h1>
 
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
-                    <h2 className="text-xl font-semibold mb-4 border-b pb-2">语言设置</h2>
+                    <h2 className="text-xl font-semibold mb-4 border-b pb-2">Language Settings</h2>
 
                     <div className="mb-4">
-                        <label className="block text-sm font-medium mb-1">母语</label>
+                        <label className="block text-sm font-medium mb-1">Native Language</label>
                         <select
                             name="nativeLanguage"
                             value={settings.nativeLanguage}
@@ -136,7 +134,7 @@ function Options() {
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-sm font-medium mb-1">目标语言</label>
+                        <label className="block text-sm font-medium mb-1">Target Language</label>
                         <select
                             name="targetLanguage"
                             value={settings.targetLanguage}
@@ -150,7 +148,7 @@ function Options() {
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-sm font-medium mb-1">语言水平</label>
+                        <label className="block text-sm font-medium mb-1">Language Level</label>
                         <div className="flex space-x-2">
                             {LANGUAGE_LEVELS.map(level => (
                                 <label key={level} className="flex items-center">
@@ -170,10 +168,10 @@ function Options() {
                 </div>
 
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
-                    <h2 className="text-xl font-semibold mb-4 border-b pb-2">AI 设置</h2>
+                    <h2 className="text-xl font-semibold mb-4 border-b pb-2">AI Settings</h2>
 
                     <div className="mb-4">
-                        <label className="block text-sm font-medium mb-1">AI 模型</label>
+                        <label className="block text-sm font-medium mb-1">AI Model</label>
                         <select
                             name="aiModel"
                             value={settings.aiModel}
@@ -192,18 +190,18 @@ function Options() {
                             name="apiKey"
                             value={settings.apiKey}
                             onChange={handleChange}
-                            placeholder="输入您的 API Key"
+                            placeholder="Enter your API Key"
                             className="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600"
                         />
                     </div>
                 </div>
 
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
-                    <h2 className="text-xl font-semibold mb-4 border-b pb-2">字幕设置</h2>
+                    <h2 className="text-xl font-semibold mb-4 border-b pb-2">Subtitle Settings</h2>
 
                     <div className="mb-4">
                         <label className="block text-sm font-medium mb-1">
-                            字体大小: {settings.subtitleSettings.fontSize}px
+                            Font Size: {settings.subtitleSettings.fontSize}px
                         </label>
                         <input
                             type="range"
@@ -217,7 +215,7 @@ function Options() {
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-sm font-medium mb-1">位置</label>
+                        <label className="block text-sm font-medium mb-1">Position</label>
                         <div className="flex space-x-4">
                             <label className="flex items-center">
                                 <input
@@ -228,7 +226,7 @@ function Options() {
                                     onChange={handleChange}
                                     className="mr-1"
                                 />
-                                <span>顶部</span>
+                                <span>Top</span>
                             </label>
                             <label className="flex items-center">
                                 <input
@@ -239,36 +237,36 @@ function Options() {
                                     onChange={handleChange}
                                     className="mr-1"
                                 />
-                                <span>底部</span>
+                                <span>Bottom</span>
                             </label>
                         </div>
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-sm font-medium mb-1">背景颜色</label>
+                        <label className="block text-sm font-medium mb-1">Background Color</label>
                         <input
                             type="color"
                             name="subtitleSettings.backgroundColor"
                             value={settings.subtitleSettings.backgroundColor}
                             onChange={handleChange}
-                            className="p-1 border rounded"
+                            className="w-full p-1 border rounded-md bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600"
                         />
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-sm font-medium mb-1">文字颜色</label>
+                        <label className="block text-sm font-medium mb-1">Text Color</label>
                         <input
                             type="color"
                             name="subtitleSettings.textColor"
                             value={settings.subtitleSettings.textColor}
                             onChange={handleChange}
-                            className="p-1 border rounded"
+                            className="w-full p-1 border rounded-md bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600"
                         />
                     </div>
 
                     <div className="mb-4">
                         <label className="block text-sm font-medium mb-1">
-                            背景透明度: {Math.round(settings.subtitleSettings.opacity * 100)}%
+                            Opacity: {settings.subtitleSettings.opacity}
                         </label>
                         <input
                             type="range"
@@ -283,18 +281,18 @@ function Options() {
                     </div>
                 </div>
 
-                <div className="flex justify-center">
+                <div className="flex justify-end">
                     <button
                         onClick={saveSettings}
                         disabled={isSaving}
-                        className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-6 rounded-md transition-colors disabled:opacity-50"
+                        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
                     >
-                        {isSaving ? '保存中...' : '保存设置'}
+                        {isSaving ? 'Saving...' : 'Save Settings'}
                     </button>
                 </div>
 
                 {saveMessage && (
-                    <div className="mt-4 text-center text-green-600 dark:text-green-400">
+                    <div className="mt-4 p-2 text-center text-sm text-green-600 dark:text-green-400">
                         {saveMessage}
                     </div>
                 )}

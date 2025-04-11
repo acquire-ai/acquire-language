@@ -1,10 +1,10 @@
 /**
- * 单词释义弹出组件
+ * Word Definition Popup Component
  *
- * 用于在用户点击单词时显示单词的详细释义。
+ * Used to display detailed word definitions when users click on words.
  */
 
-// 引入 marked 库进行 Markdown 渲染
+// Import marked library for Markdown rendering
 import {marked} from 'marked';
 
 export class WordPopup {
@@ -12,13 +12,13 @@ export class WordPopup {
     private closeTimeout: number | null = null;
 
     constructor() {
-        // 创建弹出元素
+        // Create popup element
         this.createPopupElement();
 
-        // 初始化 marked 配置
+        // Initialize marked configuration
         this.initMarked();
 
-        // 监听点击事件，点击弹出框外部时关闭
+        // Listen for click events to close popup when clicking outside
         document.addEventListener('click', (event) => {
             if (this.popupElement &&
                 event.target instanceof Node &&
@@ -30,15 +30,15 @@ export class WordPopup {
     }
 
     /**
-     * 创建弹出元素
+     * Create popup element
      */
     private createPopupElement() {
-        // 如果已经存在，则先移除
+        // Remove existing popup if it exists
         if (this.popupElement) {
             this.popupElement.remove();
         }
 
-        // 创建弹出元素
+        // Create popup element
         this.popupElement = document.createElement('div');
         this.popupElement.id = 'acquire-language-word-popup';
         this.popupElement.style.cssText = `
@@ -58,12 +58,12 @@ export class WordPopup {
       color: #333;
     `;
 
-        // 添加到文档
+        // Add to document
         document.body.appendChild(this.popupElement);
     }
 
     /**
-     * 初始化 marked 配置
+     * Initialize marked configuration
      */
     private initMarked() {
         marked.setOptions({
@@ -73,14 +73,14 @@ export class WordPopup {
     }
 
     /**
-     * 显示加载状态
+     * Show loading status
      * @param word 单词
      * @param position 位置
      */
     showLoading(word: string, position: { x: number, y: number }) {
         if (!this.popupElement) return;
 
-        // 设置内容
+        // Set content
         this.popupElement.innerHTML = `
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
         <h3 style="margin: 0; font-size: 16px; font-weight: 600;">${word}</h3>
@@ -97,13 +97,13 @@ export class WordPopup {
       </style>
     `;
 
-        // 设置位置
+        // Set position
         this.setPosition(position);
 
-        // 显示弹出框
+        // Show popup
         this.popupElement.style.display = 'block';
 
-        // 添加关闭按钮事件
+        // Add close button event
         const closeButton = document.getElementById('acquire-language-close-popup');
         if (closeButton) {
             closeButton.addEventListener('click', () => this.hide());
@@ -111,7 +111,7 @@ export class WordPopup {
     }
 
     /**
-     * 显示单词释义
+     * Show word definition
      * @param word 单词
      * @param definition 释义
      * @param position 位置
@@ -119,15 +119,15 @@ export class WordPopup {
     show(word: string, definition: string, position: { x: number, y: number }) {
         if (!this.popupElement) return;
 
-        // 渲染 Markdown
+        // Render Markdown
         const renderedDefinition = marked.parse(definition);
 
-        // 设置内容
+        // Set content
         this.popupElement.innerHTML = `
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
         <h3 style="margin: 0; font-size: 16px; font-weight: 600;">${word}</h3>
         <div>
-          <button id="acquire-language-save-word" style="background: none; border: none; cursor: pointer; font-size: 14px; color: #3498db; margin-right: 8px;">保存</button>
+          <button id="acquire-language-save-word" style="background: none; border: none; cursor: pointer; font-size: 14px; color: #3498db; margin-right: 8px;">Save</button>
           <button id="acquire-language-close-popup" style="background: none; border: none; cursor: pointer; font-size: 16px; color: #999;">×</button>
         </div>
       </div>
@@ -136,30 +136,30 @@ export class WordPopup {
       </div>
     `;
 
-        // 设置位置
+        // Set position
         this.setPosition(position);
 
-        // 显示弹出框
+        // Show popup
         this.popupElement.style.display = 'block';
 
-        // 添加关闭按钮事件
+        // Add close button event
         const closeButton = document.getElementById('acquire-language-close-popup');
         if (closeButton) {
             closeButton.addEventListener('click', () => this.hide());
         }
 
-        // 添加保存按钮事件
+        // Add save button event
         const saveButton = document.getElementById('acquire-language-save-word');
         if (saveButton) {
             saveButton.addEventListener('click', () => {
                 this.saveWord(word);
-                saveButton.textContent = '已保存';
+                saveButton.textContent = 'Saved';
                 saveButton.style.color = '#27ae60';
                 (saveButton as HTMLButtonElement).disabled = true;
             });
         }
 
-        // 清除自动关闭定时器
+        // Clear auto-close timer
         if (this.closeTimeout) {
             clearTimeout(this.closeTimeout);
             this.closeTimeout = null;
@@ -167,7 +167,7 @@ export class WordPopup {
     }
 
     /**
-     * 隐藏弹出框
+     * Hide popup
      */
     hide() {
         if (this.popupElement) {
@@ -176,68 +176,68 @@ export class WordPopup {
     }
 
     /**
-     * 设置弹出框位置
+     * Set popup position
      * @param position 位置
      */
     private setPosition(position: { x: number, y: number }) {
         if (!this.popupElement) return;
 
-        // 获取视口尺寸
+        // Get viewport dimensions
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
 
-        // 获取弹出框尺寸
+        // Get popup dimensions
         const popupRect = this.popupElement.getBoundingClientRect();
         const popupWidth = popupRect.width;
         const popupHeight = popupRect.height;
 
-        // 计算左侧位置，确保不超出视口
+        // Calculate left position to ensure it stays within viewport
         let left = position.x;
         if (left + popupWidth > viewportWidth) {
             left = viewportWidth - popupWidth - 10;
         }
         if (left < 10) left = 10;
 
-        // 计算顶部位置，确保不超出视口
+        // Calculate top position to ensure it stays within viewport
         let top = position.y;
         if (top + popupHeight > viewportHeight) {
             top = position.y - popupHeight - 10;
         }
         if (top < 10) top = 10;
 
-        // 查找字幕容器
+        // Find subtitle container
         const subtitleContainer = document.getElementById('acquire-language-subtitle');
 
-        // 如果找到字幕容器，将弹出框放在字幕上方
+        // If subtitle container is found, position popup above it
         if (subtitleContainer) {
             const subtitleRect = subtitleContainer.getBoundingClientRect();
 
-            // 计算弹出框应该放置的垂直位置 - 字幕容器上方留出一定间距
+            // Calculate vertical position - leave some space above subtitle
             const topPosition = subtitleRect.top + window.scrollY - popupRect.height - 20;
 
-            // 如果计算出的位置是负数（超出屏幕顶部），则放在字幕下方
+            // If position is negative (above screen top), place below subtitle
             if (topPosition < 0) {
                 this.popupElement.style.top = `${subtitleRect.bottom + window.scrollY + 20}px`;
             } else {
                 this.popupElement.style.top = `${topPosition}px`;
             }
 
-            // 水平居中
+            // Center horizontally
             const centerPosition = subtitleRect.left + (subtitleRect.width / 2) - (popupWidth / 2);
             this.popupElement.style.left = `${Math.max(10, centerPosition)}px`;
         } else {
-            // 如果没有找到字幕容器，使用计算的位置
+            // If no subtitle container found, use calculated position
             this.popupElement.style.left = `${left}px`;
             this.popupElement.style.top = `${top}px`;
         }
     }
 
     /**
-     * 保存单词到生词本
+     * Save word to vocabulary
      * @param word 单词
      */
     private saveWord(word: string) {
-        // 获取当前字幕作为上下文
+        // Get current subtitle as context
         const subtitleContainer = document.getElementById('acquire-language-subtitle');
         let context = '';
 
@@ -245,7 +245,7 @@ export class WordPopup {
             context = subtitleContainer.textContent || '';
         }
 
-        // 发送消息到后台脚本
+        // Send message to background script
         browser.runtime.sendMessage({
             type: 'SAVE_WORD',
             word,
@@ -258,7 +258,7 @@ export class WordPopup {
     }
 
     /**
-     * 销毁组件
+     * Destroy component
      */
     destroy() {
         if (this.popupElement) {
