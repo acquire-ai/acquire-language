@@ -1,5 +1,5 @@
 /**
- * 平台工厂
+ * Platform factory
  */
 import {PlatformHandler} from '@/core/types/platform';
 import {isYouTubeVideoUrl} from '@/core/utils';
@@ -15,10 +15,6 @@ export function createPlatformHandler(url: string): PlatformHandler | null {
         return new YouTubePlatformHandler();
     }
 
-    // 未来可以添加更多平台的支持
-    // if (isUdemyUrl(url)) {
-    //   return new UdemyPlatformHandler();
-    // }
-
+    // Future support for more platforms
     return null;
 } 
