@@ -1,5 +1,5 @@
 /**
- * YouTube 平台处理器
+ * YouTube Platform Handler
  */
 import {SubtitleHandler} from '@/core/types/platform.ts';
 import {AIService} from '@/core/types/ai.ts';
@@ -8,29 +8,29 @@ import {BasePlatformHandler} from '../base/platform-handler';
 import {YouTubeSubtitleHandler} from './subtitle-handler';
 
 /**
- * YouTube 平台处理器
+ * YouTube Platform Handler
  */
 export class YouTubePlatformHandler extends BasePlatformHandler {
     /**
-     * 检查是否支持当前URL
-     * @param url 当前URL
-     * @returns 是否支持
+     * Check if current URL is supported
+     * @param url Current URL
+     * @returns Whether the URL is supported
      */
     isSupported(url: string): boolean {
         return isYouTubeVideoUrl(url);
     }
 
     /**
-     * 初始化平台处理器
+     * Initialize platform handler
      */
     async initialize(): Promise<void> {
-        console.log('初始化 YouTube 平台处理器');
+        console.log('Initializing YouTube platform handler');
     }
 
     /**
-     * 创建字幕处理器
-     * @param aiService AI服务
-     * @returns 字幕处理器
+     * Create subtitle handler
+     * @param aiService AI service
+     * @returns Subtitle handler
      */
     createSubtitleHandler(aiService: AIService): SubtitleHandler {
         return new YouTubeSubtitleHandler(aiService);

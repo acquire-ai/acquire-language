@@ -6,9 +6,9 @@ import {isYouTubeVideoUrl} from '@/core/utils';
 import {YouTubePlatformHandler} from './youtube';
 
 /**
- * 创建平台处理器
- * @param url 当前URL
- * @returns 平台处理器实例或null
+ * Create platform handler
+ * @param url Current URL
+ * @returns Platform handler instance or null
  */
 export function createPlatformHandler(url: string): PlatformHandler | null {
     if (isYouTubeVideoUrl(url)) {

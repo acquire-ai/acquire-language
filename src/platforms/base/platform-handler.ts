@@ -1,29 +1,29 @@
 /**
- * 平台处理器基类
+ * Platform Handler Base Class
  */
 import {AIService} from '../../core/types/ai';
 import {PlatformHandler, SubtitleHandler} from '../../core/types/platform';
 
 /**
- * 抽象平台处理器基类
+ * Abstract Platform Handler Base Class
  */
 export abstract class BasePlatformHandler implements PlatformHandler {
     /**
-     * 检查是否支持当前URL
-     * @param url 当前URL
-     * @returns 是否支持
+     * Check if current URL is supported
+     * @param url Current URL
+     * @returns Whether the URL is supported
      */
     abstract isSupported(url: string): boolean;
 
     /**
-     * 初始化平台处理器
+     * Initialize platform handler
      */
     abstract initialize(): Promise<void>;
 
     /**
-     * 创建字幕处理器
-     * @param aiService AI服务
-     * @returns 字幕处理器
+     * Create subtitle handler
+     * @param aiService AI service
+     * @returns Subtitle handler
      */
     abstract createSubtitleHandler(aiService: AIService): SubtitleHandler;
 }
