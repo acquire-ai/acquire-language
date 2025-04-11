@@ -221,7 +221,7 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
                             this.subtitleData.length > 0 &&
                             this.container.innerHTML === ""
                         ) {
-                            this.checkCurrentTime();
+                            this.syncSubtitleWithVideoTime();
                         }
                     }
                 }
@@ -294,7 +294,7 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
 
         // Use requestAnimationFrame for more precise synchronization
         const checkFrame = (timestamp: number) => {
-            this.checkCurrentTime();
+            this.syncSubtitleWithVideoTime();
             if (this.checkIntervalId !== null) {
                 requestAnimationFrame(checkFrame);
             }
@@ -307,7 +307,7 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     /**
      * Check current video time and update subtitle
      */
-    private checkCurrentTime() {
+    private syncSubtitleWithVideoTime() {
         console.log("Checking current time, updating subtitle");
         if (!this.subtitleEnabled || this.subtitleData.length === 0) {
             return;
@@ -316,9 +316,6 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
         const videoPlayer = document.querySelector("video");
         if (!videoPlayer) return;
         
-        if (videoPlayer.paused) {
-            return;
-        }
 
         const currentTime = videoPlayer.currentTime * 1000;
 
@@ -331,24 +328,15 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
         // Update current subtitle index
         this.currentSubtitleIndex = index;
 
-        // If no subtitle found, clear subtitle display
         if (index === -1) {
             this.updateSubtitle("");
             return;
         }
 
-        // Get subtitle text
         const subtitle = this.subtitleData[index];
 
-        // Update subtitle display
         this.updateSubtitle(subtitle.text);
 
-        // Trigger subtitle change event
-        window.dispatchEvent(
-            new CustomEvent("acquireLanguageSubtitleChanged", {
-                detail: { text: subtitle.text },
-            })
-        );
     }
 
     private findSubtitleIndex(currentTime: number): number {
