@@ -7,7 +7,7 @@
 import {BaseSubtitleHandler} from "../base/subtitle-handler";
 import {AIService} from "@/core/types/ai.ts";
 
-// Subtitle item interface
+
 interface SubtitleItem {
     start: number;
     end: number;
@@ -20,6 +20,7 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     private subtitleData: SubtitleItem[] = [];
     private checkIntervalId: number | null = null;
     private currentSubtitleIndex: number = -1;
+    private currentSubtitleItem: SubtitleItem | null = null;
 
     constructor(aiService: AIService) {
         super(aiService);
@@ -186,7 +187,7 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
                 const {url, lang, videoId, response} = message.data;
                 console.log("Get subtitle from background script", url, lang, videoId);
                 this.parseSubtitle(response);
-
+                console.log("Subtitle data length:", this.subtitleData.length);
                 this.subtitleEnabled = true;
 
                 if (this.container) {
@@ -272,7 +273,7 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
                 subtitles.push({
                     start,
                     end,
-                    text: text.trim(),
+                    text,
                 });
             }
             
@@ -319,13 +320,10 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
 
         const currentTime = videoPlayer.currentTime * 1000;
 
-        // Find subtitle index for current time
         const index = this.findSubtitleIndex(currentTime);
 
-        // If index hasn't changed, don't update subtitle
         if (index === this.currentSubtitleIndex) return;
 
-        // Update current subtitle index
         this.currentSubtitleIndex = index;
 
         if (index === -1) {
@@ -333,9 +331,11 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
             return;
         }
 
-        const subtitle = this.subtitleData[index];
+        this.currentSubtitleItem = this.subtitleData[index];
 
-        this.updateSubtitle(subtitle.text);
+        console.log("Current time subtitle:", currentTime, this.currentSubtitleItem);
+
+        this.updateSubtitle(this.currentSubtitleItem.text);
 
     }
 
@@ -429,7 +429,6 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
             }
         }
 
-        // No matching subtitle found
         return -1;
     }
 
