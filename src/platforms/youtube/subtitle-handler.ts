@@ -9,15 +9,13 @@ import {AIService} from "@/core/types/ai.ts";
 
 // Subtitle item interface
 interface SubtitleItem {
-    start: number; // Start time (milliseconds)
-    end: number; // End time (milliseconds)
-    text: string; // Subtitle text
+    start: number;
+    end: number;
+    text: string;
 }
 
 export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     private containerObserver: MutationObserver | null = null;
-    private currentVideoId: string = "";
-    private currentLang: string = "";
     private subtitleEnabled: boolean = false;
     private subtitleData: any[] = [];
     private checkIntervalId: number | null = null;
@@ -31,62 +29,17 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
      * Initialize subtitle handler
      */
     async initialize(): Promise<void> {
-        // Load settings
         await this.loadSettings();
 
-        // Create custom subtitle container
         this.createSubtitleContainer();
 
-        // Listen for subtitle events
         this.listenToBackgroundScript();
 
-        // Start periodic check of video time to update current subtitle
         this.startPeriodicCheck();
 
-        // Check if subtitle button is already enabled
-        this.checkInitialSubtitleStatus();
-
-        // Try to preload subtitles
         this.tryPreloadSubtitles();
     }
 
-    /**
-     * Check initial subtitle status
-     */
-    private checkInitialSubtitleStatus() {
-        // Delay check to ensure YouTube interface is fully loaded
-        setTimeout(() => {
-            const subsToggleElement = document.querySelector(".ytp-subtitles-button");
-            if (subsToggleElement) {
-                const isSubtitleEnabled =
-                    subsToggleElement.getAttribute("aria-pressed") === "true";
-
-                // Update subtitle status
-                this.subtitleEnabled = isSubtitleEnabled;
-
-                // If subtitles are enabled, try to manually trigger subtitle toggle to refresh them
-                if (isSubtitleEnabled) {
-                    // Get video player
-                    const player = document.getElementById("movie_player");
-                    if (player) {
-                        // Toggle subtitles twice to refresh them
-                        try {
-                            // Use type assertion as TypeScript doesn't know YouTube player specific methods
-                            const ytPlayer = player as any;
-                            if (typeof ytPlayer.toggleSubtitles === "function") {
-                                ytPlayer.toggleSubtitles();
-                                setTimeout(() => {
-                                    ytPlayer.toggleSubtitles();
-                                }, 100);
-                            }
-                        } catch (e) {
-                            console.error("Failed to toggle subtitles:", e);
-                        }
-                    }
-                }
-            }
-        }, 2000);
-    }
 
     /**
      * Create custom subtitle container
@@ -284,19 +237,15 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
                 const isSubtitleEnabled =
                     subsToggleElement.getAttribute("aria-pressed") === "true";
 
-                // If subtitle status changes
                 if (this.subtitleEnabled !== isSubtitleEnabled) {
                     this.subtitleEnabled = isSubtitleEnabled;
 
-                    // If subtitles are disabled, clear subtitle display
                     if (!isSubtitleEnabled && this.container) {
                         this.container.innerHTML = "";
                         this.container.style.display = "none";
                     } else if (isSubtitleEnabled && this.container) {
-                        // If subtitles are enabled, show subtitle container
                         this.container.style.display = "block";
 
-                        // If there is subtitle data but not displayed, try to redisplay
                         if (
                             this.subtitleData.length > 0 &&
                             this.container.innerHTML === ""
@@ -434,13 +383,7 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
         );
     }
 
-    /**
-     * Find subtitle index for current time
-     * @param currentTime Current video time (milliseconds)
-     * @returns Subtitle index, -1 if not found
-     */
     private findSubtitleIndex(currentTime: number): number {
-        // If no subtitle data, return -1
         if (this.subtitleData.length === 0) return -1;
 
         // If current index is valid, first check if current index still matches
@@ -539,15 +482,12 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
      * @param text Subtitle text
      */
     updateSubtitle(text: string = ""): void {
-        // If subtitle hasn't changed, don't update
         if (text === this._currentSubtitle) {
             return;
         }
 
-        // Update current subtitle
         this._currentSubtitle = text;
 
-        // If no container or subtitles are disabled, don't update DOM
         if (!this.container) {
             console.error("Subtitle container does not exist, cannot update subtitle");
             return;
