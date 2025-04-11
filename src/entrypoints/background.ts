@@ -1,5 +1,5 @@
 /**
- * 习得语言 (Acquire Language) 后台脚本
+ * Acquire Language Background Script
  */
 import {defineBackground} from "wxt/sandbox";
 import {StorageManager} from "@/core/storage";
@@ -35,8 +35,6 @@ export default defineBackground(() => {
                     urlObject.pathname.split("/").pop() ||
                     "";
 
-
-
                 // send message to content script
                 if (details.tabId > 0) {
                     fetchSubtitle(urlObject.href)
@@ -56,37 +54,33 @@ export default defineBackground(() => {
         {urls: ["*://*.youtube.com/*timedtext*", "*://*.youtube.com/api/*"]}
     );
 
-
-    // 监听来自内容脚本的消息
+    // Listen for messages from content script
     browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-        // 在这里处理消息
         if (message.type === "SAVE_WORD") {
-            // 保存单词到生词本
+            // Save word to vocabulary
             saveWordToVocabulary(message.word, message.context)
                 .then(() => sendResponse({success: true}))
                 .catch((error) =>
                     sendResponse({success: false, error: error.message})
                 );
-            return true; // 表示将异步发送响应
+            return true; // Indicates that the response will be sent asynchronously
         }
-
     });
 
-    // 保存单词到生词本
     async function saveWordToVocabulary(
         word: string,
         context: string
     ): Promise<Word> {
         const vocabulary = await StorageManager.getVocabulary();
 
-        // 检查单词是否已存在
+        // Check if word already exists
         if (vocabulary[word]) {
-            // 如果单词已存在，添加新的上下文（如果不重复）
+            // If word exists, add new context if not duplicate
             if (!vocabulary[word].contexts.includes(context)) {
                 vocabulary[word].contexts.push(context);
             }
         } else {
-            // 如果单词不存在，创建新条目
+            // If word doesn't exist, create new entry
             vocabulary[word] = {
                 word,
                 contexts: [context],
@@ -94,14 +88,11 @@ export default defineBackground(() => {
             };
         }
 
-        // 保存更新后的生词本
         await StorageManager.saveVocabulary(vocabulary);
 
-        // 返回更新后的单词条目
         return vocabulary[word];
     }
 });
-
 
 async function fetchSubtitle(url: string) {
     try {

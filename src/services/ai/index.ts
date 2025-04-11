@@ -1,5 +1,5 @@
 /**
- * AI 服务入口
+ * AI Service Entry
  */
 export * from './factory';
 export * from './deepseek';

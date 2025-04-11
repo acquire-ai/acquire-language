@@ -1,8 +1,8 @@
 /**
- * 习得语言 (Acquire Language) 内容脚本
+ * Acquire Language Content Script
  *
- * 这个脚本在各平台页面上运行，负责初始化字幕处理器。
- * 它检测各平台视频页面，并在视频播放器加载后启动字幕增强功能。
+ * This script runs on platform pages and is responsible for initializing subtitle handlers.
+ * It detects platform video pages and activates subtitle enhancement features after the video player loads.
  */
 import {defineContentScript} from "wxt/sandbox";
 import {createPlatformHandler} from "@/platforms";
@@ -39,7 +39,7 @@ export default defineContentScript({
             if (message.type === "SUBTITLE_REQUEST_DETECTED") {
                 if (!subtitleHandler) {
                     initializeHandler().then(() => {
-                        // 初始化完成后处理字幕请求
+                        // Process subtitle request after initialization
                         processSubtitleRequest(message.data);
                     });
                     return true;
@@ -94,7 +94,7 @@ export default defineContentScript({
         }
 
         /**
-         * 等待视频播放器加载
+         * Wait for video player to load
          */
         async function waitForVideoPlayer() {
             return new Promise<void>((resolve) => {
@@ -105,31 +105,30 @@ export default defineContentScript({
                         clearTimeout(timeout);
 
                         try {
-                            // 创建平台处理器
+                            // Create platform handler
                             const platformHandler = createPlatformHandler(
                                 window.location.href
                             );
 
                             if (platformHandler) {
-                                // 初始化平台处理器
+                                // Initialize platform handler
                                 await platformHandler.initialize();
 
                                 subtitleHandler = platformHandler.createSubtitleHandler(aiService);
 
-                                // 初始化字幕处理器
+                                // Initialize subtitle handler
                                 await subtitleHandler.initialize();
                             } else {
-                                console.error("无法创建平台处理器");
+                                console.error("Failed to create platform handler");
                             }
                         } catch (error) {
-                            console.error("初始化字幕处理器失败:", error);
+                            console.error("Failed to initialize subtitle handler:", error);
                         }
 
                         resolve();
                     }
                 }, 1000);
 
-                // 设置超时，避免无限等待
                 const timeout = setTimeout(() => {
                     clearInterval(checkForVideoPlayer);
                     resolve();

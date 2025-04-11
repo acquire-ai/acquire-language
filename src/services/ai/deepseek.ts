@@ -1,5 +1,5 @@
 /**
- * DeepSeek AI 服务实现
+ * DeepSeek AI Service Implementation
  */
 import {AIService, AIServiceConfig} from '@/core/types/ai.ts';
 import {getLanguageName} from '@/core/utils';
@@ -13,58 +13,55 @@ export class DeepSeekAIService implements AIService {
         this.model = config.model || 'deepseek-chat';
     }
 
-    // 获取单词释义
+    // Get word definition
     async getWordDefinition(word: string, context: string, targetLanguage: string): Promise<string> {
         try {
-            // 从存储中获取设置，获取用户的母语
+            // Get settings from storage to get user's native language
             const result = await browser.storage.local.get('settings');
             const settings = result.settings || {nativeLanguage: 'zh-CN'};
             const nativeLanguage = settings.nativeLanguage;
 
-            console.log(`获取单词释义: 单词="${word}", 上下文="${context}", 母语="${nativeLanguage}"`);
+            console.log(`Getting word definition: word="${word}", context="${context}", native language="${nativeLanguage}"`);
 
-            // 构建提示
+            // Build prompt
             const prompt = `
-请根据以下上下文，解释单词 "${word}" 的含义。
-上下文: "${context}"
-请用${this.getLanguageName(nativeLanguage)}回答，简洁明了地解释这个单词在当前上下文中的含义。
-请提供以下信息，并使用Markdown格式：
-1. 单词的基本含义
-2. 在当前上下文中的具体含义
-3. 词性 (名词、动词、形容词等)
-4. 一到两个例句
+Please explain the meaning of the word "${word}" based on the following context.
+Context: "${context}"
+Please answer in ${this.getLanguageName(nativeLanguage)}, explaining the word's meaning in the current context concisely.
+Please provide the following information in Markdown format:
+1. Basic meaning of the word
+2. Specific meaning in the current context
+3. Part of speech (noun, verb, adjective, etc.)
+4. One or two example sentences
 `;
 
-            // 调用 DeepSeek API
             return await this.callAPI(prompt);
         } catch (error: any) {
-            console.error('获取单词释义失败:', error);
-            return `获取 "${word}" 的释义失败: ${error.message}`;
+            console.error('Failed to get word definition:', error);
+            return `Failed to get definition for "${word}": ${error.message}`;
         }
     }
 
-    // 翻译文本
+    // Translate text
     async translateText(text: string, sourceLanguage: string, targetLanguage: string): Promise<string> {
         try {
-            // 构建提示
+            // Build prompt
             const prompt = `
-请将以下${this.getLanguageName(sourceLanguage)}文本翻译成${this.getLanguageName(targetLanguage)}：
+Please translate the following ${this.getLanguageName(sourceLanguage)} text to ${this.getLanguageName(targetLanguage)}:
 "${text}"
-请只返回翻译结果，不要包含其他解释。
+Please only return the translation result, without any additional explanations.
 `;
 
-            // 调用 DeepSeek API
             return await this.callAPI(prompt);
         } catch (error: any) {
-            console.error('翻译文本失败:', error);
-            return `翻译失败: ${error.message}`;
+            console.error('Failed to translate text:', error);
+            return `Translation failed: ${error.message}`;
         }
     }
 
-    // 调用 DeepSeek API
     private async callAPI(prompt: string): Promise<string> {
         if (!this.apiKey) {
-            throw new Error('API 密钥未设置');
+            throw new Error('API key not set');
         }
 
         try {
@@ -89,18 +86,18 @@ export class DeepSeekAIService implements AIService {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(`API 请求失败: ${errorData.error?.message || response.statusText}`);
+                throw new Error(`API request failed: ${errorData.error?.message || response.statusText}`);
             }
 
             const data = await response.json();
             return data.choices[0].message.content;
         } catch (error) {
-            console.error('调用 DeepSeek API 失败:', error);
+            console.error('Failed to call DeepSeek API:', error);
             throw error;
         }
     }
 
-    // 获取语言名称
+    // Get language name
     private getLanguageName(code: string): string {
         return getLanguageName(code);
     }

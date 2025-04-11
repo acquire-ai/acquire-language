@@ -1,13 +1,13 @@
-import {useEffect, useState} from 'react';
+import { useEffect, useState } from 'react';
 
-// 单词接口
+// Word interface
 interface Word {
     word: string;
     contexts: string[];
     createdAt: string;
 }
 
-// 生词本接口
+// Vocabulary interface
 interface VocabularyData {
     [key: string]: Word;
 }
@@ -18,7 +18,7 @@ function Vocabulary() {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedWord, setSelectedWord] = useState<Word | null>(null);
 
-    // 加载生词本
+    // Load vocabulary
     useEffect(() => {
         const loadVocabulary = async () => {
             setLoading(true);
@@ -26,7 +26,7 @@ function Vocabulary() {
                 const result = await browser.storage.local.get('vocabulary');
                 setVocabulary(result.vocabulary || {});
             } catch (error) {
-                console.error('加载生词本失败:', error);
+                console.error('Failed to load vocabulary:', error);
             } finally {
                 setLoading(false);
             }
@@ -35,30 +35,30 @@ function Vocabulary() {
         loadVocabulary();
     }, []);
 
-    // 删除单词
+    // Delete word
     const deleteWord = async (word: string) => {
-        if (confirm(`确定要删除单词 "${word}" 吗？`)) {
-            const newVocabulary = {...vocabulary};
+        if (confirm(`Are you sure you want to delete the word "${word}"?`)) {
+            const newVocabulary = { ...vocabulary };
             delete newVocabulary[word];
 
             try {
-                await browser.storage.local.set({vocabulary: newVocabulary});
+                await browser.storage.local.set({ vocabulary: newVocabulary });
                 setVocabulary(newVocabulary);
                 if (selectedWord?.word === word) {
                     setSelectedWord(null);
                 }
             } catch (error) {
-                console.error('删除单词失败:', error);
+                console.error('Failed to delete word:', error);
             }
         }
     };
 
-    // 过滤单词
+    // Filter words
     const filteredWords = Object.values(vocabulary).filter(word =>
         word.word.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    // 按创建时间排序
+    // Sort words by creation time
     const sortedWords = [...filteredWords].sort((a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
@@ -95,9 +95,8 @@ function Vocabulary() {
                                 {sortedWords.map((word) => (
                                     <li
                                         key={word.word}
-                                        className={`p-2 rounded-md cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 flex justify-between items-center ${
-                                            selectedWord?.word === word.word ? 'bg-blue-100 dark:bg-blue-900' : ''
-                                        }`}
+                                        className={`p-2 rounded-md cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 flex justify-between items-center ${selectedWord?.word === word.word ? 'bg-blue-100 dark:bg-blue-900' : ''
+                                            }`}
                                         onClick={() => setSelectedWord(word)}
                                     >
                                         <span>{word.word}</span>

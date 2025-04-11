@@ -1,15 +1,15 @@
 /**
- * AI 服务工厂
+ * AI Service Factory
  */
 import {AIService, AIServiceConfig} from '../../core/types/ai';
 import {DeepSeekAIService} from './deepseek';
 import {GPT4oMiniAIService} from './gpt';
 
 /**
- * 创建 AI 服务
- * @param type AI 服务类型
- * @param config AI 服务配置
- * @returns AI 服务实例
+ * Create AI service
+ * @param type AI service type
+ * @param config AI service configuration
+ * @returns AI service instance
  */
 export function createAIService(type: string, config: AIServiceConfig): AIService {
     switch (type) {
@@ -18,7 +18,7 @@ export function createAIService(type: string, config: AIServiceConfig): AIServic
         case 'gpt-4o-mini':
             return new GPT4oMiniAIService(config);
         default:
-            console.warn(`未知的 AI 服务类型: ${type}，使用默认的 DeepSeek 服务`);
+            console.warn(`Unknown AI service type: ${type}, using default DeepSeek service`);
             return new DeepSeekAIService(config);
     }
 } 

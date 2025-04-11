@@ -1,17 +1,17 @@
 /**
- * YouTube 字幕处理器
+ * YouTube Subtitle Handler
  *
- * 这个类负责获取 YouTube 字幕，并以更美观的方式显示它们。
- * 它使用webRequest拦截 YouTube 的字幕请求，获取完整的字幕数据。
+ * This class is responsible for getting YouTube subtitles and displaying them in a more beautiful way.
+ * It uses webRequest to intercept YouTube's subtitle requests and get the complete subtitle data.
  */
 import {BaseSubtitleHandler} from "../base/subtitle-handler";
 import {AIService} from "@/core/types/ai.ts";
 
-// 字幕项接口
+// Subtitle item interface
 interface SubtitleItem {
-    start: number; // 开始时间（毫秒）
-    end: number; // 结束时间（毫秒）
-    text: string; // 字幕文本
+    start: number; // Start time (milliseconds)
+    end: number; // End time (milliseconds)
+    text: string; // Subtitle text
 }
 
 export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
@@ -28,50 +28,50 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     }
 
     /**
-     * 初始化字幕处理器
+     * Initialize subtitle handler
      */
     async initialize(): Promise<void> {
-        // 加载设置
+        // Load settings
         await this.loadSettings();
 
-        // 创建自定义字幕容器
+        // Create custom subtitle container
         this.createSubtitleContainer();
 
-        // 监听字幕事件
+        // Listen for subtitle events
         this.listenToBackgroundScript();
 
-        // 开始定期检查视频时间，更新当前字幕
+        // Start periodic check of video time to update current subtitle
         this.startPeriodicCheck();
 
-        // 检查是否已经有字幕按钮被启用
+        // Check if subtitle button is already enabled
         this.checkInitialSubtitleStatus();
 
-        // 尝试预加载字幕
+        // Try to preload subtitles
         this.tryPreloadSubtitles();
     }
 
     /**
-     * 检查初始字幕状态
+     * Check initial subtitle status
      */
     private checkInitialSubtitleStatus() {
-        // 延迟检查，确保 YouTube 界面已完全加载
+        // Delay check to ensure YouTube interface is fully loaded
         setTimeout(() => {
             const subsToggleElement = document.querySelector(".ytp-subtitles-button");
             if (subsToggleElement) {
                 const isSubtitleEnabled =
                     subsToggleElement.getAttribute("aria-pressed") === "true";
 
-                // 更新字幕状态
+                // Update subtitle status
                 this.subtitleEnabled = isSubtitleEnabled;
 
-                // 如果字幕已启用，尝试手动触发字幕切换以刷新字幕
+                // If subtitles are enabled, try to manually trigger subtitle toggle to refresh them
                 if (isSubtitleEnabled) {
-                    // 获取视频播放器
+                    // Get video player
                     const player = document.getElementById("movie_player");
                     if (player) {
-                        // 切换字幕两次以刷新字幕
+                        // Toggle subtitles twice to refresh them
                         try {
-                            // 使用类型断言，因为 TypeScript 不知道 YouTube 播放器的特定方法
+                            // Use type assertion as TypeScript doesn't know YouTube player specific methods
                             const ytPlayer = player as any;
                             if (typeof ytPlayer.toggleSubtitles === "function") {
                                 ytPlayer.toggleSubtitles();
@@ -80,7 +80,7 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
                                 }, 100);
                             }
                         } catch (e) {
-                            console.error("切换字幕失败:", e);
+                            console.error("Failed to toggle subtitles:", e);
                         }
                     }
                 }
@@ -89,28 +89,28 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     }
 
     /**
-     * 创建自定义字幕容器
+     * Create custom subtitle container
      */
     private createSubtitleContainer() {
-        // 隐藏 YouTube 原始字幕
+        // Hide YouTube original subtitles
         this.hideYouTubeSubtitles();
 
-        // 创建自定义字幕容器
+        // Create custom subtitle container
         this.container = document.createElement("div");
         this.container.id = "acquire-language-subtitle";
 
-        // 设置样式
+        // Set styles
         this.applySubtitleStyles();
 
-        // 添加到文档
+        // Add to document
         document.body.appendChild(this.container);
 
-        // 添加字幕悬停事件 - 暂停视频
+        // Add subtitle hover events - pause video
         this.addSubtitleHoverEvents();
     }
 
     /**
-     * 隐藏 YouTube 原始字幕
+     * Hide YouTube original subtitles
      */
     private hideYouTubeSubtitles() {
         const style = document.createElement("style");
@@ -129,25 +129,25 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     }
 
     /**
-     * 应用字幕样式
+     * Apply subtitle styles
      */
     private applySubtitleStyles() {
         if (!this.container) {
-            console.error("字幕容器不存在，无法应用样式");
+            console.error("Subtitle container does not exist, cannot apply styles");
             return;
         }
 
-        // 获取视频播放器
+        // Get video player
         const videoPlayer = document.querySelector("video");
         if (!videoPlayer) {
-            console.error("找不到视频播放器，无法应用字幕样式");
+            console.error("Cannot find video player, cannot apply subtitle styles");
             return;
         }
 
-        // 获取视频播放器尺寸和位置
+        // Get video player dimensions and position
         const videoRect = videoPlayer.getBoundingClientRect();
 
-        // 设置字幕容器样式
+        // Set subtitle container styles
         const cssText = `
             position: absolute;
             z-index: 1000;
@@ -167,22 +167,22 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
         `;
         this.container.style.cssText = cssText;
 
-        // 根据设置设置字幕位置
+        // Set subtitle position based on settings
         if (this.settings.subtitleSettings.position === "top") {
             this.container.style.top = `${videoRect.top + 10}px`;
         } else {
-            // YouTube控制栏高度约为40-45px，我们设置60px的间距以确保不会遮挡
+            // YouTube control bar height is about 40-45px, we set 60px spacing to ensure no overlap
             this.container.style.bottom = `${
                 window.innerHeight - videoRect.bottom + 60
             }px`;
         }
 
-        // 监听窗口大小变化，更新字幕位置
+        // Listen for window resize events to update subtitle position
         window.addEventListener("resize", () => {
             this.updateSubtitlePosition();
         });
 
-        // 监听视频播放器大小变化
+        // Listen for video player size changes
         this.containerObserver = new MutationObserver(() => {
             this.updateSubtitlePosition();
         });
@@ -194,28 +194,28 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     }
 
     /**
-     * 更新字幕位置
+     * Update subtitle position
      */
     private updateSubtitlePosition() {
         if (!this.container) return;
 
-        // 获取视频播放器
+        // Get video player
         const videoPlayer = document.querySelector("video");
         if (!videoPlayer) return;
 
-        // 获取视频播放器尺寸和位置
+        // Get video player dimensions and position
         const videoRect = videoPlayer.getBoundingClientRect();
 
-        // 更新字幕容器位置
+        // Update subtitle container position
         this.container.style.left = `${videoRect.left}px`;
         this.container.style.width = `${videoRect.width}px`;
 
-        // 根据设置更新字幕位置
+        // Update subtitle position based on settings
         if (this.settings.subtitleSettings.position === "top") {
             this.container.style.top = `${videoRect.top + 10}px`;
             this.container.style.bottom = "auto";
         } else {
-            // 调整底部位置，避免遮挡控制栏
+            // Adjust bottom position to avoid overlapping with control bar
             this.container.style.bottom = `${
                 window.innerHeight - videoRect.bottom + 60
             }px`;
@@ -224,7 +224,7 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     }
 
     /**
-     * 添加字幕悬停事件 - 暂停视频
+     * Add subtitle hover events - pause video
      */
     private addSubtitleHoverEvents() {
         if (!this.container) return;
@@ -251,7 +251,7 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     }
 
     /**
-     * listen to the event sent by content script
+     * Listen to the event sent by content script
      */
     private listenToBackgroundScript() {
 
@@ -261,14 +261,14 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
                 console.log("Get subtitle from background script", url, lang, videoId);
                 this.parseSubtitle(response);
 
-                // 启用字幕
+                // Enable subtitles
                 this.subtitleEnabled = true;
 
-                // 显示字幕容器
+                // Show subtitle container
                 if (this.container) {
                     this.container.style.display = "block";
                 } else {
-                    console.error("字幕容器不存在，无法显示");
+                    console.error("Subtitle container does not exist, cannot display");
                 }
 
             }
@@ -276,7 +276,7 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
             return true;
         });
 
-        // 添加一个方法来手动检查字幕状态
+        // Add a method to manually check subtitle status
         const checkSubtitleStatus = () => {
             const subsToggleElement = document.querySelector(".ytp-subtitles-button");
 
@@ -284,19 +284,19 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
                 const isSubtitleEnabled =
                     subsToggleElement.getAttribute("aria-pressed") === "true";
 
-                // 如果字幕状态变化
+                // If subtitle status changes
                 if (this.subtitleEnabled !== isSubtitleEnabled) {
                     this.subtitleEnabled = isSubtitleEnabled;
 
-                    // 如果字幕被禁用，清空字幕显示
+                    // If subtitles are disabled, clear subtitle display
                     if (!isSubtitleEnabled && this.container) {
                         this.container.innerHTML = "";
                         this.container.style.display = "none";
                     } else if (isSubtitleEnabled && this.container) {
-                        // 如果字幕被启用，显示字幕容器
+                        // If subtitles are enabled, show subtitle container
                         this.container.style.display = "block";
 
-                        // 如果有字幕数据但没有显示，尝试重新显示
+                        // If there is subtitle data but not displayed, try to redisplay
                         if (
                             this.subtitleData.length > 0 &&
                             this.container.innerHTML === ""
@@ -308,24 +308,23 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
             }
         };
 
-        // 定期检查字幕状态，降低频率到 2 秒一次
+        // Check subtitle status periodically, reduce frequency to once every 2 seconds
         setInterval(checkSubtitleStatus, 2000);
-        console.log("已设置定期检查字幕状态");
+        console.log("Periodic subtitle status check set up");
     }
 
     private parseSubtitle(response: string) {
         this.subtitleData  = this.parseJsonSubtitle(response);
         if (this.subtitleData  && this.subtitleData .length > 0) {
-            console.log(`解析成功，获取到 ${this.subtitleData.length} 条字幕`);
+            console.log(`Parsing successful, got ${this.subtitleData.length} subtitle entries`);
         } else {
-            console.warn("字幕解析结果为空");
+            console.warn("Subtitle parsing result is empty");
         }
-
     }
 
     /**
-     * 解析 JSON 格式字幕
-     * @param jsonContent JSON 字幕内容
+     * Parse JSON format subtitles
+     * @param jsonContent JSON subtitle content
      */
     private parseJsonSubtitle(jsonContent: string): SubtitleItem[] {
         try {
@@ -368,15 +367,15 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     }
 
     /**
-     * 开始定期检查视频时间，更新当前字幕
+     * Start periodic check of video time to update current subtitle
      */
     private startPeriodicCheck() {
-        // 清除之前的定时器
+        // Clear previous timer
         if (this.checkIntervalId !== null) {
             cancelAnimationFrame(this.checkIntervalId as unknown as number);
         }
 
-        // 使用 requestAnimationFrame 实现更精确的同步
+        // Use requestAnimationFrame for more precise synchronization
         const checkFrame = (timestamp: number) => {
             this.checkCurrentTime();
             if (this.checkIntervalId !== null) {
@@ -384,15 +383,15 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
             }
         };
 
-        // 启动帧检查
+        // Start frame check
         this.checkIntervalId = window.requestAnimationFrame(checkFrame) as unknown as number;
     }
 
     /**
-     * 检查当前视频时间，更新字幕
+     * Check current video time and update subtitle
      */
     private checkCurrentTime() {
-        console.log("检查当前时间，更新字幕");
+        console.log("Checking current time, updating subtitle");
         if (!this.subtitleEnabled || this.subtitleData.length === 0) {
             return;
         }
@@ -406,28 +405,28 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
 
         const currentTime = videoPlayer.currentTime * 1000;
 
-        // 查找当前时间对应的字幕索引
+        // Find subtitle index for current time
         const index = this.findSubtitleIndex(currentTime);
 
-        // 如果索引没有变化，不更新字幕
+        // If index hasn't changed, don't update subtitle
         if (index === this.currentSubtitleIndex) return;
 
-        // 更新当前字幕索引
+        // Update current subtitle index
         this.currentSubtitleIndex = index;
 
-        // 如果没有找到字幕，清空字幕显示
+        // If no subtitle found, clear subtitle display
         if (index === -1) {
             this.updateSubtitle("");
             return;
         }
 
-        // 获取字幕文本
+        // Get subtitle text
         const subtitle = this.subtitleData[index];
 
-        // 更新字幕显示
+        // Update subtitle display
         this.updateSubtitle(subtitle.text);
 
-        // 触发字幕变化事件
+        // Trigger subtitle change event
         window.dispatchEvent(
             new CustomEvent("acquireLanguageSubtitleChanged", {
                 detail: { text: subtitle.text },
@@ -436,15 +435,15 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     }
 
     /**
-     * 查找当前时间对应的字幕索引
-     * @param currentTime 当前视频时间（毫秒）
-     * @returns 字幕索引，如果没有找到则返回 -1
+     * Find subtitle index for current time
+     * @param currentTime Current video time (milliseconds)
+     * @returns Subtitle index, -1 if not found
      */
     private findSubtitleIndex(currentTime: number): number {
-        // 如果没有字幕数据，返回 -1
+        // If no subtitle data, return -1
         if (this.subtitleData.length === 0) return -1;
 
-        // 如果当前索引有效，先检查当前索引是否仍然匹配
+        // If current index is valid, first check if current index still matches
         if (
             this.currentSubtitleIndex >= 0 &&
             this.currentSubtitleIndex < this.subtitleData.length
@@ -454,53 +453,53 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
                 return this.currentSubtitleIndex;
             }
 
-            // 检查下一个字幕（预测性查找，假设字幕是按时间顺序排列的）
+            // Check next subtitle (predictive lookup, assuming subtitles are in chronological order)
             if (this.currentSubtitleIndex + 1 < this.subtitleData.length) {
                 const next = this.subtitleData[this.currentSubtitleIndex + 1];
                 if (currentTime >= next.start && currentTime <= next.end) {
                     return this.currentSubtitleIndex + 1;
                 }
 
-                // 如果当前时间在下一个字幕的开始时间之前，但很接近（200ms内），提前显示下一个字幕
+                // If current time is before next subtitle start time but very close (within 200ms), show next subtitle early
                 if (currentTime < next.start && next.start - currentTime < 200) {
                     return this.currentSubtitleIndex + 1;
                 }
             }
 
-            // 如果当前时间超过了当前字幕的结束时间，尝试查找下一个合适的字幕
-            // 这种情况通常发生在快进或跳转时
+            // If current time has passed current subtitle end time, try to find next suitable subtitle
+            // This usually happens during fast forward or seeking
             if (currentTime > current.end) {
-                // 从当前索引开始向后查找
+                // Search forward from current index
                 for (
                     let i = this.currentSubtitleIndex + 1;
                     i < this.subtitleData.length;
                     i++
                 ) {
                     const subtitle = this.subtitleData[i];
-                    // 如果找到匹配的字幕，或者当前时间接近下一个字幕的开始时间
+                    // If found matching subtitle, or current time is close to next subtitle start time
                     if (
                         (currentTime >= subtitle.start && currentTime <= subtitle.end) ||
                         (currentTime < subtitle.start && subtitle.start - currentTime < 200)
                     ) {
                         return i;
                     }
-                    // 如果已经超过了当前时间很多，停止查找
+                    // If already far ahead of current time, stop searching
                     if (subtitle.start > currentTime + 5000) break;
                 }
             } else if (currentTime < current.start) {
-                // 从当前索引开始向前查找
+                // Search backward from current index
                 for (let i = this.currentSubtitleIndex - 1; i >= 0; i--) {
                     const subtitle = this.subtitleData[i];
                     if (currentTime >= subtitle.start && currentTime <= subtitle.end) {
                         return i;
                     }
-                    // 如果已经小于当前时间很多，停止查找
+                    // If already far behind current time, stop searching
                     if (subtitle.end < currentTime - 5000) break;
                 }
             }
         }
 
-        // 使用二分查找算法快速定位字幕
+        // Use binary search algorithm to quickly locate subtitle
         let low = 0;
         let high = this.subtitleData.length - 1;
 
@@ -509,7 +508,7 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
             const subtitle = this.subtitleData[mid];
 
             if (currentTime < subtitle.start) {
-                // 如果当前时间接近字幕开始时间（200ms内），提前显示该字幕
+                // If current time is close to subtitle start time (within 200ms), show this subtitle early
                 if (subtitle.start - currentTime < 200) {
                     return mid;
                 }
@@ -517,40 +516,40 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
             } else if (currentTime > subtitle.end) {
                 low = mid + 1;
             } else {
-                // 找到匹配的字幕
+                // Found matching subtitle
                 return mid;
             }
         }
 
-        // 没有找到匹配的字幕，但检查是否接近下一个字幕
+        // No matching subtitle found, but check if close to next subtitle
         if (low < this.subtitleData.length) {
             const nextSubtitle = this.subtitleData[low];
-            // 如果当前时间接近下一个字幕的开始时间（200ms内），提前显示该字幕
+            // If current time is close to next subtitle start time (within 200ms), show next subtitle early
             if (nextSubtitle.start - currentTime < 200) {
                 return low;
             }
         }
 
-        // 没有找到匹配的字幕
+        // No matching subtitle found
         return -1;
     }
 
     /**
-     * 更新字幕
-     * @param text 字幕文本
+     * Update subtitle
+     * @param text Subtitle text
      */
     updateSubtitle(text: string = ""): void {
-        // 如果字幕没有变化，则不更新
+        // If subtitle hasn't changed, don't update
         if (text === this._currentSubtitle) {
             return;
         }
 
-        // 更新当前字幕
+        // Update current subtitle
         this._currentSubtitle = text;
 
-        // 如果没有容器或字幕被禁用，不更新DOM
+        // If no container or subtitles are disabled, don't update DOM
         if (!this.container) {
-            console.error("字幕容器不存在，无法更新字幕");
+            console.error("Subtitle container does not exist, cannot update subtitle");
             return;
         }
 
@@ -558,85 +557,85 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
             return;
         }
 
-        // 处理字幕
+        // Process subtitle
         const processedText = this.processSubtitle(text);
 
-        // 使用 requestAnimationFrame 优化DOM更新，减少重排
+        // Use requestAnimationFrame to optimize DOM updates, reduce reflow
         requestAnimationFrame(() => {
-            // 更新字幕容器
+            // Update subtitle container
             if (this.container) {
                 this.container.innerHTML = processedText;
 
-                // 添加单词点击事件
+                // Add word click events
                 if (processedText) {
                     this.addWordClickEvents();
                 }
             } else {
-                console.error("字幕容器不存在，无法更新DOM");
+                console.error("Subtitle container does not exist, cannot update DOM");
             }
         });
     }
 
     /**
-     * 处理字幕文本
-     * @param text 原始字幕文本
-     * @returns 处理后的字幕文本
+     * Process subtitle text
+     * @param text Original subtitle text
+     * @returns Processed subtitle text
      */
     processSubtitle(text: string): string {
         if (!text) return "";
 
-        // 使用缓存优化，避免重复处理相同的文本
+        // Use cache optimization to avoid processing the same text repeatedly
         const cacheKey = `processed:${text}`;
         const cached = sessionStorage.getItem(cacheKey);
         if (cached) {
             return cached;
         }
 
-        // 分割文本为单词
+        // Split text into words
         const words = text.split(/(\s+|[,.!?;:'"()[\]{}])/);
 
-        // 处理每个单词
+        // Process each word
         const processedWords = words.map((word) => {
-            // 跳过空白字符和标点符号
+            // Skip whitespace and punctuation
             if (!word.trim() || /^[,.!?;:'"()[\]{}]$/.test(word)) {
                 return word;
             }
 
-            // 将单词包装在可点击的 span 中
+            // Wrap word in clickable span
             return `<span class="acquire-language-word" data-word="${word}">${word}</span>`;
         });
 
-        // 合并处理后的单词
+        // Merge processed words
         const result = processedWords.join("");
 
-        // 缓存处理结果
+        // Cache processed result
         try {
             sessionStorage.setItem(cacheKey, result);
         } catch (e) {
-            // 忽略存储错误
+            // Ignore storage error
         }
 
         return result;
     }
 
     /**
-     * 添加单词点击事件
+     * Add word click events
      */
     addWordClickEvents() {
         if (!this.container) return;
 
-        // 获取所有单词元素
+        // Get all word elements
         const wordElements = this.container.querySelectorAll(
             ".acquire-language-word"
         );
 
-        // 为每个单词添加点击事件
+        // Add click event to each word
         wordElements.forEach((element: Element) => {
             element.addEventListener("click", async (event: Event) => {
-                // 阻止事件冒泡
+                // Stop event propagation
                 event.stopPropagation();
 
-                // 获取单词和位置
+                // Get word and position
                 const word = element.getAttribute("data-word") || "";
                 const rect = element.getBoundingClientRect();
                 const position = {
@@ -644,100 +643,100 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
                     y: rect.bottom + window.scrollY + 10,
                 };
 
-                // 显示加载状态
+                // Show loading status
                 this.wordPopup.showLoading(word, position);
 
-                // 获取单词释义
+                // Get word definition
                 try {
-                    // 调用 AI 服务获取释义
+                    // Call AI service to get definition
                     const definition = await this.aiService.getWordDefinition(
                         word,
                         this._currentSubtitle,
                         this.settings.targetLanguage
                     );
 
-                    // 显示单词释义
+                    // Show word definition
                     this.wordPopup.show(word, definition, position);
                 } catch (error: any) {
-                    console.error("获取单词释义失败:", error);
-                    this.wordPopup.show(word, `获取释义失败: ${error.message}`, position);
+                    console.error("Failed to get word definition:", error);
+                    this.wordPopup.show(word, `Failed to get definition: ${error.message}`, position);
                 }
             });
         });
     }
 
     /**
-     * 销毁字幕处理器
+     * Destroy subtitle handler
      */
     destroy() {
-        // 停止定期检查
+        // Stop periodic check
         if (this.checkIntervalId !== null) {
             cancelAnimationFrame(this.checkIntervalId as unknown as number);
             this.checkIntervalId = null;
         }
 
-        // 停止监听视频播放器大小变化
+        // Stop listening for video player size changes
         if (this.containerObserver) {
             this.containerObserver.disconnect();
             this.containerObserver = null;
         }
 
-        // 调用基类的销毁方法
+        // Call base class destroy method
         super.destroy();
     }
 
     /**
-     * 尝试预加载字幕
+     * Try to preload subtitles
      */
     private tryPreloadSubtitles() {
-        // 延迟执行，确保页面已完全加载
+        // Delay execution to ensure page is fully loaded
         setTimeout(() => {
-            // 获取视频ID
+            // Get video ID
             const videoId = this.getVideoIdFromUrl(window.location.href);
             if (!videoId) {
                 return;
             }
 
-            // 模拟点击字幕按钮以触发字幕加载
+            // Simulate clicking subtitle button to trigger subtitle load
             const subsToggleElement = document.querySelector(".ytp-subtitles-button");
             if (subsToggleElement) {
                 const isSubtitleEnabled =
                     subsToggleElement.getAttribute("aria-pressed") === "true";
 
                 if (!isSubtitleEnabled) {
-                    // 如果字幕未启用，尝试点击按钮启用字幕
+                    // If subtitles are not enabled, try to click button to enable subtitles
                     try {
                         (subsToggleElement as HTMLElement).click();
 
-                        // 2秒后再次点击，恢复原始状态（如果用户不想要字幕）
+                        // 2 seconds later, click again to restore original state (if user doesn't want subtitles)
                         setTimeout(() => {
                             if (!this.subtitleData.length) {
-                                // 如果没有加载到字幕数据，恢复原始状态
+                                // If no subtitle data loaded, restore original state
                                 (subsToggleElement as HTMLElement).click();
                             }
                         }, 2000);
                     } catch (e) {
-                        console.error("点击字幕按钮失败:", e);
+                        console.error("Failed to click subtitle button:", e);
                     }
                 } else {
-                    console.log("字幕已启用，无需预加载");
+                    console.log("Subtitles are already enabled, no need to preload");
                 }
             } else {
-                console.log("找不到字幕按钮，无法预加载字幕");
+                console.log("Cannot find subtitle button, cannot preload subtitles");
             }
         }, 3000);
-        console.log("已设置预加载字幕定时器");
+        console.log("Preload subtitle timer set");
     }
 
     /**
-     * 从URL中获取视频ID
+     * Get video ID from URL
      */
     private getVideoIdFromUrl(url: string): string | null {
         try {
             const urlObj = new URL(url);
             return urlObj.searchParams.get("v");
         } catch (e) {
-            console.error("解析URL失败:", e);
+            console.error("Failed to parse URL:", e);
             return null;
         }
     }

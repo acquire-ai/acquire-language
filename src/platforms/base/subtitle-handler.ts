@@ -1,49 +1,49 @@
 /**
- * 字幕处理器基类
+ * Subtitle handler base class
  */
 import {AIService} from "@/core/types/ai.ts";
 import {SubtitleHandler} from "@/core/types/platform.ts";
 import {WordPopup} from "@/components/word-popup";
 
 /**
- * 抽象字幕处理器基类
+ * Abstract subtitle handler base class
  */
 export abstract class BaseSubtitleHandler implements SubtitleHandler {
     /**
-     * 字幕容器元素
+     * Subtitle container element
      */
     protected container: HTMLElement | null = null;
 
     /**
-     * 当前字幕文本（私有实现）
+     * Current subtitle text (private implementation)
      */
     protected _currentSubtitle: string = "";
 
     /**
-     * 当前字幕文本（只读属性）
+     * Current subtitle text (read-only property)
      */
     get currentSubtitle(): string {
         return this._currentSubtitle;
     }
 
     /**
-     * AI服务
+     * AI service
      */
     protected aiService: AIService;
 
     /**
-     * 单词弹出组件
+     * Word popup component
      */
     protected wordPopup: WordPopup;
 
     /**
-     * 设置
+     * Settings
      */
     protected settings: any = null;
 
     /**
-     * 构造函数
-     * @param aiService AI服务
+     * Constructor
+     * @param aiService AI service
      */
     constructor(aiService: AIService) {
         this.aiService = aiService;
@@ -51,38 +51,38 @@ export abstract class BaseSubtitleHandler implements SubtitleHandler {
     }
 
     /**
-     * 初始化字幕处理器
+     * Initialize subtitle handler
      */
     abstract initialize(): Promise<void>;
 
     /**
-     * 更新字幕
-     * 从视频平台获取最新字幕并更新显示
+     * Update subtitle
+     * Get latest subtitle from video platform and update display
      */
     abstract updateSubtitle(): void;
 
     /**
-     * 获取当前字幕文本
-     * @returns 当前字幕文本
+     * Get current subtitle text
+     * @returns Current subtitle text
      */
     getCurrentSubtitle(): string {
         return this._currentSubtitle;
     }
 
     /**
-     * 处理字幕文本
-     * @param text 原始字幕文本
-     * @returns 处理后的字幕文本
+     * Process subtitle text
+     * @param text Original subtitle text
+     * @returns Processed subtitle text
      */
     abstract processSubtitle(text: string): string;
 
     /**
-     * 添加单词点击事件
+     * Add word click events
      */
     abstract addWordClickEvents(): void;
 
     /**
-     * 加载设置
+     * Load settings
      */
     protected async loadSettings() {
         try {
@@ -102,14 +102,14 @@ export abstract class BaseSubtitleHandler implements SubtitleHandler {
                 },
             };
 
-            console.log("已加载设置:", this.settings);
+            console.log("Settings loaded:", this.settings);
         } catch (error) {
-            console.error("加载设置失败:", error);
+            console.error("Failed to load settings:", error);
         }
     }
 
     /**
-     * 销毁字幕处理器
+     * Destroy subtitle handler
      */
     destroy(): void {
         if (this.container) {
@@ -117,7 +117,7 @@ export abstract class BaseSubtitleHandler implements SubtitleHandler {
             this.container = null;
         }
 
-        // 销毁单词弹出组件
+        // Destroy word popup component
         this.wordPopup.destroy();
     }
 }

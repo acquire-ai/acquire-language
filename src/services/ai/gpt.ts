@@ -1,5 +1,5 @@
 /**
- * GPT-4o Mini AI 服务实现
+ * GPT-4o Mini AI Service Implementation
  */
 import {AIService, AIServiceConfig} from '../../core/types/ai';
 import {getLanguageName} from '../../core/utils';
@@ -13,17 +13,17 @@ export class GPT4oMiniAIService implements AIService {
         this.model = config.model || 'gpt-4o-mini';
     }
 
-    // 获取单词释义
+    // Get word definition
     async getWordDefinition(word: string, context: string, targetLanguage: string): Promise<string> {
         try {
-            // 从存储中获取设置，获取用户的母语
+            // Get settings from storage, get user's native language
             const result = await browser.storage.local.get('settings');
             const settings = result.settings || {nativeLanguage: 'zh-CN'};
             const nativeLanguage = settings.nativeLanguage;
 
-            console.log(`获取单词释义 (GPT-4o-mini): 单词="${word}", 上下文="${context}", 母语="${nativeLanguage}"`);
+            console.log(`Get word definition (GPT-4o-mini): word="${word}", context="${context}", native language="${nativeLanguage}"`);
 
-            // 构建提示
+            // Build prompt
             const prompt = `
 请根据以下上下文，解释单词 "${word}" 的含义。
 上下文: "${context}"
@@ -44,43 +44,38 @@ export class GPT4oMiniAIService implements AIService {
 2. 另一个例句 (中文翻译)
 `;
 
-            // 调用 OpenAI API
+            // Call OpenAI API
             return await this.callAPI(prompt);
         } catch (error: any) {
-            console.error('获取单词释义失败:', error);
-            return `获取 "${word}" 的释义失败: ${error.message}`;
+            console.error('Failed to get word definition:', error);
+            return `Failed to get definition for "${word}": ${error.message}`;
         }
     }
 
-    // 翻译文本
+    // Translate text
     async translateText(text: string, sourceLanguage: string, targetLanguage: string): Promise<string> {
         try {
-            // 构建提示
             const prompt = `
 请将以下文本从${this.getLanguageName(sourceLanguage)}翻译成${this.getLanguageName(targetLanguage)}:
 "${text}"
 只需要提供翻译结果，不要添加任何解释或额外内容。
 `;
 
-            // 调用 OpenAI API
             return await this.callAPI(prompt);
         } catch (error: any) {
-            console.error('翻译文本失败:', error);
-            return `翻译失败: ${error.message}`;
+            console.error('Failed to translate text:', error);
+            return `Translation failed: ${error.message}`;
         }
     }
 
-    // 调用 OpenAI API
     private async callAPI(prompt: string): Promise<string> {
         if (!this.apiKey) {
-            throw new Error('API 密钥未设置');
+            throw new Error('API key not set');
         }
 
         try {
-            // OpenAI API 端点
             const apiUrl = 'https://api.openai.com/v1/chat/completions';
 
-            // 构建请求
             const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
@@ -100,21 +95,19 @@ export class GPT4oMiniAIService implements AIService {
                 }),
             });
 
-            // 解析响应
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(`API 错误: ${data.error?.message || '未知错误'}`);
+                throw new Error(`API error: ${data.error?.message || 'Unknown error'}`);
             }
 
             return data.choices[0].message.content.trim();
         } catch (error) {
-            console.error('调用 OpenAI API 失败:', error);
+            console.error('Failed to call OpenAI API:', error);
             throw error;
         }
     }
 
-    // 获取语言名称
     private getLanguageName(code: string): string {
         return getLanguageName(code);
     }

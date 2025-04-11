@@ -9,7 +9,7 @@ describe('工具函数测试', () => {
       const end = Date.now();
       const elapsed = end - start;
       
-      // 允许一定的时间误差
+      // Allow a small time error margin
       expect(elapsed).toBeGreaterThanOrEqual(90);
     });
   });
