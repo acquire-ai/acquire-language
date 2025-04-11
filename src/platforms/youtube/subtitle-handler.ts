@@ -37,7 +37,6 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
 
         this.startPeriodicCheck();
 
-        this.tryPreloadSubtitles();
     }
 
 
@@ -229,7 +228,7 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
             return true;
         });
 
-        // Add a method to manually check subtitle status
+        // check if subtitle is enabled, if not, hide subtitle container
         const checkSubtitleStatus = () => {
             const subsToggleElement = document.querySelector(".ytp-subtitles-button");
 
@@ -257,8 +256,8 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
             }
         };
 
-        // Check subtitle status periodically, reduce frequency to once every 2 seconds
-        setInterval(checkSubtitleStatus, 2000);
+        // Check subtitle status periodically, every 100ms
+        setInterval(checkSubtitleStatus, 100);
         console.log("Periodic subtitle status check set up");
     }
 
@@ -583,7 +582,6 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
                     y: rect.bottom + window.scrollY + 10,
                 };
 
-                // Show loading status
                 this.wordPopup.showLoading(word, position);
 
                 // Get word definition
@@ -621,63 +619,7 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
             this.containerObserver = null;
         }
 
-        // Call base class destroy method
         super.destroy();
     }
 
-    /**
-     * Try to preload subtitles
-     */
-    private tryPreloadSubtitles() {
-        // Delay execution to ensure page is fully loaded
-        setTimeout(() => {
-            // Get video ID
-            const videoId = this.getVideoIdFromUrl(window.location.href);
-            if (!videoId) {
-                return;
-            }
-
-            // Simulate clicking subtitle button to trigger subtitle load
-            const subsToggleElement = document.querySelector(".ytp-subtitles-button");
-            if (subsToggleElement) {
-                const isSubtitleEnabled =
-                    subsToggleElement.getAttribute("aria-pressed") === "true";
-
-                if (!isSubtitleEnabled) {
-                    // If subtitles are not enabled, try to click button to enable subtitles
-                    try {
-                        (subsToggleElement as HTMLElement).click();
-
-                        // 2 seconds later, click again to restore original state (if user doesn't want subtitles)
-                        setTimeout(() => {
-                            if (!this.subtitleData.length) {
-                                // If no subtitle data loaded, restore original state
-                                (subsToggleElement as HTMLElement).click();
-                            }
-                        }, 2000);
-                    } catch (e) {
-                        console.error("Failed to click subtitle button:", e);
-                    }
-                } else {
-                    console.log("Subtitles are already enabled, no need to preload");
-                }
-            } else {
-                console.log("Cannot find subtitle button, cannot preload subtitles");
-            }
-        }, 3000);
-        console.log("Preload subtitle timer set");
-    }
-
-    /**
-     * Get video ID from URL
-     */
-    private getVideoIdFromUrl(url: string): string | null {
-        try {
-            const urlObj = new URL(url);
-            return urlObj.searchParams.get("v");
-        } catch (e) {
-            console.error("Failed to parse URL:", e);
-            return null;
-        }
-    }
 }
