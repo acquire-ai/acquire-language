@@ -17,7 +17,7 @@ interface SubtitleItem {
 export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     private containerObserver: MutationObserver | null = null;
     private subtitleEnabled: boolean = false;
-    private subtitleData: any[] = [];
+    private subtitleData: SubtitleItem[] = [];
     private checkIntervalId: number | null = null;
     private currentSubtitleIndex: number = -1;
 
@@ -40,30 +40,17 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     }
 
 
-    /**
-     * Create custom subtitle container
-     */
     private createSubtitleContainer() {
-        // Hide YouTube original subtitles
         this.hideYouTubeSubtitles();
 
-        // Create custom subtitle container
         this.container = document.createElement("div");
         this.container.id = "acquire-language-subtitle";
-
-        // Set styles
         this.applySubtitleStyles();
-
-        // Add to document
-        document.body.appendChild(this.container);
-
-        // Add subtitle hover events - pause video
         this.addSubtitleHoverEvents();
+
+        document.body.appendChild(this.container)
     }
 
-    /**
-     * Hide YouTube original subtitles
-     */
     private hideYouTubeSubtitles() {
         const style = document.createElement("style");
         style.textContent = `
@@ -80,16 +67,12 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
         document.head.appendChild(style);
     }
 
-    /**
-     * Apply subtitle styles
-     */
     private applySubtitleStyles() {
         if (!this.container) {
             console.error("Subtitle container does not exist, cannot apply styles");
             return;
         }
 
-        // Get video player
         const videoPlayer = document.querySelector("video");
         if (!videoPlayer) {
             console.error("Cannot find video player, cannot apply subtitle styles");
@@ -145,17 +128,12 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
         });
     }
 
-    /**
-     * Update subtitle position
-     */
     private updateSubtitlePosition() {
         if (!this.container) return;
 
-        // Get video player
         const videoPlayer = document.querySelector("video");
         if (!videoPlayer) return;
 
-        // Get video player dimensions and position
         const videoRect = videoPlayer.getBoundingClientRect();
 
         // Update subtitle container position
@@ -202,21 +180,15 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
         });
     }
 
-    /**
-     * Listen to the event sent by content script
-     */
     private listenToBackgroundScript() {
-
         chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             if (message.type === "ACQ_SUBTITLE_FETCHED") {
                 const {url, lang, videoId, response} = message.data;
                 console.log("Get subtitle from background script", url, lang, videoId);
                 this.parseSubtitle(response);
 
-                // Enable subtitles
                 this.subtitleEnabled = true;
 
-                // Show subtitle container
                 if (this.container) {
                     this.container.style.display = "block";
                 } else {
@@ -258,14 +230,11 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
 
         // Check subtitle status periodically, every 100ms
         setInterval(checkSubtitleStatus, 100);
-        console.log("Periodic subtitle status check set up");
     }
 
     private parseSubtitle(response: string) {
         this.subtitleData  = this.parseJsonSubtitle(response);
-        if (this.subtitleData  && this.subtitleData .length > 0) {
-            console.log(`Parsing successful, got ${this.subtitleData.length} subtitle entries`);
-        } else {
+        if (!this.subtitleData || this.subtitleData.length === 0) {
             console.warn("Subtitle parsing result is empty");
         }
     }
@@ -476,10 +445,6 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
         return -1;
     }
 
-    /**
-     * Update subtitle
-     * @param text Subtitle text
-     */
     updateSubtitle(text: string = ""): void {
         if (text === this._currentSubtitle) {
             return;
