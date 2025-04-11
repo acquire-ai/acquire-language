@@ -1,5 +1,5 @@
 /**
- * 习得语言 (Acquire Language) WXT 配置文件
+ * Acquire Language WXT Configuration File
  */
 import { defineConfig } from "wxt";
 import tailwindcss from "@tailwindcss/vite";
@@ -7,29 +7,29 @@ import tailwindcss from "@tailwindcss/vite";
 // See https://wxt.dev/api/config.html
 export default defineConfig({
   srcDir: "src",
-  // 使用 Chrome 扩展 API
+  // Use Chrome extension API
   extensionApi: "chrome",
 
-  // 使用 React 模块
+  // Use React module
   modules: ["@wxt-dev/module-react"],
 
-  // Vite 配置
+  // Vite configuration
   vite: () => ({
     plugins: [tailwindcss()],
   }),
 
-  // 添加静态资源配置，确保 public 目录中的文件被复制到构建输出
+  // Add static resource configuration to ensure files in public directory are copied to build output
   publicDir: "public",
 
-  // 扩展清单配置
+  // Extension manifest configuration
   manifest: {
-    // 扩展名称
+    // Extension name
     name: "习得语言 (Acquire Language)",
 
-    // 扩展描述
+    // Extension description
     description: "通过观看视频学习语言的 Chrome 扩展 - 增强字幕显示",
 
-    // 版本号
+    // Version number
     version: "0.0.1",
     permissions: ["storage", "tabs", "scripting", "webRequest"],
     host_permissions: ["*://*.youtube.com/*"],

@@ -1,33 +1,33 @@
-import {useState} from 'react';
+import { useState } from 'react';
 import reactLogo from '@/assets/react.svg';
 import wxtLogo from '/wxt.svg';
 
 function App() {
     const [count, setCount] = useState(0);
 
-    // 打开选项页面
+    // Open options page
     const openOptionsPage = () => {
         browser.runtime.openOptionsPage();
     };
 
-    // 打开生词本页面
+    // Open vocabulary page
     const openVocabularyPage = () => {
-        browser.tabs.create({url: '/vocabulary.html'});
+        browser.tabs.create({ url: '/vocabulary.html' });
     };
 
-    // 打开 YouTube
+    // Open YouTube
     const openYouTube = () => {
-        browser.tabs.create({url: 'https://www.youtube.com'});
+        browser.tabs.create({ url: 'https://www.youtube.com' });
     };
 
     return (
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-4">
             <div className="flex justify-center space-x-4 mb-6">
                 <a href="https://wxt.dev" target="_blank" className="hover:scale-110 transition-transform">
-                    <img src={wxtLogo} className="h-16 w-16" alt="WXT logo"/>
+                    <img src={wxtLogo} className="h-16 w-16" alt="WXT logo" />
                 </a>
                 <a href="https://react.dev" target="_blank" className="hover:scale-110 transition-transform">
-                    <img src={reactLogo} className="h-16 w-16 animate-spin-slow" alt="React logo"/>
+                    <img src={reactLogo} className="h-16 w-16 animate-spin-slow" alt="React logo" />
                 </a>
             </div>
             <h1 className="text-2xl font-bold text-center mb-6">习得语言 (Acquire Language)</h1>
