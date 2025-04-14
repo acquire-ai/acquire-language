@@ -7,7 +7,7 @@
 import {BaseSubtitleHandler} from "../base/subtitle-handler";
 import {AIService} from "@/core/types/ai.ts";
 
-// Subtitle item interface
+
 interface SubtitleItem {
     start: number;
     end: number;
@@ -17,9 +17,10 @@ interface SubtitleItem {
 export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     private containerObserver: MutationObserver | null = null;
     private subtitleEnabled: boolean = false;
-    private subtitleData: any[] = [];
+    private subtitleData: SubtitleItem[] = [];
     private checkIntervalId: number | null = null;
-    private currentSubtitleIndex: number = -1;
+    private currSubtitleIndices: number[] = [];
+    private currSubtitleText: string = "";
 
     constructor(aiService: AIService) {
         super(aiService);
@@ -40,30 +41,17 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     }
 
 
-    /**
-     * Create custom subtitle container
-     */
     private createSubtitleContainer() {
-        // Hide YouTube original subtitles
         this.hideYouTubeSubtitles();
 
-        // Create custom subtitle container
         this.container = document.createElement("div");
         this.container.id = "acquire-language-subtitle";
-
-        // Set styles
         this.applySubtitleStyles();
-
-        // Add to document
-        document.body.appendChild(this.container);
-
-        // Add subtitle hover events - pause video
         this.addSubtitleHoverEvents();
+
+        document.body.appendChild(this.container)
     }
 
-    /**
-     * Hide YouTube original subtitles
-     */
     private hideYouTubeSubtitles() {
         const style = document.createElement("style");
         style.textContent = `
@@ -80,16 +68,12 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
         document.head.appendChild(style);
     }
 
-    /**
-     * Apply subtitle styles
-     */
     private applySubtitleStyles() {
         if (!this.container) {
             console.error("Subtitle container does not exist, cannot apply styles");
             return;
         }
 
-        // Get video player
         const videoPlayer = document.querySelector("video");
         if (!videoPlayer) {
             console.error("Cannot find video player, cannot apply subtitle styles");
@@ -145,17 +129,12 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
         });
     }
 
-    /**
-     * Update subtitle position
-     */
     private updateSubtitlePosition() {
         if (!this.container) return;
 
-        // Get video player
         const videoPlayer = document.querySelector("video");
         if (!videoPlayer) return;
 
-        // Get video player dimensions and position
         const videoRect = videoPlayer.getBoundingClientRect();
 
         // Update subtitle container position
@@ -202,21 +181,15 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
         });
     }
 
-    /**
-     * Listen to the event sent by content script
-     */
     private listenToBackgroundScript() {
-
         chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             if (message.type === "ACQ_SUBTITLE_FETCHED") {
                 const {url, lang, videoId, response} = message.data;
                 console.log("Get subtitle from background script", url, lang, videoId);
                 this.parseSubtitle(response);
-
-                // Enable subtitles
+                console.log("Subtitle data length:", this.subtitleData.length);
                 this.subtitleEnabled = true;
 
-                // Show subtitle container
                 if (this.container) {
                     this.container.style.display = "block";
                 } else {
@@ -249,7 +222,7 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
                             this.subtitleData.length > 0 &&
                             this.container.innerHTML === ""
                         ) {
-                            this.checkCurrentTime();
+                            this.syncSubtitleWithVideoTime();
                         }
                     }
                 }
@@ -258,14 +231,11 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
 
         // Check subtitle status periodically, every 100ms
         setInterval(checkSubtitleStatus, 100);
-        console.log("Periodic subtitle status check set up");
     }
 
     private parseSubtitle(response: string) {
         this.subtitleData  = this.parseJsonSubtitle(response);
-        if (this.subtitleData  && this.subtitleData .length > 0) {
-            console.log(`Parsing successful, got ${this.subtitleData.length} subtitle entries`);
-        } else {
+        if (!this.subtitleData || this.subtitleData.length === 0) {
             console.warn("Subtitle parsing result is empty");
         }
     }
@@ -303,7 +273,7 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
                 subtitles.push({
                     start,
                     end,
-                    text: text.trim(),
+                    text,
                 });
             }
             
@@ -325,7 +295,7 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
 
         // Use requestAnimationFrame for more precise synchronization
         const checkFrame = (timestamp: number) => {
-            this.checkCurrentTime();
+            this.syncSubtitleWithVideoTime();
             if (this.checkIntervalId !== null) {
                 requestAnimationFrame(checkFrame);
             }
@@ -338,7 +308,7 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     /**
      * Check current video time and update subtitle
      */
-    private checkCurrentTime() {
+    private syncSubtitleWithVideoTime() {
         console.log("Checking current time, updating subtitle");
         if (!this.subtitleEnabled || this.subtitleData.length === 0) {
             return;
@@ -347,139 +317,44 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
         const videoPlayer = document.querySelector("video");
         if (!videoPlayer) return;
         
-        if (videoPlayer.paused) {
-            return;
-        }
 
         const currentTime = videoPlayer.currentTime * 1000;
 
-        // Find subtitle index for current time
-        const index = this.findSubtitleIndex(currentTime);
+        const indices = this.findSubtitleIndices(currentTime);
 
-        // If index hasn't changed, don't update subtitle
-        if (index === this.currentSubtitleIndex) return;
 
-        // Update current subtitle index
-        this.currentSubtitleIndex = index;
-
-        // If no subtitle found, clear subtitle display
-        if (index === -1) {
-            this.updateSubtitle("");
-            return;
+        if (indices.length >= 2) {
+            this.currSubtitleText = indices.map(index => this.subtitleData[index].text).join("\n");
+        } else if (indices.length === 1) {
+            this.currSubtitleText = this.subtitleData[indices[0]].text;
+            // do need next subtitle
+            const  currSubtitle = this.subtitleData[indices[0]];
+            const nextIndex = indices[0] + 1;
+            if (nextIndex < this.subtitleData.length) {
+                const nextSubtitle = this.subtitleData[nextIndex];
+                if (nextSubtitle.start <= currSubtitle.end) {
+                    this.currSubtitleText += "\n" + nextSubtitle.text;
+                }
+            }
+        } else {
+            this.currSubtitleText = "";
         }
 
-        // Get subtitle text
-        const subtitle = this.subtitleData[index];
+        console.log("Current time subtitle:", currentTime, this.currSubtitleText);
 
-        // Update subtitle display
-        this.updateSubtitle(subtitle.text);
+        this.updateSubtitle(this.currSubtitleText);
 
-        // Trigger subtitle change event
-        window.dispatchEvent(
-            new CustomEvent("acquireLanguageSubtitleChanged", {
-                detail: { text: subtitle.text },
-            })
-        );
     }
 
-    private findSubtitleIndex(currentTime: number): number {
-        if (this.subtitleData.length === 0) return -1;
-
-        // If current index is valid, first check if current index still matches
-        if (
-            this.currentSubtitleIndex >= 0 &&
-            this.currentSubtitleIndex < this.subtitleData.length
-        ) {
-            const current = this.subtitleData[this.currentSubtitleIndex];
-            if (currentTime >= current.start && currentTime <= current.end) {
-                return this.currentSubtitleIndex;
+    private findSubtitleIndices(currentTime: number): number[] {
+        return this.subtitleData.reduce((indices: number[], sub:SubtitleItem, index:number):number[] => {
+            if (currentTime >= sub.start && currentTime <= sub.end) {
+                indices.push(index);
             }
-
-            // Check next subtitle (predictive lookup, assuming subtitles are in chronological order)
-            if (this.currentSubtitleIndex + 1 < this.subtitleData.length) {
-                const next = this.subtitleData[this.currentSubtitleIndex + 1];
-                if (currentTime >= next.start && currentTime <= next.end) {
-                    return this.currentSubtitleIndex + 1;
-                }
-
-                // If current time is before next subtitle start time but very close (within 200ms), show next subtitle early
-                if (currentTime < next.start && next.start - currentTime < 200) {
-                    return this.currentSubtitleIndex + 1;
-                }
-            }
-
-            // If current time has passed current subtitle end time, try to find next suitable subtitle
-            // This usually happens during fast forward or seeking
-            if (currentTime > current.end) {
-                // Search forward from current index
-                for (
-                    let i = this.currentSubtitleIndex + 1;
-                    i < this.subtitleData.length;
-                    i++
-                ) {
-                    const subtitle = this.subtitleData[i];
-                    // If found matching subtitle, or current time is close to next subtitle start time
-                    if (
-                        (currentTime >= subtitle.start && currentTime <= subtitle.end) ||
-                        (currentTime < subtitle.start && subtitle.start - currentTime < 200)
-                    ) {
-                        return i;
-                    }
-                    // If already far ahead of current time, stop searching
-                    if (subtitle.start > currentTime + 5000) break;
-                }
-            } else if (currentTime < current.start) {
-                // Search backward from current index
-                for (let i = this.currentSubtitleIndex - 1; i >= 0; i--) {
-                    const subtitle = this.subtitleData[i];
-                    if (currentTime >= subtitle.start && currentTime <= subtitle.end) {
-                        return i;
-                    }
-                    // If already far behind current time, stop searching
-                    if (subtitle.end < currentTime - 5000) break;
-                }
-            }
-        }
-
-        // Use binary search algorithm to quickly locate subtitle
-        let low = 0;
-        let high = this.subtitleData.length - 1;
-
-        while (low <= high) {
-            const mid = Math.floor((low + high) / 2);
-            const subtitle = this.subtitleData[mid];
-
-            if (currentTime < subtitle.start) {
-                // If current time is close to subtitle start time (within 200ms), show this subtitle early
-                if (subtitle.start - currentTime < 200) {
-                    return mid;
-                }
-                high = mid - 1;
-            } else if (currentTime > subtitle.end) {
-                low = mid + 1;
-            } else {
-                // Found matching subtitle
-                return mid;
-            }
-        }
-
-        // No matching subtitle found, but check if close to next subtitle
-        if (low < this.subtitleData.length) {
-            const nextSubtitle = this.subtitleData[low];
-            // If current time is close to next subtitle start time (within 200ms), show next subtitle early
-            if (nextSubtitle.start - currentTime < 200) {
-                return low;
-            }
-        }
-
-        // No matching subtitle found
-        return -1;
+            return indices;
+        }, []);
     }
 
-    /**
-     * Update subtitle
-     * @param text Subtitle text
-     */
     updateSubtitle(text: string = ""): void {
         if (text === this._currentSubtitle) {
             return;
