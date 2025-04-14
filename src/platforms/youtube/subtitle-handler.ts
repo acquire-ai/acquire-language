@@ -19,8 +19,8 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     private subtitleEnabled: boolean = false;
     private subtitleData: SubtitleItem[] = [];
     private checkIntervalId: number | null = null;
-    private currentSubtitleIndex: number = -1;
-    private currentSubtitleItem: SubtitleItem | null = null;
+    private currSubtitleIndices: number[] = [];
+    private currSubtitleText: string = "";
 
     constructor(aiService: AIService) {
         super(aiService);
@@ -320,116 +320,39 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
 
         const currentTime = videoPlayer.currentTime * 1000;
 
-        const index = this.findSubtitleIndex(currentTime);
+        const indices = this.findSubtitleIndices(currentTime);
 
-        if (index === this.currentSubtitleIndex) return;
 
-        this.currentSubtitleIndex = index;
-
-        if (index === -1) {
-            this.updateSubtitle("");
-            return;
+        if (indices.length >= 2) {
+            this.currSubtitleText = indices.map(index => this.subtitleData[index].text).join("\n");
+        } else if (indices.length === 1) {
+            this.currSubtitleText = this.subtitleData[indices[0]].text;
+            // do need next subtitle
+            const  currSubtitle = this.subtitleData[indices[0]];
+            const nextIndex = indices[0] + 1;
+            if (nextIndex < this.subtitleData.length) {
+                const nextSubtitle = this.subtitleData[nextIndex];
+                if (nextSubtitle.start <= currSubtitle.end) {
+                    this.currSubtitleText += "\n" + nextSubtitle.text;
+                }
+            }
+        } else {
+            this.currSubtitleText = "";
         }
 
-        this.currentSubtitleItem = this.subtitleData[index];
+        console.log("Current time subtitle:", currentTime, this.currSubtitleText);
 
-        console.log("Current time subtitle:", currentTime, this.currentSubtitleItem);
-
-        this.updateSubtitle(this.currentSubtitleItem.text);
+        this.updateSubtitle(this.currSubtitleText);
 
     }
 
-    private findSubtitleIndex(currentTime: number): number {
-        if (this.subtitleData.length === 0) return -1;
-
-        // If current index is valid, first check if current index still matches
-        if (
-            this.currentSubtitleIndex >= 0 &&
-            this.currentSubtitleIndex < this.subtitleData.length
-        ) {
-            const current = this.subtitleData[this.currentSubtitleIndex];
-            if (currentTime >= current.start && currentTime <= current.end) {
-                return this.currentSubtitleIndex;
+    private findSubtitleIndices(currentTime: number): number[] {
+        return this.subtitleData.reduce((indices: number[], sub:SubtitleItem, index:number):number[] => {
+            if (currentTime >= sub.start && currentTime <= sub.end) {
+                indices.push(index);
             }
-
-            // Check next subtitle (predictive lookup, assuming subtitles are in chronological order)
-            if (this.currentSubtitleIndex + 1 < this.subtitleData.length) {
-                const next = this.subtitleData[this.currentSubtitleIndex + 1];
-                if (currentTime >= next.start && currentTime <= next.end) {
-                    return this.currentSubtitleIndex + 1;
-                }
-
-                // If current time is before next subtitle start time but very close (within 200ms), show next subtitle early
-                if (currentTime < next.start && next.start - currentTime < 200) {
-                    return this.currentSubtitleIndex + 1;
-                }
-            }
-
-            // If current time has passed current subtitle end time, try to find next suitable subtitle
-            // This usually happens during fast forward or seeking
-            if (currentTime > current.end) {
-                // Search forward from current index
-                for (
-                    let i = this.currentSubtitleIndex + 1;
-                    i < this.subtitleData.length;
-                    i++
-                ) {
-                    const subtitle = this.subtitleData[i];
-                    // If found matching subtitle, or current time is close to next subtitle start time
-                    if (
-                        (currentTime >= subtitle.start && currentTime <= subtitle.end) ||
-                        (currentTime < subtitle.start && subtitle.start - currentTime < 200)
-                    ) {
-                        return i;
-                    }
-                    // If already far ahead of current time, stop searching
-                    if (subtitle.start > currentTime + 5000) break;
-                }
-            } else if (currentTime < current.start) {
-                // Search backward from current index
-                for (let i = this.currentSubtitleIndex - 1; i >= 0; i--) {
-                    const subtitle = this.subtitleData[i];
-                    if (currentTime >= subtitle.start && currentTime <= subtitle.end) {
-                        return i;
-                    }
-                    // If already far behind current time, stop searching
-                    if (subtitle.end < currentTime - 5000) break;
-                }
-            }
-        }
-
-        // Use binary search algorithm to quickly locate subtitle
-        let low = 0;
-        let high = this.subtitleData.length - 1;
-
-        while (low <= high) {
-            const mid = Math.floor((low + high) / 2);
-            const subtitle = this.subtitleData[mid];
-
-            if (currentTime < subtitle.start) {
-                // If current time is close to subtitle start time (within 200ms), show this subtitle early
-                if (subtitle.start - currentTime < 200) {
-                    return mid;
-                }
-                high = mid - 1;
-            } else if (currentTime > subtitle.end) {
-                low = mid + 1;
-            } else {
-                // Found matching subtitle
-                return mid;
-            }
-        }
-
-        // No matching subtitle found, but check if close to next subtitle
-        if (low < this.subtitleData.length) {
-            const nextSubtitle = this.subtitleData[low];
-            // If current time is close to next subtitle start time (within 200ms), show next subtitle early
-            if (nextSubtitle.start - currentTime < 200) {
-                return low;
-            }
-        }
-
-        return -1;
+            return indices;
+        }, []);
     }
 
     updateSubtitle(text: string = ""): void {
