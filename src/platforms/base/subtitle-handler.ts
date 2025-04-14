@@ -4,9 +4,13 @@
 import {AIService} from "@/core/types/ai.ts";
 import {SubtitleHandler} from "@/core/types/platform.ts";
 import {WordPopup} from "@/components/word-popup";
+import { createRoot } from 'react-dom/client';
+import { Subtitle } from '@/components/subtitles';
+import React from 'react';
 
 export abstract class BaseSubtitleHandler implements SubtitleHandler {
     protected container: HTMLElement | null = null;
+    protected root: ReturnType<typeof createRoot> | null = null;
 
     protected _currentSubtitle: string = "";
 
@@ -27,7 +31,40 @@ export abstract class BaseSubtitleHandler implements SubtitleHandler {
 
     abstract initialize(): Promise<void>;
 
-    abstract updateSubtitle(): void;
+    protected createSubtitleContainer() {
+        this.container = document.createElement('div');
+        this.container.id = 'acquire-language-root';
+        document.body.appendChild(this.container);
+        // init react root
+        this.root = createRoot(this.container);
+    }
+
+    updateSubtitle(text: string = ""): void {
+        this._currentSubtitle = text;
+        
+        if (this.root && this.settings) {
+            const subtitleElement = React.createElement(Subtitle, {
+                text: text,
+                settings: this.settings.subtitleSettings,
+                onWordClick: (word: string, position: { x: number, y: number }) => {
+                    this.wordPopup.showLoading(word, position);
+                    this.handleWordClick(word, position);
+                }
+            });
+            
+            this.root.render(subtitleElement);
+        }
+    }
+
+    protected async handleWordClick(word: string, position: { x: number, y: number }) {
+        const definition = await this.aiService.getWordDefinition(
+            word, 
+            this._currentSubtitle, 
+            this.settings.nativeLanguage
+        );
+        
+        this.wordPopup.show(word, definition, position);
+    }
 
     getCurrentSubtitle(): string {
         return this._currentSubtitle;
@@ -35,7 +72,6 @@ export abstract class BaseSubtitleHandler implements SubtitleHandler {
 
     abstract processSubtitle(text: string): string;
 
-    abstract addWordClickEvents(): void;
 
     protected async loadSettings() {
         try {
@@ -63,8 +99,12 @@ export abstract class BaseSubtitleHandler implements SubtitleHandler {
 
     destroy(): void {
         if (this.container) {
+            if (this.root) {
+                this.root.unmount();
+            }
             this.container.remove();
             this.container = null;
+            this.root = null;
         }
 
         this.wordPopup.destroy();

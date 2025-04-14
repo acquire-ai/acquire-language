@@ -17,8 +17,6 @@ export interface SubtitleHandler {
 
     processSubtitle(text: string): string;
 
-    addWordClickEvents(): void;
-
     destroy(): void;
 }
 

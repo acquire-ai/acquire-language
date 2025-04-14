@@ -1,0 +1,62 @@
+import React, { useEffect, useState } from 'react';
+import { SubtitleContainer } from './SubtitleContainer';
+import { SubtitleText } from './SubtitleText';
+
+interface SubtitleProps {
+    text: string;
+    settings: {
+        fontSize: number;
+        position: 'top' | 'bottom';
+        backgroundColor: string;
+        textColor: string;
+        opacity: number;
+    };
+    onWordClick?: (word: string, position: { x: number, y: number }) => void;
+}
+
+export const Subtitle: React.FC<SubtitleProps> = ({ text, settings, onWordClick }) => {
+    const [videoRect, setVideoRect] = useState<DOMRect | null>(null);
+
+    useEffect(() => {
+        const updateVideoRect = () => {
+            const videoPlayer = document.querySelector('video');
+            if (videoPlayer) {
+                setVideoRect(videoPlayer.getBoundingClientRect());
+            }
+        };
+
+        updateVideoRect();
+
+        window.addEventListener('resize', updateVideoRect);
+
+        const observer = new ResizeObserver(updateVideoRect);
+        const videoPlayer = document.querySelector('video');
+        if (videoPlayer) {
+            observer.observe(videoPlayer);
+        }
+
+        return () => {
+            window.removeEventListener('resize', updateVideoRect);
+            observer.disconnect();
+        };
+    }, []);
+
+    const handleWordClick = (word: string, event: React.MouseEvent) => {
+        if (onWordClick) {
+            onWordClick(word, { x: event.clientX, y: event.clientY });
+        }
+    };
+
+    return (
+        <SubtitleContainer
+            position={settings.position}
+            fontSize={settings.fontSize}
+            textColor={settings.textColor}
+            backgroundColor={settings.backgroundColor}
+            opacity={settings.opacity}
+            videoRect={videoRect || undefined}
+        >
+            <SubtitleText text={text} onWordClick={handleWordClick} />
+        </SubtitleContainer>
+    );
+}; 

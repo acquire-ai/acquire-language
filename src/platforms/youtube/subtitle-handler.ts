@@ -31,25 +31,18 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
      */
     async initialize(): Promise<void> {
         await this.loadSettings();
-
-        this.createSubtitleContainer();
-
+        this.hideYouTubeSubtitles();
+        
+        super.createSubtitleContainer();
+        
+        this.setupYouTubeSubtitles();
+        
         this.listenToBackgroundScript();
-
         this.startPeriodicCheck();
-
     }
 
-
-    private createSubtitleContainer() {
-        this.hideYouTubeSubtitles();
-
-        this.container = document.createElement("div");
-        this.container.id = "acquire-language-subtitle";
-        this.applySubtitleStyles();
+    private setupYouTubeSubtitles() {
         this.addSubtitleHoverEvents();
-
-        document.body.appendChild(this.container)
     }
 
     private hideYouTubeSubtitles() {
@@ -68,91 +61,7 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
         document.head.appendChild(style);
     }
 
-    private applySubtitleStyles() {
-        if (!this.container) {
-            console.error("Subtitle container does not exist, cannot apply styles");
-            return;
-        }
 
-        const videoPlayer = document.querySelector("video");
-        if (!videoPlayer) {
-            console.error("Cannot find video player, cannot apply subtitle styles");
-            return;
-        }
-
-        // Get video player dimensions and position
-        const videoRect = videoPlayer.getBoundingClientRect();
-
-        // Set subtitle container styles
-        const cssText = `
-            position: absolute;
-            z-index: 1000;
-            left: ${videoRect.left}px;
-            width: ${videoRect.width}px;
-            text-align: center;
-            padding: 10px;
-            font-family: Arial, sans-serif;
-            font-size: ${this.settings.subtitleSettings.fontSize}px;
-            color: ${this.settings.subtitleSettings.textColor};
-            background-color: ${this.settings.subtitleSettings.backgroundColor};
-            opacity: ${this.settings.subtitleSettings.opacity};
-            border-radius: 4px;
-            transition: opacity 0.3s ease;
-            pointer-events: auto;
-            user-select: none;
-        `;
-        this.container.style.cssText = cssText;
-
-        // Set subtitle position based on settings
-        if (this.settings.subtitleSettings.position === "top") {
-            this.container.style.top = `${videoRect.top + 10}px`;
-        } else {
-            // YouTube control bar height is about 40-45px, we set 60px spacing to ensure no overlap
-            this.container.style.bottom = `${
-                window.innerHeight - videoRect.bottom + 60
-            }px`;
-        }
-
-        // Listen for window resize events to update subtitle position
-        window.addEventListener("resize", () => {
-            this.updateSubtitlePosition();
-        });
-
-        // Listen for video player size changes
-        this.containerObserver = new MutationObserver(() => {
-            this.updateSubtitlePosition();
-        });
-
-        this.containerObserver.observe(videoPlayer, {
-            attributes: true,
-            attributeFilter: ["style", "class"],
-        });
-    }
-
-    private updateSubtitlePosition() {
-        if (!this.container) return;
-
-        const videoPlayer = document.querySelector("video");
-        if (!videoPlayer) return;
-
-        const videoRect = videoPlayer.getBoundingClientRect();
-
-        // Update subtitle container position
-        this.container.style.left = `${videoRect.left}px`;
-        this.container.style.width = `${videoRect.width}px`;
-
-        // Update subtitle position based on settings
-        if (this.settings.subtitleSettings.position === "top") {
-            this.container.style.top = `${videoRect.top + 10}px`;
-            this.container.style.bottom = "auto";
-        } else {
-            // Adjust bottom position to avoid overlapping with control bar
-            this.container.style.bottom = `${
-                window.innerHeight - videoRect.bottom + 60
-            }px`;
-            this.container.style.top = "auto";
-        }
-    }
 
     /**
      * Add subtitle hover events - pause video
@@ -309,7 +218,6 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
      * Check current video time and update subtitle
      */
     private syncSubtitleWithVideoTime() {
-        console.log("Checking current time, updating subtitle");
         if (!this.subtitleEnabled || this.subtitleData.length === 0) {
             return;
         }
@@ -317,18 +225,15 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
         const videoPlayer = document.querySelector("video");
         if (!videoPlayer) return;
         
-
         const currentTime = videoPlayer.currentTime * 1000;
-
         this.currIndices = this.findSubtitleIndices(currentTime);
-
 
         if (this.currIndices.length >= 2) {
             this.currSubtitleText = this.currIndices.map(index => this.subtitleData[index].text).join("\n");
         } else if (this.currIndices.length === 1) {
             this.currSubtitleText = this.subtitleData[this.currIndices[0]].text;
             // do need next subtitle
-            const  currSubtitle = this.subtitleData[this.currIndices[0]];
+            const currSubtitle = this.subtitleData[this.currIndices[0]];
             const nextIndex = this.currIndices[0] + 1;
             if (nextIndex < this.subtitleData.length) {
                 const nextSubtitle = this.subtitleData[nextIndex];
@@ -340,10 +245,9 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
             this.currSubtitleText = "";
         }
 
-        console.log("Current time subtitle:", currentTime, this.currSubtitleText);
-
-        this.updateSubtitle(this.currSubtitleText);
-
+        const processedText = this.processSubtitle(this.currSubtitleText);
+        // 调用基类的方法来更新字幕
+        super.updateSubtitle(processedText);
     }
 
     private findSubtitleIndices(currentTime: number): number[] {
@@ -360,34 +264,9 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
             return;
         }
 
-        this._currentSubtitle = text;
-
-        if (!this.container) {
-            console.error("Subtitle container does not exist, cannot update subtitle");
-            return;
-        }
-
-        if (!this.subtitleEnabled) {
-            return;
-        }
-
-        // Process subtitle
         const processedText = this.processSubtitle(text);
-
-        // Use requestAnimationFrame to optimize DOM updates, reduce reflow
-        requestAnimationFrame(() => {
-            // Update subtitle container
-            if (this.container) {
-                this.container.innerHTML = processedText;
-
-                // Add word click events
-                if (processedText) {
-                    this.addWordClickEvents();
-                }
-            } else {
-                console.error("Subtitle container does not exist, cannot update DOM");
-            }
-        });
+        // 调用基类的方法
+        super.updateSubtitle(processedText);
     }
 
     /**
@@ -396,86 +275,9 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
      * @returns Processed subtitle text
      */
     processSubtitle(text: string): string {
+        // 只需简单处理文本，不需要添加 HTML 标签，因为 React 组件会处理单词点击
         if (!text) return "";
-
-        // Use cache optimization to avoid processing the same text repeatedly
-        const cacheKey = `processed:${text}`;
-        const cached = sessionStorage.getItem(cacheKey);
-        if (cached) {
-            return cached;
-        }
-
-        // Split text into words
-        const words = text.split(/(\s+|[,.!?;:'"()[\]{}])/);
-
-        // Process each word
-        const processedWords = words.map((word) => {
-            // Skip whitespace and punctuation
-            if (!word.trim() || /^[,.!?;:'"()[\]{}]$/.test(word)) {
-                return word;
-            }
-
-            // Wrap word in clickable span
-            return `<span class="acquire-language-word" data-word="${word}">${word}</span>`;
-        });
-
-        // Merge processed words
-        const result = processedWords.join("");
-
-        // Cache processed result
-        try {
-            sessionStorage.setItem(cacheKey, result);
-        } catch (e) {
-            // Ignore storage error
-        }
-
-        return result;
-    }
-
-    /**
-     * Add word click events
-     */
-    addWordClickEvents() {
-        if (!this.container) return;
-
-        // Get all word elements
-        const wordElements = this.container.querySelectorAll(
-            ".acquire-language-word"
-        );
-
-        // Add click event to each word
-        wordElements.forEach((element: Element) => {
-            element.addEventListener("click", async (event: Event) => {
-                // Stop event propagation
-                event.stopPropagation();
-
-                // Get word and position
-                const word = element.getAttribute("data-word") || "";
-                const rect = element.getBoundingClientRect();
-                const position = {
-                    x: rect.left + window.scrollX,
-                    y: rect.bottom + window.scrollY + 10,
-                };
-
-                this.wordPopup.showLoading(word, position);
-
-                // Get word definition
-                try {
-                    // Call AI service to get definition
-                    const definition = await this.aiService.getWordDefinition(
-                        word,
-                        this._currentSubtitle,
-                        this.settings.targetLanguage
-                    );
-
-                    // Show word definition
-                    this.wordPopup.show(word, definition, position);
-                } catch (error: any) {
-                    console.error("Failed to get word definition:", error);
-                    this.wordPopup.show(word, `Failed to get definition: ${error.message}`, position);
-                }
-            });
-        });
+        return text;
     }
 
     /**
