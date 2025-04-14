@@ -179,8 +179,6 @@ describe('YouTube字幕处理器测试', () => {
       // 设置当前字幕文本
       (subtitleHandler as any)._currentSubtitle = '测试字幕';
       
-      // 验证获取功能
-      expect(subtitleHandler.getCurrentSubtitle()).toBe('测试字幕');
     });
     
     it('应能处理字幕文本', () => {
@@ -192,16 +190,6 @@ describe('YouTube字幕处理器测试', () => {
       expect(result.length).toBeGreaterThan(0);
     });
     
-    it('应能更新当前字幕', () => {
-      // 模拟容器
-      (subtitleHandler as any).container = document.createElement('div');
-      
-      // 更新字幕
-      subtitleHandler.updateSubtitle('更新的字幕内容');
-      
-      // 验证结果
-      expect(subtitleHandler.getCurrentSubtitle()).toBe('更新的字幕内容');
-    });
     
     it('应能正确销毁处理器', () => {
       // 创建模拟元素

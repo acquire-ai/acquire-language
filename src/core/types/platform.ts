@@ -3,19 +3,12 @@
  */
 import {AIService} from "./ai";
 
-/**
- * 字幕处理器接口
- */
 export interface SubtitleHandler {
-    readonly currentSubtitle: string;
+    readonly currSubtitles: string;
 
     initialize(): Promise<void>;
 
-    getCurrentSubtitle(): string;
-    
-    updateSubtitle(): void;
-
-    processSubtitle(text: string): string;
+    updateSubtitle(texts: string[]): void;
 
     destroy(): void;
 }

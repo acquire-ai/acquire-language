@@ -12,10 +12,10 @@ export abstract class BaseSubtitleHandler implements SubtitleHandler {
     protected container: HTMLElement | null = null;
     protected root: ReturnType<typeof createRoot> | null = null;
 
-    protected _currentSubtitle: string = "";
+    protected _currSubtitles: string[] = [];
 
-    get currentSubtitle(): string {
-        return this._currentSubtitle;
+    get currSubtitles(): string {
+        return this._currSubtitles.join("\n");
     }
 
     protected aiService: AIService;
@@ -39,12 +39,12 @@ export abstract class BaseSubtitleHandler implements SubtitleHandler {
         this.root = createRoot(this.container);
     }
 
-    updateSubtitle(text: string = ""): void {
-        this._currentSubtitle = text;
+    updateSubtitle(texts: string[] = []): void {
+        this._currSubtitles = texts;
         
         if (this.root && this.settings) {
             const subtitleElement = React.createElement(Subtitle, {
-                text: text,
+                texts: texts,
                 settings: this.settings.subtitleSettings,
                 onWordClick: (word: string, position: { x: number, y: number }) => {
                     this.wordPopup.showLoading(word, position);
@@ -59,18 +59,12 @@ export abstract class BaseSubtitleHandler implements SubtitleHandler {
     protected async handleWordClick(word: string, position: { x: number, y: number }) {
         const definition = await this.aiService.getWordDefinition(
             word, 
-            this._currentSubtitle, 
+            this.currSubtitles,
             this.settings.nativeLanguage
         );
         
         this.wordPopup.show(word, definition, position);
     }
-
-    getCurrentSubtitle(): string {
-        return this._currentSubtitle;
-    }
-
-    abstract processSubtitle(text: string): string;
 
 
     protected async loadSettings() {
@@ -83,11 +77,11 @@ export abstract class BaseSubtitleHandler implements SubtitleHandler {
                 aiModel: "deepseek",
                 apiKey: "",
                 subtitleSettings: {
-                    fontSize: 16,
+                    fontSize: 22,
                     position: "bottom",
                     backgroundColor: "rgba(0, 0, 0, 0.7)",
                     textColor: "#ffffff",
-                    opacity: 0.9,
+                    opacity: 0.8,
                 },
             };
 

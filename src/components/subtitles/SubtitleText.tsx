@@ -15,14 +15,14 @@ export const SubtitleText: React.FC<SubtitleTextProps> = ({ text, onWordClick })
     const renderWords = () => {
         if (!text) return null;
 
-        return text.split(/\s+/).map((word, index) => (
+        return text.split(/\s+/).map((word, wordIndex) => (
             <span
-                key={index}
+                key={wordIndex}
                 className="acquire-language-word"
                 onClick={(e) => handleWordClick(word, e)}
                 style={{
                     cursor: 'pointer',
-                    margin: '0 2px',
+                    margin: '0 4px',
                 }}
             >
                 {word}
@@ -30,5 +30,5 @@ export const SubtitleText: React.FC<SubtitleTextProps> = ({ text, onWordClick })
         ));
     };
 
-    return <>{renderWords()}</>;
+    return <div className="subtitle-line">{renderWords()}</div>;
 }; 

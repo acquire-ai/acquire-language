@@ -3,7 +3,7 @@ import { SubtitleContainer } from './SubtitleContainer';
 import { SubtitleText } from './SubtitleText';
 
 interface SubtitleProps {
-    text: string;
+    texts: string[];
     settings: {
         fontSize: number;
         position: 'top' | 'bottom';
@@ -14,7 +14,7 @@ interface SubtitleProps {
     onWordClick?: (word: string, position: { x: number, y: number }) => void;
 }
 
-export const Subtitle: React.FC<SubtitleProps> = ({ text, settings, onWordClick }) => {
+export const Subtitle: React.FC<SubtitleProps> = ({ texts, settings, onWordClick }) => {
     const [videoRect, setVideoRect] = useState<DOMRect | null>(null);
 
     useEffect(() => {
@@ -47,6 +47,17 @@ export const Subtitle: React.FC<SubtitleProps> = ({ text, settings, onWordClick 
         }
     };
 
+    const renderSubtitleTexts = () => {
+        if (!texts || texts.length === 0) return null;
+        return texts.map((text, index) => (
+            <SubtitleText
+                key={`subtitle-line-${index}`}
+                text={text}
+                onWordClick={handleWordClick}
+            />
+        ));
+    };
+
     return (
         <SubtitleContainer
             position={settings.position}
@@ -56,7 +67,7 @@ export const Subtitle: React.FC<SubtitleProps> = ({ text, settings, onWordClick 
             opacity={settings.opacity}
             videoRect={videoRect || undefined}
         >
-            <SubtitleText text={text} onWordClick={handleWordClick} />
+            {renderSubtitleTexts()}
         </SubtitleContainer>
     );
 }; 

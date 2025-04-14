@@ -20,7 +20,7 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     private subtitleData: SubtitleItem[] = [];
     private checkIntervalId: number | null = null;
     private currIndices: number[] = [];
-    private currSubtitleText: string = "";
+    private currSubtitleTexts: string[] = [];
 
     constructor(aiService: AIService) {
         super(aiService);
@@ -228,26 +228,29 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
         const currentTime = videoPlayer.currentTime * 1000;
         this.currIndices = this.findSubtitleIndices(currentTime);
 
+        let subtitleTexts: string[] = [];
+
         if (this.currIndices.length >= 2) {
-            this.currSubtitleText = this.currIndices.map(index => this.subtitleData[index].text).join("\n");
+            subtitleTexts = this.currIndices.map(index => this.subtitleData[index].text);
         } else if (this.currIndices.length === 1) {
-            this.currSubtitleText = this.subtitleData[this.currIndices[0]].text;
+            subtitleTexts.push(this.subtitleData[this.currIndices[0]].text);
+            
             // do need next subtitle
             const currSubtitle = this.subtitleData[this.currIndices[0]];
             const nextIndex = this.currIndices[0] + 1;
             if (nextIndex < this.subtitleData.length) {
                 const nextSubtitle = this.subtitleData[nextIndex];
                 if (nextSubtitle.start <= currSubtitle.end) {
-                    this.currSubtitleText += "\n" + nextSubtitle.text;
+                    subtitleTexts.push(nextSubtitle.text);
                 }
             }
-        } else {
-            this.currSubtitleText = "";
         }
-
-        const processedText = this.processSubtitle(this.currSubtitleText);
-        // 调用基类的方法来更新字幕
-        super.updateSubtitle(processedText);
+        
+        this.currSubtitleTexts = subtitleTexts;
+        
+        
+        // TODO：replace this to base class? only need to update this.currSubtitleTexts?
+        super.updateSubtitle(this.currSubtitleTexts);
     }
 
     private findSubtitleIndices(currentTime: number): number[] {
@@ -259,26 +262,7 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
         }, []);
     }
 
-    updateSubtitle(text: string = ""): void {
-        if (text === this._currentSubtitle) {
-            return;
-        }
 
-        const processedText = this.processSubtitle(text);
-        // 调用基类的方法
-        super.updateSubtitle(processedText);
-    }
-
-    /**
-     * Process subtitle text
-     * @param text Original subtitle text
-     * @returns Processed subtitle text
-     */
-    processSubtitle(text: string): string {
-        // 只需简单处理文本，不需要添加 HTML 标签，因为 React 组件会处理单词点击
-        if (!text) return "";
-        return text;
-    }
 
     /**
      * Destroy subtitle handler
