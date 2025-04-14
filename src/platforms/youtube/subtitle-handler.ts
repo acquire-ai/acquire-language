@@ -244,8 +244,8 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
             }
         }
         
-        // 使用新的方法设置字幕
-        this.setSubtitles(subtitleTexts);
+        // 使用新的 subtitles 属性
+        this.subtitles = subtitleTexts;
     }
 
     private findSubtitleIndices(currentTime: number): number[] {

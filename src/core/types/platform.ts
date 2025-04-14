@@ -4,10 +4,10 @@
 import {AIService} from "./ai";
 
 export interface SubtitleHandler {
+    // 提供字幕数据的访问器
+    subtitles: string[];
 
     initialize(): Promise<void>;
-
-    updateSubtitle(texts: string[]): void;
 
     destroy(): void;
 }
