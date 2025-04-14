@@ -19,7 +19,7 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     private subtitleEnabled: boolean = false;
     private subtitleData: SubtitleItem[] = [];
     private checkIntervalId: number | null = null;
-    private currSubtitleIndices: number[] = [];
+    private currIndices: number[] = [];
     private currSubtitleText: string = "";
 
     constructor(aiService: AIService) {
@@ -320,16 +320,16 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
 
         const currentTime = videoPlayer.currentTime * 1000;
 
-        const indices = this.findSubtitleIndices(currentTime);
+        this.currIndices = this.findSubtitleIndices(currentTime);
 
 
-        if (indices.length >= 2) {
-            this.currSubtitleText = indices.map(index => this.subtitleData[index].text).join("\n");
-        } else if (indices.length === 1) {
-            this.currSubtitleText = this.subtitleData[indices[0]].text;
+        if (this.currIndices.length >= 2) {
+            this.currSubtitleText = this.currIndices.map(index => this.subtitleData[index].text).join("\n");
+        } else if (this.currIndices.length === 1) {
+            this.currSubtitleText = this.subtitleData[this.currIndices[0]].text;
             // do need next subtitle
-            const  currSubtitle = this.subtitleData[indices[0]];
-            const nextIndex = indices[0] + 1;
+            const  currSubtitle = this.subtitleData[this.currIndices[0]];
+            const nextIndex = this.currIndices[0] + 1;
             if (nextIndex < this.subtitleData.length) {
                 const nextSubtitle = this.subtitleData[nextIndex];
                 if (nextSubtitle.start <= currSubtitle.end) {
