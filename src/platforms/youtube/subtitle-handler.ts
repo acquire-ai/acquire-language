@@ -19,7 +19,8 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     private subtitleEnabled: boolean = false;
     private subtitleData: SubtitleItem[] = [];
     private checkIntervalId: number | null = null;
-    private currIndices: number[] = [];
+    private matchIndices: number[] = [];
+    private newestIndex: number = -1;
 
     constructor(aiService: AIService) {
         super(aiService);
@@ -192,9 +193,6 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
         }
     }
 
-    /**
-     * Start periodic check of video time to update current subtitle
-     */
     private startPeriodicCheck() {
         // Clear previous timer
         if (this.checkIntervalId !== null) {
@@ -225,27 +223,36 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
         if (!videoPlayer) return;
         
         const currentTime = videoPlayer.currentTime * 1000;
-        this.currIndices = this.findSubtitleIndices(currentTime);
+        this.matchIndices = this.findSubtitleIndices(currentTime);
 
         let subtitleTexts: string[] = [];
+        if (this.matchIndices.length === 0) {
+            this.subtitles = [];
+            return;
+        }
+        // This for adopt the YouTube auto-generated subtitle
+        // When it matches multiple subtitles, it will base one the newest one
+        // that means it is the speaking one.
+        this.newestIndex = this.matchIndices[this.matchIndices.length - 1];
 
-        if (this.currIndices.length >= 2) {
-            subtitleTexts = this.currIndices.map(index => this.subtitleData[index].text);
-        } else if (this.currIndices.length === 1) {
-            subtitleTexts.push(this.subtitleData[this.currIndices[0]].text);
-            
-            const currSubtitle = this.subtitleData[this.currIndices[0]];
-            const nextIndex = this.currIndices[0] + 1;
-            if (nextIndex < this.subtitleData.length) {
-                const nextSubtitle = this.subtitleData[nextIndex];
-                if (nextSubtitle.start <= currSubtitle.end) {
-                    subtitleTexts.push(nextSubtitle.text);
-                }
+        subtitleTexts.push(this.subtitleData[this.newestIndex].text);
+        subtitleTexts = this.addCrossSubtitle(this.newestIndex, subtitleTexts);
+
+        this.subtitles = subtitleTexts;
+    }
+
+    // some subtitles the timestamp is cross, that means the subtitle is not finished yet
+    // added for easy to read
+    private addCrossSubtitle(currIndex: number, subtitleTexts: string[]) {
+        const currSubtitle = this.subtitleData[currIndex];
+        const nextIndex = currIndex + 1;
+        if (nextIndex < this.subtitleData.length) {
+            const nextSubtitle = this.subtitleData[nextIndex];
+            if (nextSubtitle.start <= currSubtitle.end) {
+                subtitleTexts.push(nextSubtitle.text);
             }
         }
-        
-        // 使用新的 subtitles 属性
-        this.subtitles = subtitleTexts;
+        return subtitleTexts
     }
 
     private findSubtitleIndices(currentTime: number): number[] {

@@ -1,10 +1,9 @@
 /**
- * 视频平台和字幕处理器接口定义
+ * interface of platform handler
  */
 import {AIService} from "./ai";
 
 export interface SubtitleHandler {
-    // 提供字幕数据的访问器
     subtitles: string[];
 
     initialize(): Promise<void>;
