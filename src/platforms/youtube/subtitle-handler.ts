@@ -20,7 +20,6 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     private subtitleData: SubtitleItem[] = [];
     private checkIntervalId: number | null = null;
     private currIndices: number[] = [];
-    private currSubtitleTexts: string[] = [];
 
     constructor(aiService: AIService) {
         super(aiService);
@@ -235,7 +234,6 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
         } else if (this.currIndices.length === 1) {
             subtitleTexts.push(this.subtitleData[this.currIndices[0]].text);
             
-            // do need next subtitle
             const currSubtitle = this.subtitleData[this.currIndices[0]];
             const nextIndex = this.currIndices[0] + 1;
             if (nextIndex < this.subtitleData.length) {
@@ -246,11 +244,8 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
             }
         }
         
-        this.currSubtitleTexts = subtitleTexts;
-        
-        
-        // TODO：replace this to base class? only need to update this.currSubtitleTexts?
-        super.updateSubtitle(this.currSubtitleTexts);
+        // 使用新的方法设置字幕
+        this.setSubtitles(subtitleTexts);
     }
 
     private findSubtitleIndices(currentTime: number): number[] {

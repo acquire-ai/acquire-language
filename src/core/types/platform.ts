@@ -4,7 +4,6 @@
 import {AIService} from "./ai";
 
 export interface SubtitleHandler {
-    readonly currSubtitles: string;
 
     initialize(): Promise<void>;
 

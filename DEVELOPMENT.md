@@ -34,7 +34,7 @@ acquire-language/
 │   │   │   └── gpt.ts             # GPT4o-mini implementation
 │   │   ├── platforms/             # Video platform handlers
 │   │   │   ├── base/              # Base classes and interfaces
-│   │   │   │   ├── platform-handler.ts # Platform handler base class
+│   │   │   │   ├── platform-handler.tsx # Platform handler base class
 │   │   │   │   └── subtitle-handler.ts # Subtitle handler base class
 │   │   │   ├── youtube/           # YouTube platform implementation
 │   │   │   │   ├── index.ts       # YouTube platform handler

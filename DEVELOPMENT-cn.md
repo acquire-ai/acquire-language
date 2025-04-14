@@ -34,7 +34,7 @@ acquire-language/
 │   │   │   └── gpt.ts             # GPT4o-mini实现
 │   ├── platforms/                 # 视频平台处理模块
 │   │   ├── base/                  # 基础类和接口
-│   │   │   ├── platform-handler.ts # 平台处理器基类
+│   │   │   ├── platform-handler.tsx # 平台处理器基类
 │   │   │   └── subtitle-handler.ts # 字幕处理基类
 │   │   ├── youtube/               # YouTube平台实现
 │   │   │   ├── index.ts           # YouTube平台处理器

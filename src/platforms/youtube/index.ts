@@ -4,7 +4,7 @@
 import {SubtitleHandler} from '@/core/types/platform.ts';
 import {AIService} from '@/core/types/ai.ts';
 import {isYouTubeVideoUrl} from '@/core/utils';
-import {BasePlatformHandler} from '../base/platform-handler';
+import {BasePlatformHandler} from '../base/platform-handler.tsx';
 import {YouTubeSubtitleHandler} from './subtitle-handler';
 
 /**

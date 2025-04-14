@@ -177,7 +177,7 @@ describe('YouTube字幕处理器测试', () => {
   describe('基本功能测试', () => {
     it('应能获取当前字幕', () => {
       // 设置当前字幕文本
-      (subtitleHandler as any)._currentSubtitle = '测试字幕';
+      (subtitleHandler as any)._currSubtitles = '测试字幕';
       
     });
     
