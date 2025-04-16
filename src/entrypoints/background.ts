@@ -4,9 +4,50 @@
 import {defineBackground} from "wxt/sandbox";
 import {StorageManager} from "@/core/storage";
 import {Word} from "@/core/types/storage";
+import { saveSettings, loadSettings } from "@/core/config/settings";
 
-export default defineBackground(() => {
+export default defineBackground({
+    main() {
+        // Initialize settings from environment variables
+        initializeSettings();
 
+        // Listen for updates from content scripts
+        listenForSubtitleRequests();
+    },
+});
+
+/**
+ * Initialize settings from environment variables
+ * This runs when the extension starts, applying any environment variables to the stored settings
+ */
+async function initializeSettings() {
+    try {
+        // Load current settings
+        const settings = await loadSettings();
+        
+        // If this is a development build with injected environment variables
+        if (typeof window !== 'undefined' && (window as any).__ENV__) {
+            const env = (window as any).__ENV__;
+            
+            // Apply environment variables to settings
+            if (env.ACQUIRE_API_KEY) settings.apiKey = env.ACQUIRE_API_KEY;
+            if (env.ACQUIRE_NATIVE_LANGUAGE) settings.nativeLanguage = env.ACQUIRE_NATIVE_LANGUAGE;
+            if (env.ACQUIRE_TARGET_LANGUAGE) settings.targetLanguage = env.ACQUIRE_TARGET_LANGUAGE;
+            if (env.ACQUIRE_LANGUAGE_LEVEL) settings.languageLevel = env.ACQUIRE_LANGUAGE_LEVEL;
+            if (env.ACQUIRE_AI_MODEL) settings.aiModel = env.ACQUIRE_AI_MODEL;
+            
+            // Save the updated settings
+            await saveSettings(settings);
+        }
+    } catch (error) {
+        console.error("Failed to initialize settings from environment variables:", error);
+    }
+}
+
+/**
+ * Listen for subtitle requests from content scripts
+ */
+function listenForSubtitleRequests() {
     chrome.webRequest.onBeforeRequest.addListener(
         (details) => {
             if (details.method !== "GET") return;
@@ -66,33 +107,7 @@ export default defineBackground(() => {
             return true; // Indicates that the response will be sent asynchronously
         }
     });
-
-    async function saveWordToVocabulary(
-        word: string,
-        context: string
-    ): Promise<Word> {
-        const vocabulary = await StorageManager.getVocabulary();
-
-        // Check if word already exists
-        if (vocabulary[word]) {
-            // If word exists, add new context if not duplicate
-            if (!vocabulary[word].contexts.includes(context)) {
-                vocabulary[word].contexts.push(context);
-            }
-        } else {
-            // If word doesn't exist, create new entry
-            vocabulary[word] = {
-                word,
-                contexts: [context],
-                createdAt: new Date().toISOString(),
-            };
-        }
-
-        await StorageManager.saveVocabulary(vocabulary);
-
-        return vocabulary[word];
-    }
-});
+}
 
 async function fetchSubtitle(url: string) {
     try {
@@ -105,4 +120,30 @@ async function fetchSubtitle(url: string) {
         console.error("Failed to fetch subtitle:", error);
         throw error;
     }
+}
+
+async function saveWordToVocabulary(
+    word: string,
+    context: string
+): Promise<Word> {
+    const vocabulary = await StorageManager.getVocabulary();
+
+    // Check if word already exists
+    if (vocabulary[word]) {
+        // If word exists, add new context if not duplicate
+        if (!vocabulary[word].contexts.includes(context)) {
+            vocabulary[word].contexts.push(context);
+        }
+    } else {
+        // If word doesn't exist, create new entry
+        vocabulary[word] = {
+            word,
+            contexts: [context],
+            createdAt: new Date().toISOString(),
+        };
+    }
+
+    await StorageManager.saveVocabulary(vocabulary);
+
+    return vocabulary[word];
 }

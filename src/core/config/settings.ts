@@ -2,11 +2,8 @@
  * Settings management module
  * Handles loading settings from environment variables and browser storage
  */
-import dotenv from 'dotenv';
 
-// 加载环境变量
-dotenv.config();
-
+// Define the settings type
 export interface Settings {
   nativeLanguage: string;
   targetLanguage: string;
@@ -38,14 +35,20 @@ export const DEFAULT_SETTINGS: Settings = {
   },
 };
 
+/**
+ * Get environment variable with a fallback value
+ */
 function getEnvVar(key: string, fallback: string): string {
-  if (typeof process !== 'undefined' && process.env && process.env[key]) {
-    return process.env[key] || fallback;
+  if (typeof window !== 'undefined' && (window as any).__ENV__ && (window as any).__ENV__[key]) {
+    return (window as any).__ENV__[key];
   }
+  
   return fallback;
 }
 
-
+/**
+ * Load settings from environment variables
+ */
 export function loadEnvSettings(): Partial<Settings> {
   const envSettings: Partial<Settings> = {
     nativeLanguage: getEnvVar('ACQUIRE_NATIVE_LANGUAGE', ''),
@@ -61,6 +64,9 @@ export function loadEnvSettings(): Partial<Settings> {
   ) as Partial<Settings>;
 }
 
+/**
+ * Load settings from browser storage
+ */
 export async function loadStorageSettings(): Promise<Settings> {
   try {
     const result = await browser.storage.local.get("settings");
@@ -76,8 +82,10 @@ export async function loadStorageSettings(): Promise<Settings> {
  * Environment variables take precedence over stored settings
  */
 export async function loadSettings(): Promise<Settings> {
+  // First get settings from storage
   const storageSettings = await loadStorageSettings();
   
+  // Then overlay with environment variables
   const envSettings = loadEnvSettings();
   
   // Merge settings with environment variables taking precedence
@@ -86,14 +94,15 @@ export async function loadSettings(): Promise<Settings> {
     ...envSettings,
   };
 
-  console.log("Settings loaded:", mergedSettings);
   return mergedSettings;
 }
 
+/**
+ * Save settings to browser storage
+ */
 export async function saveSettings(settings: Settings): Promise<void> {
   try {
     await browser.storage.local.set({ settings });
-    console.log("Settings saved:", settings);
   } catch (error) {
     console.error("Failed to save settings:", error);
   }

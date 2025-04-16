@@ -3,6 +3,13 @@
  */
 import { defineConfig } from "wxt";
 import tailwindcss from "@tailwindcss/vite";
+import { config } from 'dotenv';
+
+const env = config().parsed || {};
+
+const acquireEnv = Object.fromEntries(
+  Object.entries(env).filter(([key]) => key.startsWith('ACQUIRE_'))
+);
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
@@ -16,6 +23,9 @@ export default defineConfig({
   // Vite configuration
   vite: () => ({
     plugins: [tailwindcss()],
+    define: {
+      'window.__ENV__': acquireEnv
+    }
   }),
 
   // Add static resource configuration to ensure files in public directory are copied to build output
