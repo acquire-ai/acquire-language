@@ -12,9 +12,10 @@ interface SubtitleProps {
         opacity: number;
     };
     onWordClick?: (word: string, position: { x: number, y: number }) => void;
+    visible?: boolean;
 }
 
-export const Subtitle: React.FC<SubtitleProps> = ({ texts, settings, onWordClick }) => {
+export const Subtitle: React.FC<SubtitleProps> = ({ texts, settings, onWordClick, visible = true }) => {
     const [videoRect, setVideoRect] = useState<DOMRect | null>(null);
 
     useEffect(() => {
@@ -66,6 +67,7 @@ export const Subtitle: React.FC<SubtitleProps> = ({ texts, settings, onWordClick
             backgroundColor={settings.backgroundColor}
             opacity={settings.opacity}
             videoRect={videoRect || undefined}
+            visible={visible}
         >
             {renderSubtitleTexts()}
         </SubtitleContainer>

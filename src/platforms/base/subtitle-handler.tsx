@@ -14,18 +14,26 @@ const SubtitleContainer: React.FC<{
 }> = ({ handler, settings }) => {
     // using state to manage subtitles
     const [subtitles, setSubtitles] = useState<string[]>([]);
+    const [subtitleEnabled, setSubtitleEnabled] = useState<boolean>(false);
 
     useEffect(() => {
         const updateSubtitles = (newSubtitles: string[]) => {
             setSubtitles([...newSubtitles]);
         };
 
+        const updateSubtitleEnabled = (enabled: boolean) => {
+            setSubtitleEnabled(enabled);
+        };
+
         handler.setSubtitleUpdater(updateSubtitles);
+        handler.setSubtitleEnabledUpdater(updateSubtitleEnabled);
 
         updateSubtitles(handler.subtitles);
+        updateSubtitleEnabled(handler.subtitleEnabled);
 
         return () => {
             handler.setSubtitleUpdater(null);
+            handler.setSubtitleEnabledUpdater(null);
         };
     }, [handler]);
 
@@ -45,6 +53,7 @@ const SubtitleContainer: React.FC<{
             texts={subtitles}
             settings={settings.subtitleSettings}
             onWordClick={handleWordClick}
+            visible={subtitleEnabled}
         />
     );
 };
@@ -54,11 +63,17 @@ export abstract class BaseSubtitleHandler implements SubtitleHandler {
     protected root: ReturnType<typeof createRoot> | null = null;
 
     protected _subtitles: string[] = [];
+    protected _subtitleEnabled: boolean = false;
 
     private subtitleUpdater: ((texts: string[]) => void) | null = null;
+    private subtitleEnabledUpdater: ((enabled: boolean) => void) | null = null;
 
     setSubtitleUpdater(updater: ((texts: string[]) => void) | null) {
         this.subtitleUpdater = updater;
+    }
+
+    setSubtitleEnabledUpdater(updater: ((enabled: boolean) => void) | null) {
+        this.subtitleEnabledUpdater = updater;
     }
 
     get subtitles(): string[] {
@@ -70,6 +85,18 @@ export abstract class BaseSubtitleHandler implements SubtitleHandler {
 
         if (this.subtitleUpdater) {
             this.subtitleUpdater(texts);
+        }
+    }
+
+    get subtitleEnabled(): boolean {
+        return this._subtitleEnabled;
+    }
+
+    set subtitleEnabled(enabled: boolean) {
+        this._subtitleEnabled = enabled;
+
+        if (this.subtitleEnabledUpdater) {
+            this.subtitleEnabledUpdater(enabled);
         }
     }
 

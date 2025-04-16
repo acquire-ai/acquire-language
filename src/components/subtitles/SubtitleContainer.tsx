@@ -8,6 +8,7 @@ interface SubtitleContainerProps {
     opacity: number;
     videoRect?: DOMRect;
     children?: React.ReactNode;
+    visible?: boolean;
 }
 
 export const SubtitleContainer: React.FC<SubtitleContainerProps> = ({
@@ -17,10 +18,11 @@ export const SubtitleContainer: React.FC<SubtitleContainerProps> = ({
     backgroundColor,
     opacity,
     videoRect,
-    children
+    children,
+    visible = true
 }) => {
     const getStyles = (): CSSProperties => {
-        if (!videoRect) {
+        if (!videoRect || !visible) {
             return {
                 display: 'none'
             };

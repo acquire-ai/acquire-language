@@ -16,7 +16,6 @@ interface SubtitleItem {
 
 export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     private containerObserver: MutationObserver | null = null;
-    private subtitleEnabled: boolean = false;
     private subtitleData: SubtitleItem[] = [];
     private checkIntervalId: number | null = null;
     private matchIndices: number[] = [];
@@ -98,19 +97,12 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
                 this.parseSubtitle(response);
                 console.log("Subtitle data length:", this.subtitleData.length);
                 this.subtitleEnabled = true;
-
-                if (this.container) {
-                    this.container.style.display = "block";
-                } else {
-                    console.error("Subtitle container does not exist, cannot display");
-                }
-
             }
 
             return true;
         });
 
-        // check if subtitle is enabled, if not, hide subtitle container
+        // check if subtitle is enabled, if not, update subtitleEnabled state
         const checkSubtitleStatus = () => {
             const subsToggleElement = document.querySelector(".ytp-subtitles-button");
 
@@ -121,14 +113,8 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
                 if (this.subtitleEnabled !== isSubtitleEnabled) {
                     this.subtitleEnabled = isSubtitleEnabled;
 
-                    if (!isSubtitleEnabled && this.container) {
-                        this.container.style.display = "none";
-                    } else if (isSubtitleEnabled && this.container) {
-                        this.container.style.display = "block";
-                        
-                        if (this.subtitleData.length > 0) {
-                            this.syncSubtitleWithVideoTime();
-                        }
+                    if (isSubtitleEnabled && this.subtitleData.length > 0) {
+                        this.syncSubtitleWithVideoTime();
                     }
                 }
             }
@@ -281,4 +267,4 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
         super.destroy();
     }
 
-}
+} 
