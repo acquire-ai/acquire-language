@@ -158,7 +158,7 @@ export abstract class BaseSubtitleHandler implements SubtitleHandler {
                 aiModel: "deepseek",
                 apiKey: "",
                 subtitleSettings: {
-                    fontSize: 16,
+                    fontSize: 20,
                     position: "bottom",
                     backgroundColor: "rgba(0, 0, 0, 0.7)",
                     textColor: "#ffffff",
