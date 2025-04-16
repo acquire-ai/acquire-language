@@ -122,15 +122,11 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
                     this.subtitleEnabled = isSubtitleEnabled;
 
                     if (!isSubtitleEnabled && this.container) {
-                        this.container.innerHTML = "";
                         this.container.style.display = "none";
                     } else if (isSubtitleEnabled && this.container) {
                         this.container.style.display = "block";
-
-                        if (
-                            this.subtitleData.length > 0 &&
-                            this.container.innerHTML === ""
-                        ) {
+                        
+                        if (this.subtitleData.length > 0) {
                             this.syncSubtitleWithVideoTime();
                         }
                     }
