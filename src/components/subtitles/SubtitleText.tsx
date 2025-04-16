@@ -26,6 +26,7 @@ export const SubtitleText: React.FC<SubtitleTextProps> = ({ text, onWordClick })
                     style={{
                         cursor: 'pointer',
                         display: 'inline-block',
+                        fontWeight: 'bold',
                     }}
                 >
                     {word}
@@ -42,6 +43,7 @@ export const SubtitleText: React.FC<SubtitleTextProps> = ({ text, onWordClick })
                 margin: '2px 0',
                 whiteSpace: 'pre-wrap',
                 wordBreak: 'break-word',
+                fontWeight: 'bold',
             }}
         >
             {renderWords()}

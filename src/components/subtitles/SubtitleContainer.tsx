@@ -56,6 +56,7 @@ export const SubtitleContainer: React.FC<SubtitleContainerProps> = ({
         padding: `${paddingVertical}px ${paddingHorizontal}px`,
         fontFamily: 'Arial, sans-serif',
         fontSize: `${fontSize}px`,
+        fontWeight: 'bold',
         color: textColor,
         backgroundColor: backgroundColor,
         opacity: opacity,
@@ -66,6 +67,7 @@ export const SubtitleContainer: React.FC<SubtitleContainerProps> = ({
         textAlign: 'center',
         maxWidth: '90%',
         boxShadow: scaleFactor > 1.2 ? `0 ${Math.round(4 * scaleFactor)}px ${Math.round(8 * scaleFactor)}px rgba(0, 0, 0, 0.3)` : 'none',
+        textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)',
     };
 
     return (
