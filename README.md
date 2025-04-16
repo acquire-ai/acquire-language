@@ -2,6 +2,8 @@
 
 A Chrome extension that helps users learn languages through video content.
 
+[中文文档](README-cn.md)
+
 ## Features
 
 - **Enhanced Video Subtitles**: Display enhanced subtitles on YouTube videos with word lookup and translation support
@@ -50,3 +52,8 @@ npm run build
 - **Language Level**: Set your language proficiency level (A1-C2)
 - **AI Model**: Choose the AI model for translation and word definitions
 - **Subtitle Settings**: Customize subtitle size, position, color, and transparency
+
+### Development Documentation
+
+For more detailed development information, please check:
+[Development Guide](docs/DEVELOPMENT.md) - Detailed guide for developers
