@@ -15,20 +15,36 @@ export const SubtitleText: React.FC<SubtitleTextProps> = ({ text, onWordClick })
     const renderWords = () => {
         if (!text) return null;
 
-        return text.split(/\s+/).map((word, wordIndex) => (
-            <span
-                key={wordIndex}
-                className="acquire-language-word"
-                onClick={(e) => handleWordClick(word, e)}
-                style={{
-                    cursor: 'pointer',
-                    margin: '0 4px',
-                }}
-            >
-                {word}
-            </span>
+        // 去除多余空格，并按空格分词
+        const words = text.trim().split(/\s+/);
+
+        return words.map((word, wordIndex) => (
+            <React.Fragment key={wordIndex}>
+                <span
+                    className="acquire-language-word"
+                    onClick={(e) => handleWordClick(word, e)}
+                    style={{
+                        cursor: 'pointer',
+                        display: 'inline-block',
+                    }}
+                >
+                    {word}
+                </span>
+                {wordIndex < words.length - 1 && ' '}
+            </React.Fragment>
         ));
     };
 
-    return <div className="subtitle-line">{renderWords()}</div>;
+    return (
+        <div
+            className="subtitle-line"
+            style={{
+                margin: '2px 0',
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word',
+            }}
+        >
+            {renderWords()}
+        </div>
+    );
 }; 

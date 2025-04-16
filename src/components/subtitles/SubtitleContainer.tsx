@@ -21,47 +21,55 @@ export const SubtitleContainer: React.FC<SubtitleContainerProps> = ({
     children,
     visible = true
 }) => {
-    const getStyles = (): CSSProperties => {
-        if (!videoRect || !visible) {
-            return {
-                display: 'none'
-            };
-        }
+    if (!videoRect || !visible) {
+        return null;
+    }
 
-        const styles: CSSProperties = {
-            position: 'absolute',
-            zIndex: 1000,
-            left: `${videoRect.left}px`,
-            width: `${videoRect.width}px`,
-            textAlign: 'center',
-            padding: '10px',
-            fontFamily: 'Arial, sans-serif',
-            fontSize: `${fontSize}px`,
-            color: textColor,
-            backgroundColor: backgroundColor,
-            opacity: opacity,
-            borderRadius: '4px',
-            transition: 'opacity 0.3s ease',
-            pointerEvents: 'auto',
-            userSelect: 'none',
-        };
+    const containerStyle: CSSProperties = {
+        position: 'absolute',
+        zIndex: 1000,
+        left: `${videoRect.left}px`,
+        width: `${videoRect.width}px`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        pointerEvents: 'none',
+    };
 
-        // 根据位置设置 top 或 bottom
-        if (position === 'top') {
-            styles.top = `${videoRect.top + 10}px`;
-        } else {
-            styles.bottom = `${window.innerHeight - videoRect.bottom + 60}px`;
-        }
+    if (position === 'top') {
+        containerStyle.top = `${videoRect.top + 10}px`;
+    } else {
+        containerStyle.bottom = `${window.innerHeight - videoRect.bottom + 60}px`;
+    }
 
-        return styles;
+    const subtitleStyle: CSSProperties = {
+        display: 'inline-block',
+        padding: '8px 15px',
+        fontFamily: 'Arial, sans-serif',
+        fontSize: `${fontSize}px`,
+        color: textColor,
+        backgroundColor: backgroundColor,
+        opacity: opacity,
+        borderRadius: '4px',
+        transition: 'opacity 0.3s ease',
+        pointerEvents: 'auto',
+        userSelect: 'none',
+        textAlign: 'center',
+        maxWidth: '90%',
     };
 
     return (
         <div
-            id="acquire-language-subtitle"
-            style={getStyles()}
+            id="acquire-language-subtitle-wrapper"
+            style={containerStyle}
         >
-            {children}
+            <div
+                id="acquire-language-subtitle"
+                style={subtitleStyle}
+            >
+                {children}
+            </div>
         </div>
     );
 }; 
