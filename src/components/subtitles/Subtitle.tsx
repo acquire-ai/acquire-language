@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { SubtitleContainer } from './SubtitleContainer';
 import { SubtitleText } from './SubtitleText';
 
@@ -17,12 +17,30 @@ interface SubtitleProps {
 
 export const Subtitle: React.FC<SubtitleProps> = ({ texts, settings, onWordClick, visible = true }) => {
     const [videoRect, setVideoRect] = useState<DOMRect | null>(null);
+    const [scaleFactor, setScaleFactor] = useState<number>(1);
+    const initialVideoSizeRef = useRef<{ width: number, height: number } | null>(null);
 
     useEffect(() => {
         const updateVideoRect = () => {
             const videoPlayer = document.querySelector('video');
-            if (videoPlayer) {
-                setVideoRect(videoPlayer.getBoundingClientRect());
+            if (!videoPlayer) return;
+
+            const rect = videoPlayer.getBoundingClientRect();
+            setVideoRect(rect);
+
+            if (!initialVideoSizeRef.current && rect.width > 0 && rect.height > 0) {
+                initialVideoSizeRef.current = {
+                    width: rect.width,
+                    height: rect.height
+                };
+            }
+
+            if (initialVideoSizeRef.current) {
+                const widthRatio = rect.width / initialVideoSizeRef.current.width;
+                const heightRatio = rect.height / initialVideoSizeRef.current.height;
+                const newScaleFactor = Math.max(widthRatio, heightRatio);
+
+                setScaleFactor(Math.max(newScaleFactor, 0.8));
             }
         };
 
@@ -59,15 +77,21 @@ export const Subtitle: React.FC<SubtitleProps> = ({ texts, settings, onWordClick
         ));
     };
 
+    const adjustedSettings = {
+        ...settings,
+        fontSize: Math.round(settings.fontSize * scaleFactor),
+    };
+
     return (
         <SubtitleContainer
             position={settings.position}
-            fontSize={settings.fontSize}
+            fontSize={adjustedSettings.fontSize}
             textColor={settings.textColor}
             backgroundColor={settings.backgroundColor}
             opacity={settings.opacity}
             videoRect={videoRect || undefined}
             visible={visible}
+            scaleFactor={scaleFactor}
         >
             {renderSubtitleTexts()}
         </SubtitleContainer>

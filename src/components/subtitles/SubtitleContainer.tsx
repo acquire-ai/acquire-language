@@ -9,6 +9,7 @@ interface SubtitleContainerProps {
     videoRect?: DOMRect;
     children?: React.ReactNode;
     visible?: boolean;
+    scaleFactor?: number;
 }
 
 export const SubtitleContainer: React.FC<SubtitleContainerProps> = ({
@@ -19,7 +20,8 @@ export const SubtitleContainer: React.FC<SubtitleContainerProps> = ({
     opacity,
     videoRect,
     children,
-    visible = true
+    visible = true,
+    scaleFactor = 1
 }) => {
     if (!videoRect || !visible) {
         return null;
@@ -27,7 +29,7 @@ export const SubtitleContainer: React.FC<SubtitleContainerProps> = ({
 
     const containerStyle: CSSProperties = {
         position: 'absolute',
-        zIndex: 1000,
+        zIndex: 9999,
         left: `${videoRect.left}px`,
         width: `${videoRect.width}px`,
         display: 'flex',
@@ -37,26 +39,33 @@ export const SubtitleContainer: React.FC<SubtitleContainerProps> = ({
         pointerEvents: 'none',
     };
 
+    const verticalMargin = Math.round(10 * scaleFactor);
+    const bottomOffset = Math.round(60 * scaleFactor);
+
     if (position === 'top') {
-        containerStyle.top = `${videoRect.top + 10}px`;
+        containerStyle.top = `${videoRect.top + verticalMargin}px`;
     } else {
-        containerStyle.bottom = `${window.innerHeight - videoRect.bottom + 60}px`;
+        containerStyle.bottom = `${window.innerHeight - videoRect.bottom + bottomOffset}px`;
     }
+
+    const paddingVertical = Math.max(Math.round(8 * scaleFactor), 8);
+    const paddingHorizontal = Math.max(Math.round(15 * scaleFactor), 12);
 
     const subtitleStyle: CSSProperties = {
         display: 'inline-block',
-        padding: '8px 15px',
+        padding: `${paddingVertical}px ${paddingHorizontal}px`,
         fontFamily: 'Arial, sans-serif',
         fontSize: `${fontSize}px`,
         color: textColor,
         backgroundColor: backgroundColor,
         opacity: opacity,
-        borderRadius: '4px',
+        borderRadius: `${Math.max(4 * scaleFactor, 4)}px`,
         transition: 'opacity 0.3s ease',
         pointerEvents: 'auto',
         userSelect: 'none',
         textAlign: 'center',
         maxWidth: '90%',
+        boxShadow: scaleFactor > 1.2 ? `0 ${Math.round(4 * scaleFactor)}px ${Math.round(8 * scaleFactor)}px rgba(0, 0, 0, 0.3)` : 'none',
     };
 
     return (
