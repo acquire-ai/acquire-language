@@ -7,10 +7,11 @@ import { WordPopup } from "@/components/word-popup";
 import { createRoot } from 'react-dom/client';
 import { Subtitle } from '@/components/subtitles';
 import React, { useState, useEffect } from 'react';
+import { Settings, loadSettings } from "@/core/config/settings";
 
 const SubtitleContainer: React.FC<{
     handler: BaseSubtitleHandler;
-    settings: any;
+    settings: Settings | null;
 }> = ({ handler, settings }) => {
     // using state to manage subtitles
     const [subtitles, setSubtitles] = useState<string[]>([]);
@@ -48,10 +49,19 @@ const SubtitleContainer: React.FC<{
         handler.showWordDefinition(word, definition, position);
     };
 
+    // Default subtitle settings if settings is null
+    const defaultSubtitleSettings = {
+        fontSize: 20,
+        position: 'bottom' as 'top' | 'bottom',
+        backgroundColor: "rgba(0, 0, 0, 0.7)",
+        textColor: "#ffffff",
+        opacity: 0.9,
+    };
+
     return (
         <Subtitle
             texts={subtitles}
-            settings={settings.subtitleSettings}
+            settings={settings?.subtitleSettings || defaultSubtitleSettings}
             onWordClick={handleWordClick}
             visible={subtitleEnabled}
         />
@@ -102,7 +112,7 @@ export abstract class BaseSubtitleHandler implements SubtitleHandler {
 
     protected aiService: AIService;
     protected wordPopup: WordPopup;
-    protected settings: any = null;
+    protected settings: Settings | null = null;
 
     constructor(aiService: AIService) {
         this.aiService = aiService;
@@ -117,7 +127,7 @@ export abstract class BaseSubtitleHandler implements SubtitleHandler {
         return await this.aiService.getWordDefinition(
             word,
             context,
-            this.settings.nativeLanguage
+            this.settings?.nativeLanguage || "zh-CN"
         );
     }
 
@@ -150,24 +160,8 @@ export abstract class BaseSubtitleHandler implements SubtitleHandler {
 
     protected async loadSettings() {
         try {
-            const result = await browser.storage.local.get("settings");
-            this.settings = result.settings || {
-                nativeLanguage: "zh-CN",
-                targetLanguage: "en-US",
-                languageLevel: "B1",
-                aiModel: "deepseek",
-                apiKey: "",
-                subtitleSettings: {
-                    fontSize: 20,
-                    position: "bottom",
-                    backgroundColor: "rgba(0, 0, 0, 0.7)",
-                    textColor: "#ffffff",
-                    opacity: 0.9,
-                },
-            };
-
-            console.log("Settings loaded:", this.settings);
-
+            // Use the new settings module to load settings
+            this.settings = await loadSettings();
             this.renderSubtitleContainer();
         } catch (error) {
             console.error("Failed to load settings:", error);

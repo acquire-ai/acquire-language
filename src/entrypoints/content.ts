@@ -8,6 +8,7 @@ import {defineContentScript} from "wxt/sandbox";
 import {createPlatformHandler} from "@/platforms";
 import {createAIService} from "@/services/ai";
 import {StorageManager} from "@/core/storage";
+import {loadSettings} from "@/core/config/settings";
 
 export default defineContentScript({
     matches: ["*://*.youtube.com/*"],
@@ -15,7 +16,7 @@ export default defineContentScript({
     async main() {
         let subtitleHandler: any = null;
         
-        const settings = await StorageManager.getSettings();
+        const settings = await loadSettings();
         
         const aiService = createAIService(settings.aiModel, {
             apiKey: settings.apiKey,

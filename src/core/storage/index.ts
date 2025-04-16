@@ -1,23 +1,8 @@
 /**
  * Storage management utilities
  */
-import {Settings, VocabularyData} from '../types/storage';
-
-// Default settings
-export const DEFAULT_SETTINGS: Settings = {
-    nativeLanguage: 'zh-CN',
-    targetLanguage: 'en-US',
-    languageLevel: 'B1',
-    aiModel: 'deepseek',
-    apiKey: '',
-    subtitleSettings: {
-        fontSize: 16,
-        position: 'bottom',
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        textColor: '#ffffff',
-        opacity: 0.9,
-    },
-};
+import {VocabularyData} from '../types/storage';
+import {Settings, DEFAULT_SETTINGS, loadSettings, saveSettings as saveSettingsToStorage} from '../config/settings';
 
 /**
  * Storage Manager
@@ -43,11 +28,11 @@ export class StorageManager {
     }
 
     /**
-     * Get settings
+     * Get settings (including environment variables)
      * @returns Settings
      */
     static async getSettings(): Promise<Settings> {
-        return await this.get<Settings>('settings') || DEFAULT_SETTINGS;
+        return await loadSettings();
     }
 
     /**
@@ -55,7 +40,7 @@ export class StorageManager {
      * @param settings Settings
      */
     static async saveSettings(settings: Settings): Promise<void> {
-        await this.set('settings', settings);
+        await saveSettingsToStorage(settings);
     }
 
     /**

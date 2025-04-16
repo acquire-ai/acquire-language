@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Settings, DEFAULT_SETTINGS, loadSettings, saveSettings as saveSetting } from '@/core/config/settings';
 
 // Language proficiency levels
 const LANGUAGE_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
@@ -15,58 +16,28 @@ const LANGUAGES = [
     { code: 'ru', name: 'Русский' },
 ];
 
-// Settings interface
-interface Settings {
-    nativeLanguage: string;
-    targetLanguage: string;
-    languageLevel: string;
-    aiModel: string;
-    apiKey: string;
-    subtitleSettings: {
-        fontSize: number;
-        position: 'top' | 'bottom';
-        backgroundColor: string;
-        textColor: string;
-        opacity: number;
-    };
-}
-
-// Default settings
-const DEFAULT_SETTINGS: Settings = {
-    nativeLanguage: 'zh-CN',
-    targetLanguage: 'en',
-    languageLevel: 'B1',
-    aiModel: 'deepseek',
-    apiKey: '',
-    subtitleSettings: {
-        fontSize: 16,
-        position: 'bottom',
-        backgroundColor: '#000000',
-        textColor: '#ffffff',
-        opacity: 0.8,
-    },
-};
-
 function Options() {
     const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
     const [isSaving, setIsSaving] = useState(false);
     const [saveMessage, setSaveMessage] = useState('');
 
     useEffect(() => {
-        const loadSettings = async () => {
-            const result = await browser.storage.local.get('settings');
-            if (result.settings) {
-                setSettings(result.settings);
+        const loadUserSettings = async () => {
+            try {
+                const userSettings = await loadSettings();
+                setSettings(userSettings);
+            } catch (error) {
+                console.error("Failed to load settings:", error);
             }
         };
 
-        loadSettings();
+        loadUserSettings();
     }, []);
 
     const saveSettings = async () => {
         setIsSaving(true);
         try {
-            await browser.storage.local.set({ settings });
+            await saveSetting(settings);
             setSaveMessage('Settings saved');
             setTimeout(() => setSaveMessage(''), 3000);
         } catch (error) {
@@ -85,7 +56,7 @@ function Options() {
             setSettings(prev => ({
                 ...prev,
                 [parent]: {
-                    ...prev[parent as keyof Settings],
+                    ...prev[parent as keyof Settings] as Record<string, any>,
                     [child]: value,
                 },
             }));
@@ -105,7 +76,7 @@ function Options() {
         setSettings(prev => ({
             ...prev,
             [parent]: {
-                ...prev[parent as keyof Settings],
+                ...prev[parent as keyof Settings] as Record<string, any>,
                 [child]: parseFloat(value),
             },
         }));

@@ -1,6 +1,7 @@
 /**
  * 存储相关接口定义
  */
+import { Settings } from '@/core/config/settings';
 
 /**
  * 单词接口
@@ -18,20 +19,5 @@ export interface VocabularyData {
     [key: string]: Word;
 }
 
-/**
- * 设置接口
- */
-export interface Settings {
-    nativeLanguage: string;
-    targetLanguage: string;
-    languageLevel: string;
-    aiModel: string;
-    apiKey: string;
-    subtitleSettings: {
-        fontSize: number;
-        position: 'top' | 'bottom';
-        backgroundColor: string;
-        textColor: string;
-        opacity: number;
-    };
-} 
+// 导出Settings接口以保持向后兼容性
+export type { Settings }; 
