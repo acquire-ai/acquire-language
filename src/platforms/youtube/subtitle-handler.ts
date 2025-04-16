@@ -248,7 +248,7 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
         const nextIndex = currIndex + 1;
         if (nextIndex < this.subtitleData.length) {
             const nextSubtitle = this.subtitleData[nextIndex];
-            if (nextSubtitle.start <= currSubtitle.end) {
+            if (nextSubtitle.start < currSubtitle.end) {
                 subtitleTexts.push(nextSubtitle.text);
             }
         }
@@ -257,7 +257,7 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
 
     private findSubtitleIndices(currentTime: number): number[] {
         return this.subtitleData.reduce((indices: number[], sub:SubtitleItem, index:number):number[] => {
-            if (currentTime >= sub.start && currentTime <= sub.end) {
+            if (currentTime >= sub.start && currentTime < sub.end) {
                 indices.push(index);
             }
             return indices;
