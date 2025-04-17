@@ -31,7 +31,7 @@ export const DEFAULT_SETTINGS: Settings = {
     position: "bottom",
     backgroundColor: "rgba(0, 0, 0, 0.7)",
     textColor: "#ffffff",
-    opacity: 0.9,
+    opacity: 0.8,
   },
 };
 
