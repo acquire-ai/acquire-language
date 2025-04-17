@@ -39,8 +39,8 @@ export const SubtitleContainer: React.FC<SubtitleContainerProps> = ({
         pointerEvents: 'none',
     };
 
-    const verticalMargin = Math.round(10 * scaleFactor);
-    const bottomOffset = Math.round(60 * scaleFactor);
+    const verticalMargin = Math.round(10 * Math.sqrt(scaleFactor));
+    const bottomOffset = Math.round(55 * Math.sqrt(scaleFactor));
 
     if (position === 'top') {
         containerStyle.top = `${videoRect.top + verticalMargin}px`;
