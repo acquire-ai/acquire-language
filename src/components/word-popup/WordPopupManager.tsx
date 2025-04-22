@@ -7,6 +7,8 @@ import { WordPopup } from './WordPopup';
  * 
  * This class bridges the gap between the imperative API used by the rest of the codebase
  * and the React component-based implementation.
+ * 
+ * Implemented as a singleton to ensure only one popup exists at a time.
  */
 export class WordPopupManager {
     private containerElement: HTMLElement | null = null;
@@ -17,18 +19,37 @@ export class WordPopupManager {
     private isLoading: boolean = false;
     private savedWords: Set<string> = new Set();
 
-    constructor() {
-        console.log('WordPopupManager: constructor called');
+    // 单例实例
+    private static instance: WordPopupManager | null = null;
 
-        // Make sure there's only one instance
-        // Get existing container
+    /**
+     * 获取WordPopupManager的单例实例
+     */
+    public static getInstance(): WordPopupManager {
+        if (!WordPopupManager.instance) {
+            WordPopupManager.instance = new WordPopupManager();
+        }
+        return WordPopupManager.instance;
+    }
+
+    /**
+     * 私有构造函数，防止外部直接创建实例
+     */
+    private constructor() {
+        console.log('WordPopupManager: constructor called');
+        this.cleanupExistingPopups();
+        this.createContainer();
+    }
+
+    /**
+     * 清理页面中所有已存在的弹窗元素
+     */
+    private cleanupExistingPopups() {
         const existingContainer = document.getElementById('acquire-language-word-popup-container');
         if (existingContainer) {
             console.log('WordPopupManager: Found existing container, removing it');
             existingContainer.remove();
         }
-
-        this.createContainer();
     }
 
     /**
@@ -105,16 +126,18 @@ export class WordPopupManager {
         this.word = word;
         this.position = adjustedPosition;
         this.isLoading = true;
+
+        // 确保容器存在并可见
+        if (!this.containerElement) {
+            console.error('WordPopupManager: containerElement is null');
+            this.createContainer();
+        }
+
         if (this.containerElement) {
             this.containerElement.style.display = 'block';
             console.log('WordPopupManager: container display set to block');
-        } else {
-            console.error('WordPopupManager: containerElement is null');
-            this.createContainer();
-            if (this.containerElement) {
-                this.containerElement.style.display = 'block';
-            }
         }
+
         this.render();
     }
 
@@ -131,17 +154,30 @@ export class WordPopupManager {
         this.definition = definition;
         this.position = adjustedPosition;
         this.isLoading = false;
+
+        if (!this.containerElement) {
+            console.error('WordPopupManager: containerElement is null');
+            this.createContainer();
+        }
+
         if (this.containerElement) {
             this.containerElement.style.display = 'block';
             console.log('WordPopupManager: container display set to block');
-        } else {
-            console.error('WordPopupManager: containerElement is null');
-            this.createContainer();
-            if (this.containerElement) {
-                this.containerElement.style.display = 'block';
-            }
         }
+
         this.render();
+    }
+
+    private validatePosition(position: { x: number, y: number }): { x: number, y: number } {
+        // 确保位置是有效的数字
+        let x = typeof position.x === 'number' ? position.x : 0;
+        let y = typeof position.y === 'number' ? position.y : 0;
+
+        // 在视口范围内
+        x = Math.max(0, Math.min(x, window.innerWidth));
+        y = Math.max(0, Math.min(y, window.innerHeight));
+
+        return { x, y };
     }
 
     /**
@@ -210,23 +246,13 @@ export class WordPopupManager {
                 this.containerElement = null;
                 console.log('WordPopupManager: container element removed');
             }
+
+            // 移除单例实例
+            if (WordPopupManager.instance === this) {
+                WordPopupManager.instance = null;
+            }
         } catch (error) {
             console.error('WordPopupManager: Error during cleanup', error);
         }
-    }
-
-    /**
-     * 验证并调整位置数据
-     */
-    private validatePosition(position: { x: number, y: number }): { x: number, y: number } {
-        // 确保位置是有效的数字
-        let x = typeof position.x === 'number' ? position.x : 0;
-        let y = typeof position.y === 'number' ? position.y : 0;
-
-        // 在视口范围内
-        x = Math.max(0, Math.min(x, window.innerWidth));
-        y = Math.max(0, Math.min(y, window.innerHeight));
-
-        return { x, y };
     }
 } 

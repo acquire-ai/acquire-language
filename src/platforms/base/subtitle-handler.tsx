@@ -8,6 +8,7 @@ import { createRoot } from 'react-dom/client';
 import { Subtitle } from '@/components/subtitles';
 import React, { useState, useEffect } from 'react';
 import { Settings, loadSettings } from "@/core/config/settings";
+import { WordPopupManager } from "@/core/utils/word-popup-manager";
 
 const SubtitleContainer: React.FC<{
     handler: BaseSubtitleHandler;
@@ -61,14 +62,23 @@ const SubtitleContainer: React.FC<{
 };
 
 export abstract class BaseSubtitleHandler implements SubtitleHandler {
+    protected aiService: AIService;
+    protected wordPopup: WordPopup;
+    protected settings: Settings = {} as Settings;
+    protected containerRoot: ReturnType<typeof createRoot> | null = null;
     protected container: HTMLElement | null = null;
-    protected root: ReturnType<typeof createRoot> | null = null;
 
     protected _subtitles: string[] = [];
     protected _subtitleEnabled: boolean = false;
 
     private subtitleUpdater: ((texts: string[]) => void) | null = null;
     private subtitleEnabledUpdater: ((enabled: boolean) => void) | null = null;
+
+    constructor(aiService: AIService) {
+        this.aiService = aiService;
+        this.wordPopup = WordPopup.getInstance();
+        this.loadSettings();
+    }
 
     setSubtitleUpdater(updater: ((texts: string[]) => void) | null) {
         this.subtitleUpdater = updater;
@@ -102,15 +112,6 @@ export abstract class BaseSubtitleHandler implements SubtitleHandler {
         }
     }
 
-    protected aiService: AIService;
-    protected wordPopup: WordPopup;
-    protected settings: Settings | null = null;
-
-    constructor(aiService: AIService) {
-        this.aiService = aiService;
-        this.wordPopup = new WordPopup();
-    }
-
     showWordLoading(word: string, position: { x: number, y: number }): void {
         this.wordPopup.showLoading(word, position);
     }
@@ -134,15 +135,15 @@ export abstract class BaseSubtitleHandler implements SubtitleHandler {
         this.container.id = 'acquire-language-root';
         document.body.appendChild(this.container);
 
-        this.root = createRoot(this.container);
+        this.containerRoot = createRoot(this.container);
 
         this.renderSubtitleContainer();
     }
 
     private renderSubtitleContainer() {
-        if (!this.root || !this.settings) return;
+        if (!this.containerRoot || !this.settings) return;
 
-        this.root.render(
+        this.containerRoot.render(
             <SubtitleContainer
                 handler={this}
                 settings={this.settings}
@@ -150,24 +151,19 @@ export abstract class BaseSubtitleHandler implements SubtitleHandler {
         );
     }
 
-    protected async loadSettings() {
-        try {
-            // Use the new settings module to load settings
-            this.settings = await loadSettings();
-            this.renderSubtitleContainer();
-        } catch (error) {
-            console.error("Failed to load settings:", error);
-        }
+    private async loadSettings() {
+        this.settings = await loadSettings();
+        this.renderSubtitleContainer();
     }
 
     destroy(): void {
         if (this.container) {
-            if (this.root) {
-                this.root.unmount();
+            if (this.containerRoot) {
+                this.containerRoot.unmount();
             }
             this.container.remove();
             this.container = null;
-            this.root = null;
+            this.containerRoot = null;
         }
 
         this.wordPopup.destroy();
