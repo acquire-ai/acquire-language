@@ -5,7 +5,7 @@
  */
 
 // Import marked library for Markdown rendering
-import {marked} from 'marked';
+import { marked } from 'marked';
 
 export class WordPopup {
     private popupElement: HTMLElement | null = null;
@@ -68,15 +68,10 @@ export class WordPopup {
     private initMarked() {
         marked.setOptions({
             breaks: true,
-            gfm: true,
+            gfm: true
         });
     }
 
-    /**
-     * Show loading status
-     * @param word 单词
-     * @param position 位置
-     */
     showLoading(word: string, position: { x: number, y: number }) {
         if (!this.popupElement) return;
 
@@ -110,12 +105,6 @@ export class WordPopup {
         }
     }
 
-    /**
-     * Show word definition
-     * @param word 单词
-     * @param definition 释义
-     * @param position 位置
-     */
     show(word: string, definition: string, position: { x: number, y: number }) {
         if (!this.popupElement) return;
 
@@ -175,10 +164,6 @@ export class WordPopup {
         }
     }
 
-    /**
-     * Set popup position
-     * @param position 位置
-     */
     private setPosition(position: { x: number, y: number }) {
         if (!this.popupElement) return;
 
@@ -232,10 +217,6 @@ export class WordPopup {
         }
     }
 
-    /**
-     * Save word to vocabulary
-     * @param word 单词
-     */
     private saveWord(word: string) {
         // Get current subtitle as context
         const subtitleContainer = document.getElementById('acquire-language-subtitle');
@@ -257,9 +238,6 @@ export class WordPopup {
         });
     }
 
-    /**
-     * Destroy component
-     */
     destroy() {
         if (this.popupElement) {
             this.popupElement.remove();
