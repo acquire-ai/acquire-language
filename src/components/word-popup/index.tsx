@@ -45,17 +45,18 @@ export class WordPopup {
       position: absolute;
       z-index: 10000;
       background-color: white;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      padding: 16px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      padding: 20px;
       max-width: 400px;
-      max-height: 300px;
+      max-height: 350px;
       overflow-y: auto;
       display: none;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
       font-size: 14px;
-      line-height: 1.5;
+      line-height: 1.6;
       color: #333;
+      border: 1px solid #eaeaea;
     `;
 
         // Add to document
@@ -77,17 +78,21 @@ export class WordPopup {
 
         // Set content
         this.popupElement.innerHTML = `
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-        <h3 style="margin: 0; font-size: 16px; font-weight: 600;">${word}</h3>
-        <button id="acquire-language-close-popup" style="background: none; border: none; cursor: pointer; font-size: 16px; color: #999;">×</button>
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; border-bottom: 1px solid #eaeaea; padding-bottom: 12px;">
+        <h3 style="margin: 0; font-size: 20px; font-weight: 600; color: #2563eb;">${word}</h3>
+        <button id="acquire-language-close-popup" style="background: none; border: none; cursor: pointer; font-size: 16px; color: #999; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: background-color 0.2s; padding: 0;">×</button>
       </div>
-      <div style="display: flex; justify-content: center; padding: 20px 0;">
-        <div class="acquire-language-loading" style="border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; width: 20px; height: 20px; animation: acquire-language-spin 1s linear infinite;"></div>
+      <div style="display: flex; justify-content: center; align-items: center; padding: 32px 0;">
+        <div class="acquire-language-loading" style="border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; width: 28px; height: 28px; animation: acquire-language-spin 1s linear infinite;"></div>
+        <div style="margin-left: 12px; color: #666; font-size: 14px;">Looking up definition...</div>
       </div>
       <style>
         @keyframes acquire-language-spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
+        }
+        #acquire-language-close-popup:hover {
+          background-color: #f3f4f6;
         }
       </style>
     `;
@@ -113,14 +118,62 @@ export class WordPopup {
 
         // Set content
         this.popupElement.innerHTML = `
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-        <h3 style="margin: 0; font-size: 16px; font-weight: 600;">${word}</h3>
-        <div>
-          <button id="acquire-language-save-word" style="background: none; border: none; cursor: pointer; font-size: 14px; color: #3498db; margin-right: 8px;">Save</button>
-          <button id="acquire-language-close-popup" style="background: none; border: none; cursor: pointer; font-size: 16px; color: #999;">×</button>
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; border-bottom: 1px solid #eaeaea; padding-bottom: 12px;">
+        <h3 style="margin: 0; font-size: 20px; font-weight: 600; color: #2563eb;">${word}</h3>
+        <div style="display: flex; align-items: center;">
+          <button id="acquire-language-save-word" style="background: none; border: none; cursor: pointer; font-size: 14px; color: #3498db; padding: 4px 8px; border-radius: 4px; transition: background-color 0.2s; margin-right: 16px;">Save</button>
+          <button id="acquire-language-close-popup" style="background: none; border: none; cursor: pointer; font-size: 16px; color: #999; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: background-color 0.2s; padding: 0;">×</button>
         </div>
       </div>
-      <div class="acquire-language-definition" style="margin-top: 8px;">
+      <div class="acquire-language-definition" style="margin-top: 12px;">
+        <style>
+          .acquire-language-definition h1, 
+          .acquire-language-definition h2, 
+          .acquire-language-definition h3, 
+          .acquire-language-definition h4 {
+            margin-top: 16px;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #1f2937;
+          }
+          
+          .acquire-language-definition ol {
+            padding-left: 24px;
+            margin: 12px 0;
+          }
+          
+          .acquire-language-definition ol li {
+            margin-bottom: 8px;
+          }
+          
+          .acquire-language-definition p {
+            margin-bottom: 12px;
+            line-height: 1.6;
+          }
+          
+          .acquire-language-definition strong {
+            color: #4b5563;
+            font-weight: 600;
+          }
+          
+          .acquire-language-definition ul {
+            padding-left: 24px;
+            margin: 12px 0;
+            list-style-type: disc;
+          }
+          
+          .acquire-language-definition ul li {
+            margin-bottom: 8px;
+          }
+          
+          #acquire-language-close-popup:hover {
+            background-color: #f3f4f6;
+          }
+          
+          #acquire-language-save-word:hover {
+            background-color: #ebf8ff;
+          }
+        </style>
         ${renderedDefinition}
       </div>
     `;
