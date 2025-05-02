@@ -18,9 +18,12 @@ export default defineContentScript({
 
         const settings = await loadSettings();
 
-        const aiService = createAIService(settings.aiModel, {
-            apiKey: settings.apiKey,
-        });
+        // Create AI service using separate provider and model fields
+        const aiService = createAIService(
+            settings.aiProvider,
+            settings.aiModel,
+            {apiKey: settings.apiKey}
+        );
 
         const processedSubtitleRequests = new Set<string>();
 
