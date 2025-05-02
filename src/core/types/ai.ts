@@ -7,6 +7,7 @@
  */
 export interface AIServiceConfig {
     apiKey: string;
+    provider?: string;
     model?: string;
     options?: Record<string, any>;
 }
