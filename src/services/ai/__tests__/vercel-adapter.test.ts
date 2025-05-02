@@ -8,36 +8,24 @@ vi.mock('ai', () => ({
     generateText: vi.fn().mockResolvedValue({ text: 'mocked response' })
 }));
 
-// Mock browser storage API
-vi.mock('webextension-polyfill', () => ({
-    default: {
-        storage: {
-            local: {
-                get: vi.fn().mockResolvedValue({
-                    settings: {
-                        nativeLanguage: 'zh-CN'
-                    }
-                })
-            }
-        }
-    }
-}));
-
 // Mock provider modules
 vi.mock('@ai-sdk/openai', () => ({
-    createOpenAI: vi.fn().mockReturnValue(modelName => ({}))
+    createOpenAI: vi.fn().mockReturnValue((modelName: string) => ({}))
 }));
 
 vi.mock('@ai-sdk/anthropic', () => ({
-    createAnthropic: vi.fn().mockReturnValue(modelName => ({}))
+    createAnthropic: vi.fn().mockReturnValue((modelName: string) => ({}))
 }));
 
 vi.mock('@ai-sdk/google', () => ({
-    createGoogleGenerativeAI: vi.fn().mockReturnValue(modelName => ({}))
+    createGoogleGenerativeAI: vi.fn().mockReturnValue((modelName: string) => ({}))
 }));
 
+// Fix DeepSeek mock implementation to use createDeepSeek properly
 vi.mock('@ai-sdk/deepseek', () => ({
-    createDeepSeek: vi.fn().mockReturnValue(modelName => ({}))
+    createDeepSeek: vi.fn().mockImplementation(() => {
+        return (modelName: string) => ({});
+    })
 }));
 
 describe('VercelAIAdapter test', () => {
@@ -45,6 +33,12 @@ describe('VercelAIAdapter test', () => {
         apiKey: 'test-api-key',
         provider: 'openai',
         model: 'gpt-4o-mini'
+    };
+
+    const deepseekConfig: AIServiceConfig = {
+        apiKey: 'test-deepseek-key',
+        provider: 'deepseek',
+        model: 'deepseek-chat'
     };
 
     beforeEach(() => {
@@ -98,5 +92,40 @@ describe('VercelAIAdapter test', () => {
         expect(AVAILABLE_MODELS).toHaveProperty('anthropic');
         expect(AVAILABLE_MODELS).toHaveProperty('google');
         expect(AVAILABLE_MODELS).toHaveProperty('deepseek');
+    });
+
+    // Add a test for DeepSeek provider specifically
+    it('should initialize correctly with DeepSeek provider', () => {
+        const adapter = new VercelAIAdapter(deepseekConfig);
+        // @ts-ignore - accessing private properties for testing
+        expect(adapter.provider).toBe('deepseek');
+        // @ts-ignore - accessing private properties for testing
+        expect(adapter.model).toBe('deepseek-chat');
+    });
+
+    // Test DeepSeek word definition functionality
+    it('should handle getWordDefinition correctly with DeepSeek provider', async () => {
+        const adapter = new VercelAIAdapter(deepseekConfig);
+        const result = await adapter.getWordDefinition('phrase', 'This is a phrase in context', 'en');
+
+        expect(result).toBe('mocked response');
+        expect(generateText).toHaveBeenCalledWith(expect.objectContaining({
+            prompt: expect.stringContaining('phrase'),
+            maxTokens: 500,
+            temperature: 0.3
+        }));
+    });
+
+    // Test DeepSeek translation functionality
+    it('should handle translateText correctly with DeepSeek provider', async () => {
+        const adapter = new VercelAIAdapter(deepseekConfig);
+        const result = await adapter.translateText('你好世界', 'zh-CN', 'en');
+
+        expect(result).toBe('mocked response');
+        expect(generateText).toHaveBeenCalledWith(expect.objectContaining({
+            prompt: expect.stringContaining('你好世界'),
+            maxTokens: 500,
+            temperature: 0.3
+        }));
     });
 }); 
