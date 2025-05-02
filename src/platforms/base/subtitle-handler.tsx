@@ -8,7 +8,6 @@ import { createRoot } from 'react-dom/client';
 import { Subtitle } from '@/components/subtitles';
 import React, { useState, useEffect } from 'react';
 import { Settings, loadSettings } from "@/core/config/settings";
-import { WordPopupManager } from "@/core/utils/word-popup-manager";
 
 const SubtitleContainer: React.FC<{
     handler: BaseSubtitleHandler;
