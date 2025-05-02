@@ -15,9 +15,9 @@ export default defineContentScript({
 
     async main() {
         let subtitleHandler: any = null;
-        
+
         const settings = await loadSettings();
-        
+
         const aiService = createAIService(settings.aiModel, {
             apiKey: settings.apiKey,
         });
