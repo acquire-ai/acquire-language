@@ -4,7 +4,7 @@
 import {defineBackground} from "wxt/sandbox";
 import {StorageManager} from "@/core/storage";
 import {Word} from "@/core/types/storage";
-import { saveSettings, loadSettings } from "@/core/config/settings";
+import {saveSettings, loadSettings} from "@/core/config/settings";
 
 export default defineBackground({
     main() {
@@ -24,18 +24,19 @@ async function initializeSettings() {
     try {
         // Load current settings
         const settings = await loadSettings();
-        
+
         // If this is a development build with injected environment variables
         if (typeof window !== 'undefined' && (window as any).__ENV__) {
             const env = (window as any).__ENV__;
-            
+
             // Apply environment variables to settings
             if (env.ACQUIRE_API_KEY) settings.apiKey = env.ACQUIRE_API_KEY;
             if (env.ACQUIRE_NATIVE_LANGUAGE) settings.nativeLanguage = env.ACQUIRE_NATIVE_LANGUAGE;
             if (env.ACQUIRE_TARGET_LANGUAGE) settings.targetLanguage = env.ACQUIRE_TARGET_LANGUAGE;
             if (env.ACQUIRE_LANGUAGE_LEVEL) settings.languageLevel = env.ACQUIRE_LANGUAGE_LEVEL;
+            if (env.ACQUIRE_AI_PROVIDER) settings.aiProvider = env.ACQUIRE_AI_PROVIDER;
             if (env.ACQUIRE_AI_MODEL) settings.aiModel = env.ACQUIRE_AI_MODEL;
-            
+
             // Save the updated settings
             await saveSettings(settings);
         }
@@ -56,7 +57,7 @@ function listenForSubtitleRequests() {
             if (details.initiator?.startsWith("chrome-extension://")) {
                 return;
             }
-            
+
             const url = details.url;
 
             if (!url.includes("/api/timedtext") && !url.includes("timedtext")) {
