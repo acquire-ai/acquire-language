@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Settings, DEFAULT_SETTINGS, loadSettings, saveSettings as saveSetting } from '@/core/config/settings';
+import { getAvailableAIModels } from '@/services/ai';
 
 // Language proficiency levels
 const LANGUAGE_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
@@ -20,6 +21,9 @@ function Options() {
     const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
     const [isSaving, setIsSaving] = useState(false);
     const [saveMessage, setSaveMessage] = useState('');
+
+    // Get available models
+    const availableModels = getAvailableAIModels();
 
     useEffect(() => {
         const loadUserSettings = async () => {
@@ -79,6 +83,17 @@ function Options() {
                 ...prev[parent as keyof Settings] as Record<string, any>,
                 [child]: parseFloat(value),
             },
+        }));
+    };
+
+    // Handle AI provider change
+    const handleProviderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const newProvider = e.target.value;
+        setSettings(prev => ({
+            ...prev,
+            aiProvider: newProvider,
+            // Reset model to first available when changing provider
+            aiModel: availableModels[newProvider][0]
         }));
     };
 
@@ -142,6 +157,22 @@ function Options() {
                     <h2 className="text-xl font-semibold mb-4 border-b pb-2">AI Settings</h2>
 
                     <div className="mb-4">
+                        <label className="block text-sm font-medium mb-1">AI Provider</label>
+                        <select
+                            name="aiProvider"
+                            value={settings.aiProvider}
+                            onChange={handleProviderChange}
+                            className="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600"
+                        >
+                            {Object.keys(availableModels).map(provider => (
+                                <option key={provider} value={provider}>
+                                    {provider.charAt(0).toUpperCase() + provider.slice(1)}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="mb-4">
                         <label className="block text-sm font-medium mb-1">AI Model</label>
                         <select
                             name="aiModel"
@@ -149,8 +180,12 @@ function Options() {
                             onChange={handleChange}
                             className="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600"
                         >
-                            <option value="deepseek">DeepSeek</option>
-                            <option value="gpt-4o-mini">GPT-4o Mini</option>
+                            {settings.aiProvider && availableModels[settings.aiProvider] ? 
+                              availableModels[settings.aiProvider].map(model => (
+                                <option key={model} value={model}>{model}</option>
+                              )) : 
+                              <option value="">please select a AI provider</option>
+                            }
                         </select>
                     </div>
 
