@@ -1,8 +1,36 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { StorageManager, DEFAULT_SETTINGS } from '../index';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { StorageManager } from '../index';
+import { DEFAULT_SETTINGS } from '../../config/settings';
 import { Settings, VocabularyData } from '../../types/storage';
+import * as settingsModule from '../../config/settings';
 
-// 模拟 browser.storage.local API
+// Mock loadSettings function
+vi.mock('../../config/settings', () => {
+  return {
+    // Keep default settings export
+    DEFAULT_SETTINGS: {
+      nativeLanguage: "zh-CN",
+      targetLanguage: "en-US",
+      languageLevel: "B1",
+      aiProvider: "deepseek",
+      aiModel: "deepseek-chat",
+      apiKey: "",
+      subtitleSettings: {
+        fontSize: 20,
+        position: "bottom",
+        backgroundColor: "rgba(0, 0, 0, 0.7)",
+        textColor: "#ffffff",
+        opacity: 0.8,
+      }
+    },
+    // Mock loadSettings function
+    loadSettings: vi.fn(),
+    // Mock saveSettings function
+    saveSettings: vi.fn()
+  };
+});
+
+// Mock browser.storage.local API
 const mockStorage = {
   local: {
     get: vi.fn(),
@@ -10,84 +38,86 @@ const mockStorage = {
   }
 };
 
-// 全局模拟 browser API
-global.browser = {
-  storage: mockStorage
-} as any;
+// Override global mocks
+beforeEach(() => {
+  vi.resetAllMocks();
+  // Ensure global mock is overridden
+  (global as any).browser = {
+    storage: mockStorage
+  };
+});
 
-describe('存储管理测试', () => {
-  beforeEach(() => {
-    vi.resetAllMocks();
-  });
-
-  describe('get 方法', () => {
-    it('应该返回存储中的数据', async () => {
+describe('Storage Manager Tests', () => {
+  describe('get method', () => {
+    it('should return data from storage', async () => {
       mockStorage.local.get.mockResolvedValue({ testKey: 'testValue' });
-      
+
       const result = await StorageManager.get('testKey');
-      
+
       expect(mockStorage.local.get).toHaveBeenCalledWith('testKey');
       expect(result).toBe('testValue');
     });
 
-    it('当数据不存在时应该返回 null', async () => {
+    it('should return null when data does not exist', async () => {
       mockStorage.local.get.mockResolvedValue({});
-      
+
       const result = await StorageManager.get('testKey');
-      
+
       expect(mockStorage.local.get).toHaveBeenCalledWith('testKey');
       expect(result).toBeNull();
     });
   });
 
-  describe('set 方法', () => {
-    it('应该正确设置存储数据', async () => {
+  describe('set method', () => {
+    it('should correctly set storage data', async () => {
       await StorageManager.set('testKey', 'testValue');
-      
+
       expect(mockStorage.local.set).toHaveBeenCalledWith({ testKey: 'testValue' });
     });
   });
 
-  describe('getSettings 方法', () => {
-    it('应该返回存储的设置', async () => {
+  describe('getSettings method', () => {
+    it('should return stored settings', async () => {
       const mockSettings: Settings = {
         ...DEFAULT_SETTINGS,
         nativeLanguage: 'ja-JP',
       };
-      
-      mockStorage.local.get.mockResolvedValue({ settings: mockSettings });
-      
+
+      // Mock loadSettings to return mock settings
+      (settingsModule.loadSettings as any).mockResolvedValue(mockSettings);
+
       const result = await StorageManager.getSettings();
-      
-      expect(mockStorage.local.get).toHaveBeenCalledWith('settings');
+
+      expect(settingsModule.loadSettings).toHaveBeenCalled();
       expect(result).toEqual(mockSettings);
     });
 
-    it('当设置不存在时应该返回默认设置', async () => {
-      mockStorage.local.get.mockResolvedValue({});
-      
+    it('should return default settings when settings do not exist', async () => {
+      // Mock loadSettings to return default settings
+      (settingsModule.loadSettings as any).mockResolvedValue(DEFAULT_SETTINGS);
+
       const result = await StorageManager.getSettings();
-      
-      expect(mockStorage.local.get).toHaveBeenCalledWith('settings');
+
+      expect(settingsModule.loadSettings).toHaveBeenCalled();
       expect(result).toEqual(DEFAULT_SETTINGS);
     });
   });
 
-  describe('saveSettings 方法', () => {
-    it('应该正确保存设置', async () => {
+  describe('saveSettings method', () => {
+    it('should correctly save settings', async () => {
       const settings: Settings = {
         ...DEFAULT_SETTINGS,
         targetLanguage: 'fr-FR',
       };
-      
+
       await StorageManager.saveSettings(settings);
-      
-      expect(mockStorage.local.set).toHaveBeenCalledWith({ settings });
+
+      expect(settingsModule.saveSettings).toHaveBeenCalledWith(settings);
     });
   });
 
-  describe('getVocabulary 方法', () => {
-    it('应该返回存储的生词本', async () => {
+  describe('getVocabulary method', () => {
+    it('should return stored vocabulary', async () => {
       const mockVocabulary: VocabularyData = {
         'test': {
           word: 'test',
@@ -95,27 +125,27 @@ describe('存储管理测试', () => {
           createdAt: '2023-01-01'
         }
       };
-      
+
       mockStorage.local.get.mockResolvedValue({ vocabulary: mockVocabulary });
-      
+
       const result = await StorageManager.getVocabulary();
-      
+
       expect(mockStorage.local.get).toHaveBeenCalledWith('vocabulary');
       expect(result).toEqual(mockVocabulary);
     });
 
-    it('当生词本不存在时应该返回空对象', async () => {
+    it('should return empty object when vocabulary does not exist', async () => {
       mockStorage.local.get.mockResolvedValue({});
-      
+
       const result = await StorageManager.getVocabulary();
-      
+
       expect(mockStorage.local.get).toHaveBeenCalledWith('vocabulary');
       expect(result).toEqual({});
     });
   });
 
-  describe('saveVocabulary 方法', () => {
-    it('应该正确保存生词本', async () => {
+  describe('saveVocabulary method', () => {
+    it('should correctly save vocabulary', async () => {
       const vocabulary: VocabularyData = {
         'example': {
           word: 'example',
@@ -123,9 +153,9 @@ describe('存储管理测试', () => {
           createdAt: '2023-01-01'
         }
       };
-      
+
       await StorageManager.saveVocabulary(vocabulary);
-      
+
       expect(mockStorage.local.set).toHaveBeenCalledWith({ vocabulary });
     });
   });

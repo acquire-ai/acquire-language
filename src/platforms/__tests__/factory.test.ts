@@ -1,35 +1,50 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createPlatformHandler } from '../factory';
 import { YouTubePlatformHandler } from '../youtube';
+import { isYouTubeVideoUrl } from '@/core/utils';
 
-// 模拟 isYouTubeVideoUrl 函数
+// Mock isYouTubeVideoUrl
 vi.mock('@/core/utils', () => ({
-  isYouTubeVideoUrl: (url: string) => url.includes('youtube.com/watch')
+  isYouTubeVideoUrl: vi.fn()
 }));
 
-// 模拟 YouTubePlatformHandler
+// Mock platform handlers
 vi.mock('../youtube', () => ({
-  YouTubePlatformHandler: vi.fn().mockImplementation(() => {
-    return { platform: 'youtube' };
-  })
+  YouTubePlatformHandler: vi.fn().mockImplementation(() => ({
+    initialize: vi.fn(),
+    createSubtitleHandler: vi.fn()
+  }))
 }));
 
-describe('平台工厂测试', () => {
+describe('Platform Factory Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('应该为YouTube URL创建YouTubePlatformHandler', () => {
-    const handler = createPlatformHandler('https://www.youtube.com/watch?v=123456');
-    
+  it('should create YouTubePlatformHandler for YouTube URL', () => {
+    const url = 'https://www.youtube.com/watch?v=12345';
+
+    // Mock isYouTubeVideoUrl to return true for this test
+    (isYouTubeVideoUrl as any).mockReturnValue(true);
+
+    const handler = createPlatformHandler(url);
+
+    // Since handler is a mock, we can't use toBeInstanceOf
+    expect(handler).toBeTruthy();
+    expect(isYouTubeVideoUrl).toHaveBeenCalledWith(url);
     expect(YouTubePlatformHandler).toHaveBeenCalled();
-    expect(handler).toEqual({ platform: 'youtube' });
   });
 
-  it('应该为非支持的URL返回null', () => {
-    const handler = createPlatformHandler('https://www.example.com');
-    
-    expect(YouTubePlatformHandler).not.toHaveBeenCalled();
+  it('should return null for unsupported URL', () => {
+    const url = 'https://www.example.com';
+
+    // Mock isYouTubeVideoUrl to return false for this test
+    (isYouTubeVideoUrl as any).mockReturnValue(false);
+
+    const handler = createPlatformHandler(url);
+
     expect(handler).toBeNull();
+    expect(isYouTubeVideoUrl).toHaveBeenCalledWith(url);
+    expect(YouTubePlatformHandler).not.toHaveBeenCalled();
   });
 }); 
