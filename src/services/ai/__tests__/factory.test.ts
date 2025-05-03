@@ -1,50 +1,96 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createAIService } from '../factory';
+import { createAIService, AVAILABLE_MODELS } from '../factory';
 import { VercelAIAdapter } from '../vercel-adapter';
 import { AIServiceConfig } from '../../../core/types/ai';
 
+// Mock Vercel AI SDK providers
+vi.mock('@ai-sdk/openai', () => ({
+  createOpenAI: vi.fn().mockReturnValue('openai-provider-instance')
+}));
+
+vi.mock('@ai-sdk/anthropic', () => ({
+  createAnthropic: vi.fn().mockReturnValue('anthropic-provider-instance')
+}));
+
+vi.mock('@ai-sdk/google', () => ({
+  createGoogleGenerativeAI: vi.fn().mockReturnValue('google-provider-instance')
+}));
+
+vi.mock('@ai-sdk/deepseek', () => ({
+  createDeepSeek: vi.fn().mockReturnValue('deepseek-provider-instance')
+}));
+
 // Mock VercelAIAdapter
 vi.mock('../vercel-adapter', () => ({
-  VercelAIAdapter: vi.fn(),
-  AVAILABLE_MODELS: {
-    openai: ['gpt-4o', 'gpt-4o-mini'],
-    deepseek: ['deepseek-chat', 'deepseek-reasoner']
-  }
+  VercelAIAdapter: vi.fn()
 }));
 
 describe('AI service factory test', () => {
-  const mockConfig: AIServiceConfig = {
-    apiKey: 'test-api-key'
-  };
-
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it('should create an AI service for deepseek provider', () => {
-    createAIService('deepseek', 'deepseek-chat', mockConfig);
-    expect(VercelAIAdapter).toHaveBeenCalledWith({
-      ...mockConfig,
-      provider: 'deepseek',
+    const config: AIServiceConfig = {
+      apiKey: 'test-api-key',
+      providerType: 'deepseek',
       model: 'deepseek-chat'
-    });
+    };
+
+    createAIService(config);
+
+    expect(VercelAIAdapter).toHaveBeenCalledWith(
+      'deepseek-provider-instance',
+      'deepseek-chat'
+    );
   });
 
   it('should create an AI service for OpenAI provider', () => {
-    createAIService('openai', 'gpt-4o-mini', mockConfig);
-    expect(VercelAIAdapter).toHaveBeenCalledWith({
-      ...mockConfig,
-      provider: 'openai',
+    const config: AIServiceConfig = {
+      apiKey: 'test-api-key',
+      providerType: 'openai',
       model: 'gpt-4o-mini'
-    });
+    };
+
+    createAIService(config);
+
+    expect(VercelAIAdapter).toHaveBeenCalledWith(
+      'openai-provider-instance',
+      'gpt-4o-mini'
+    );
   });
 
-  it('should accept any provider and model combination', () => {
-    createAIService('any-provider', 'any-model', mockConfig);
-    expect(VercelAIAdapter).toHaveBeenCalledWith({
-      ...mockConfig,
-      provider: 'any-provider',
+  it('should throw error for unsupported provider', () => {
+    const config: AIServiceConfig = {
+      apiKey: 'test-api-key',
+      providerType: 'unsupported-provider',
       model: 'any-model'
+    };
+
+    expect(() => createAIService(config)).toThrow(
+      'Unsupported provider: unsupported-provider'
+    );
+  });
+
+  it('should export AVAILABLE_MODELS with supported providers and models', () => {
+    // Verify AVAILABLE_MODELS is exported and includes all supported providers
+    expect(AVAILABLE_MODELS).toBeDefined();
+    expect(AVAILABLE_MODELS).toHaveProperty('openai');
+    expect(AVAILABLE_MODELS).toHaveProperty('anthropic');
+    expect(AVAILABLE_MODELS).toHaveProperty('google');
+    expect(AVAILABLE_MODELS).toHaveProperty('deepseek');
+
+    // Verify each provider has at least one available model
+    Object.keys(AVAILABLE_MODELS).forEach(provider => {
+      expect(Array.isArray(AVAILABLE_MODELS[provider])).toBe(true);
+      expect(AVAILABLE_MODELS[provider].length).toBeGreaterThan(0);
     });
+
+    // Verify specific models exist
+    expect(AVAILABLE_MODELS.openai).toContain('gpt-4o');
+    expect(AVAILABLE_MODELS.anthropic).toContain('claude-3-5-sonnet');
+    expect(AVAILABLE_MODELS.google).toContain('gemini-1.5-pro');
+    expect(AVAILABLE_MODELS.deepseek).toContain('deepseek-chat');
+    expect(AVAILABLE_MODELS.deepseek).toContain('deepseek-reasoner');
   });
 }); 
