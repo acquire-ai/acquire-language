@@ -7,7 +7,6 @@
 import {defineContentScript} from "wxt/sandbox";
 import {createPlatformHandler} from "@/platforms";
 import {createAIService} from "@/services/ai";
-import {StorageManager} from "@/core/storage";
 import {loadSettings} from "@/core/config/settings";
 
 export default defineContentScript({
@@ -20,9 +19,11 @@ export default defineContentScript({
 
         // Create AI service using separate provider and model fields
         const aiService = createAIService(
-            settings.aiProvider,
-            settings.aiModel,
-            {apiKey: settings.apiKey}
+            {
+                providerType: settings.aiProvider,
+                model: settings.aiModel,
+                apiKey: settings.apiKey
+            }
         );
 
         const processedSubtitleRequests = new Set<string>();
