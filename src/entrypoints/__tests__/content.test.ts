@@ -15,7 +15,11 @@ vi.mock('@/core/config/settings', () => ({
   loadSettings: vi.fn().mockResolvedValue({
     aiProvider: 'test-provider',
     aiModel: 'test-model',
-    apiKey: 'test-key'
+    apiKey: 'test-key',
+    options: {
+      baseURL: 'test-url',
+      providerName: 'test-provider-name'
+    }
   })
 }));
 
@@ -84,22 +88,31 @@ describe('Content Script Tests', () => {
   it('should initialize AI service with correct configuration', async () => {
     const { loadSettings } = await import('@/core/config/settings');
     const { createAIService } = await import('@/services/ai');
-    
+
     // Load settings from mock
     const settings = await loadSettings();
-    
+
     // Call the function we want to test directly
     createAIService({
       providerType: settings.aiProvider,
       model: settings.aiModel,
-      apiKey: settings.apiKey
+      apiKey: settings.apiKey,
+      baseURL: settings.options?.baseURL,
+      providerName: settings.options?.providerName,
+      options: settings.options
     });
-    
+
     // Verify that createAIService was called with the correct parameters
     expect(createAIService).toHaveBeenCalledWith({
       providerType: 'test-provider',
       model: 'test-model',
-      apiKey: 'test-key'
+      apiKey: 'test-key',
+      baseURL: 'test-url',
+      providerName: 'test-provider-name',
+      options: {
+        baseURL: 'test-url',
+        providerName: 'test-provider-name'
+      }
     });
   });
 });

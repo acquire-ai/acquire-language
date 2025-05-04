@@ -1,16 +1,16 @@
 /**
  * AI Service Factory
  */
-import {AIService, AIServiceConfig} from "@/core/types/ai.ts";
-import {createOpenAI} from "@ai-sdk/openai";
-import {createAnthropic} from "@ai-sdk/anthropic";
-import {createGoogleGenerativeAI} from "@ai-sdk/google";
-import {createDeepSeek} from "@ai-sdk/deepseek";
-import {createAzure} from '@ai-sdk/azure';
-import {createOpenAICompatible} from '@ai-sdk/openai-compatible';
+import { AIService, AIServiceConfig } from "@/core/types/ai.ts";
+import { createOpenAI } from "@ai-sdk/openai";
+import { createAnthropic } from "@ai-sdk/anthropic";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { createDeepSeek } from "@ai-sdk/deepseek";
+import { createAzure } from '@ai-sdk/azure';
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 
-import {ProviderV1} from "@ai-sdk/provider";
-import {VercelAIAdapter} from "./vercel-adapter";
+import { ProviderV1 } from "@ai-sdk/provider";
+import { VercelAIAdapter } from "./vercel-adapter";
 
 type ModelConfigType = Record<string, string[]>;
 
@@ -20,7 +20,7 @@ export const AVAILABLE_MODELS: ModelConfigType = {
     anthropic: ["claude-3-5-sonnet", "claude-3-opus", "claude-3-haiku"],
     google: ["gemini-1.5-pro", "gemini-1.5-flash"],
     deepseek: ["deepseek-chat", "deepseek-reasoner"],
-    azure: [],
+    azure: ["gpt-4o"],
     "openai-compatible": [],
 };
 
@@ -32,23 +32,42 @@ export function createAIService(
 
     switch (config.providerType) {
         case "openai":
-            ai = createOpenAI({apiKey: config.apiKey});
+            ai = createOpenAI({
+                apiKey: config.apiKey,
+                baseURL: config.baseURL,
+                organization: config.options?.organization,
+                project: config.options?.project
+            });
             break;
         case "anthropic":
-            ai = createAnthropic({apiKey: config.apiKey});
+            ai = createAnthropic({
+                apiKey: config.apiKey,
+                baseURL: config.baseURL
+            });
             break;
         case "google":
-            ai = createGoogleGenerativeAI({apiKey: config.apiKey});
+            ai = createGoogleGenerativeAI({
+                apiKey: config.apiKey,
+                baseURL: config.baseURL
+            });
             break;
         case "deepseek":
-            ai = createDeepSeek({apiKey: config.apiKey});
+            ai = createDeepSeek({
+                apiKey: config.apiKey,
+                baseURL: config.baseURL
+            });
             break;
         case "azure":
-            ai = createAzure({apiKey: config.apiKey});
+            ai = createAzure({
+                apiKey: config.apiKey,
+                resourceName: config.options?.resourceName,
+                baseURL: config.baseURL,
+                apiVersion: config.options?.apiVersion || '2024-10-01-preview'
+            });
             break;
         case "openai-compatible":
             ai = createOpenAICompatible({
-                name: config.providerName || 'custom-provider',
+                name: config.providerName || config.options?.providerName || 'custom-provider',
                 apiKey: config.apiKey,
                 baseURL: config.baseURL || '',
                 queryParams: config.options?.queryParams || {}
@@ -281,4 +300,4 @@ export function getAIProviderSettings(provider: string): ProviderConfig {
         default:
             return {};
     }
-}
+} 

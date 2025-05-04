@@ -4,10 +4,10 @@
  * This script runs on platform pages and is responsible for initializing subtitle handlers.
  * It detects platform video pages and activates subtitle enhancement features after the video player loads.
  */
-import {defineContentScript} from "wxt/sandbox";
-import {createPlatformHandler} from "@/platforms";
-import {createAIService} from "@/services/ai";
-import {loadSettings} from "@/core/config/settings";
+import { defineContentScript } from "wxt/sandbox";
+import { createPlatformHandler } from "@/platforms";
+import { createAIService } from "@/services/ai";
+import { loadSettings } from "@/core/config/settings";
 
 export default defineContentScript({
     matches: ["*://*.youtube.com/*"],
@@ -22,7 +22,10 @@ export default defineContentScript({
             {
                 providerType: settings.aiProvider,
                 model: settings.aiModel,
-                apiKey: settings.apiKey
+                apiKey: settings.apiKey,
+                baseURL: settings.options?.baseURL,
+                providerName: settings.options?.providerName,
+                options: settings.options
             }
         );
 
@@ -57,7 +60,7 @@ export default defineContentScript({
         });
 
         function processSubtitleRequest(data: any) {
-            const {url, lang, videoId} = data;
+            const { url, lang, videoId } = data;
 
             const requestKey = `${videoId}:${lang}`;
 
@@ -73,7 +76,7 @@ export default defineContentScript({
 
             window.dispatchEvent(
                 new CustomEvent("acquireLanguageSubtitleData", {
-                    detail: {url, lang, videoId},
+                    detail: { url, lang, videoId },
                 })
             );
         }
@@ -91,7 +94,7 @@ export default defineContentScript({
                         await initializeHandler();
                     }
                 }
-            }).observe(document, {subtree: true, childList: true});
+            }).observe(document, { subtree: true, childList: true });
         }
 
         async function initializeHandler() {

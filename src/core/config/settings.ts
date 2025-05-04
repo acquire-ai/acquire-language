@@ -11,6 +11,7 @@ export interface Settings {
     aiProvider: string;
     aiModel: string;
     apiKey: string;
+    options?: Record<string, any>; // Add options field for provider-specific configuration
     subtitleSettings: {
         fontSize: number;
         position: 'top' | 'bottom';
@@ -28,6 +29,7 @@ export const DEFAULT_SETTINGS: Settings = {
     aiProvider: "deepseek",
     aiModel: "deepseek-chat",
     apiKey: "",
+    options: {}, // Initialize with empty object
     subtitleSettings: {
         fontSize: 20,
         position: "bottom",
@@ -108,7 +110,7 @@ export async function loadSettings(): Promise<Settings> {
  */
 export async function saveSettings(settings: Settings): Promise<void> {
     try {
-        await browser.storage.local.set({settings});
+        await browser.storage.local.set({ settings });
     } catch (error) {
         console.error("Failed to save settings:", error);
     }
