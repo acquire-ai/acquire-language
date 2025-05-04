@@ -8,7 +8,7 @@ describe('Utility Functions Tests', () => {
       await delay(100);
       const end = Date.now();
       const elapsed = end - start;
-
+      
       // Allow a small time error margin
       expect(elapsed).toBeGreaterThanOrEqual(90);
     });
@@ -21,12 +21,12 @@ describe('Utility Functions Tests', () => {
         'https://example.com/page',
         'https://test.org/something'
       ];
-
+      
       const patterns = [
         'youtube\\.com/watch',
         'example\\.com/.*'
       ];
-
+      
       expect(isUrlMatch(urls[0], patterns)).toBe(true);
       expect(isUrlMatch(urls[1], patterns)).toBe(true);
       expect(isUrlMatch(urls[2], patterns)).toBe(false);

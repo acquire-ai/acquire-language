@@ -84,17 +84,17 @@ describe('Content Script Tests', () => {
   it('should initialize AI service with correct configuration', async () => {
     const { loadSettings } = await import('@/core/config/settings');
     const { createAIService } = await import('@/services/ai');
-
+    
     // Load settings from mock
     const settings = await loadSettings();
-
+    
     // Call the function we want to test directly
     createAIService({
       providerType: settings.aiProvider,
       model: settings.aiModel,
       apiKey: settings.apiKey
     });
-
+    
     // Verify that createAIService was called with the correct parameters
     expect(createAIService).toHaveBeenCalledWith({
       providerType: 'test-provider',

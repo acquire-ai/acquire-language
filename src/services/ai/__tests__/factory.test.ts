@@ -20,6 +20,10 @@ vi.mock('@ai-sdk/deepseek', () => ({
   createDeepSeek: vi.fn().mockReturnValue('deepseek-provider-instance')
 }));
 
+vi.mock('@ai-sdk/openai-compatible', () => ({
+  createOpenAICompatible: vi.fn().mockReturnValue('openai-compatible-provider-instance')
+}));
+
 // Mock VercelAIAdapter
 vi.mock('../vercel-adapter', () => ({
   VercelAIAdapter: vi.fn()
@@ -60,6 +64,26 @@ describe('AI service factory test', () => {
     );
   });
 
+  it('should create an AI service for OpenAI Compatible provider', () => {
+    const config: AIServiceConfig = {
+      apiKey: 'test-api-key',
+      providerType: 'openai-compatible',
+      model: 'meta-llama/Llama-3-70b-chat-hf',
+      providerName: 'llama',
+      baseURL: 'https://api.llama.com/v1',
+      options: {
+        queryParams: { 'api-version': '1.0' }
+      }
+    };
+
+    createAIService(config);
+
+    expect(VercelAIAdapter).toHaveBeenCalledWith(
+      'openai-compatible-provider-instance',
+      'meta-llama/Llama-3-70b-chat-hf'
+    );
+  });
+
   it('should throw error for unsupported provider', () => {
     const config: AIServiceConfig = {
       apiKey: 'test-api-key',
@@ -79,11 +103,17 @@ describe('AI service factory test', () => {
     expect(AVAILABLE_MODELS).toHaveProperty('anthropic');
     expect(AVAILABLE_MODELS).toHaveProperty('google');
     expect(AVAILABLE_MODELS).toHaveProperty('deepseek');
+    expect(AVAILABLE_MODELS).toHaveProperty('openai-compatible');
 
     // Verify each provider has at least one available model
     Object.keys(AVAILABLE_MODELS).forEach(provider => {
-      expect(Array.isArray(AVAILABLE_MODELS[provider])).toBe(true);
-      expect(AVAILABLE_MODELS[provider].length).toBeGreaterThan(0);
+      if (provider !== 'openai-compatible') {
+        expect(Array.isArray(AVAILABLE_MODELS[provider])).toBe(true);
+        expect(AVAILABLE_MODELS[provider].length).toBeGreaterThan(0);
+      } else {
+        // openai-compatible is special - it can be empty as users will input model IDs
+        expect(Array.isArray(AVAILABLE_MODELS[provider])).toBe(true);
+      }
     });
 
     // Verify specific models exist
