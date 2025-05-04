@@ -7,7 +7,7 @@ function App() {
 
     // Open options page
     const openOptionsPage = () => {
-        browser.runtime.openOptionsPage();
+        browser.tabs.create({ url: '/options.html' });
     };
 
     // Open vocabulary page

@@ -43,5 +43,8 @@ export default defineConfig({
     version: "0.0.1",
     permissions: ["storage", "tabs", "scripting", "webRequest"],
     host_permissions: ["*://*.youtube.com/*"],
+
+    options_page: null,
+    options_ui: null
   },
 });
