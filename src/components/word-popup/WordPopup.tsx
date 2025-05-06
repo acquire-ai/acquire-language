@@ -21,12 +21,12 @@ export const WordPopup: React.FC<WordPopupProps> = ({
     onClose,
     onSave,
     isLoading = false,
-    isSaved = false
+    isSaved = false,
 }) => {
     const popupRef = useRef<HTMLDivElement>(null);
     const [popupPosition, setPopupPosition] = useState({ left: '0px', top: '0px' });
     const [saveState, setSaveState] = useState<'unsaved' | 'saving' | 'saved'>(
-        isSaved ? 'saved' : 'unsaved'
+        isSaved ? 'saved' : 'unsaved',
     );
 
     // Process Markdown content
@@ -41,7 +41,13 @@ export const WordPopup: React.FC<WordPopupProps> = ({
         }
 
         try {
-            return { __html: marked.parse(cleanDefinition, { async: false, breaks: true, gfm: true }) as string };
+            return {
+                __html: marked.parse(cleanDefinition, {
+                    async: false,
+                    breaks: true,
+                    gfm: true,
+                }) as string,
+            };
         } catch (error) {
             console.error('Failed to parse markdown', error);
             return { __html: `<p>${cleanDefinition.replace(/\n/g, '<br>')}</p>` };
@@ -103,16 +109,20 @@ export const WordPopup: React.FC<WordPopupProps> = ({
 
                 // 水平居中处理（可选）
                 // 只有当点击位置接近字幕中心时才居中显示
-                const clickDistance = Math.abs(position.x - (subtitleRect.left + subtitleRect.width / 2));
-                if (clickDistance < 100) { // 如果点击位置接近字幕中心
-                    const centerPosition = subtitleRect.left + (subtitleRect.width / 2) - (popupWidth / 2);
+                const clickDistance = Math.abs(
+                    position.x - (subtitleRect.left + subtitleRect.width / 2),
+                );
+                if (clickDistance < 100) {
+                    // 如果点击位置接近字幕中心
+                    const centerPosition =
+                        subtitleRect.left + subtitleRect.width / 2 - popupWidth / 2;
                     left = Math.max(20, centerPosition);
                 }
             }
 
             setPopupPosition({
                 left: `${Math.round(left)}px`,
-                top: `${Math.round(top)}px`
+                top: `${Math.round(top)}px`,
             });
         };
 
@@ -151,20 +161,26 @@ export const WordPopup: React.FC<WordPopupProps> = ({
             }}
         >
             {/* Header with word and actions */}
-            <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '16px',
-                paddingBottom: '12px',
-                borderBottom: '1px solid #eaeaea'
-            }}>
-                <h3 style={{
-                    margin: 0,
-                    fontSize: '22px',
-                    fontWeight: 600,
-                    color: '#2563eb'
-                }}>{word}</h3>
+            <div
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '16px',
+                    paddingBottom: '12px',
+                    borderBottom: '1px solid #eaeaea',
+                }}
+            >
+                <h3
+                    style={{
+                        margin: 0,
+                        fontSize: '22px',
+                        fontWeight: 600,
+                        color: '#2563eb',
+                    }}
+                >
+                    {word}
+                </h3>
                 <div style={{ display: 'flex', alignItems: 'center' }}>
                     {!isLoading && saveState === 'unsaved' && (
                         <button
@@ -178,19 +194,25 @@ export const WordPopup: React.FC<WordPopupProps> = ({
                                 padding: '4px 8px',
                                 borderRadius: '4px',
                                 marginRight: '16px',
-                                transition: 'background-color 0.2s'
+                                transition: 'background-color 0.2s',
                             }}
-                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#ebf8ff'}
-                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                            onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#ebf8ff')}
+                            onMouseOut={(e) =>
+                                (e.currentTarget.style.backgroundColor = 'transparent')
+                            }
                         >
                             Save
                         </button>
                     )}
                     {!isLoading && saveState === 'saving' && (
-                        <span style={{ color: '#3498db', fontSize: '15px', marginRight: '16px' }}>Saving...</span>
+                        <span style={{ color: '#3498db', fontSize: '15px', marginRight: '16px' }}>
+                            Saving...
+                        </span>
                     )}
                     {!isLoading && saveState === 'saved' && (
-                        <span style={{ color: '#27ae60', fontSize: '15px', marginRight: '16px' }}>Saved</span>
+                        <span style={{ color: '#27ae60', fontSize: '15px', marginRight: '16px' }}>
+                            Saved
+                        </span>
                     )}
                     <button
                         onClick={onClose}
@@ -206,10 +228,10 @@ export const WordPopup: React.FC<WordPopupProps> = ({
                             alignItems: 'center',
                             justifyContent: 'center',
                             borderRadius: '50%',
-                            transition: 'background-color 0.2s'
+                            transition: 'background-color 0.2s',
                         }}
-                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
-                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#f3f4f6')}
+                        onMouseOut={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                     >
                         ×
                     </button>
@@ -219,20 +241,24 @@ export const WordPopup: React.FC<WordPopupProps> = ({
             {/* Content area */}
             <div style={{ padding: '16px' }}>
                 {isLoading ? (
-                    <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        padding: '32px 0'
-                    }}>
-                        <div style={{
-                            width: '28px',
-                            height: '28px',
-                            border: '3px solid #f3f3f3',
-                            borderTop: '3px solid #3498db',
-                            borderRadius: '50%',
-                            animation: 'spin 1s linear infinite'
-                        }} />
+                    <div
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: '32px 0',
+                        }}
+                    >
+                        <div
+                            style={{
+                                width: '28px',
+                                height: '28px',
+                                border: '3px solid #f3f3f3',
+                                borderTop: '3px solid #3498db',
+                                borderRadius: '50%',
+                                animation: 'spin 1s linear infinite',
+                            }}
+                        />
                         <div style={{ marginLeft: '12px', color: '#666', fontSize: '15px' }}>
                             Looking up definition...
                         </div>
@@ -301,4 +327,4 @@ export const WordPopup: React.FC<WordPopupProps> = ({
             `}</style>
         </div>
     );
-}; 
+};

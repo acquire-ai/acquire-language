@@ -16,6 +16,6 @@ Please provide the following information using Markdown format but DO NOT use co
 4. ** Example sentences **
         - One example(with translation)
     - Another example(with translation)
-`
+`;
     return prompt;
 }

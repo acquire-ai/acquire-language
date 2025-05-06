@@ -7,26 +7,28 @@ This document explains how to set up environment variables for development.
 ## Using .env Files
 
 1. Create a `.env` file in the project root directory based on `.env.example`:
-   ```bash
-   cp .env.example .env
-   ```
+
+    ```bash
+    cp .env.example .env
+    ```
 
 2. Edit the `.env` file and replace placeholder values with your actual values:
-   ```
-   ACQUIRE_API_KEY=your_actual_api_key_here
-   ```
+
+    ```
+    ACQUIRE_API_KEY=your_actual_api_key_here
+    ```
 
 3. The application will automatically load these environment variables during startup.
 
 ## Available Environment Variables
 
-| Variable                  | Description                                       | Default Value |
-|---------------------------|---------------------------------------------------|---------------|
-| ACQUIRE_NATIVE_LANGUAGE   | User's native language code                       | zh-CN         |
-| ACQUIRE_TARGET_LANGUAGE   | Language being learned                            | en-US         |
-| ACQUIRE_LANGUAGE_LEVEL    | User's language proficiency (A1, A2, B1, B2, C1, C2) | B1        |
-| ACQUIRE_AI_MODEL          | AI model to use (deepseek, gpt-4o-mini, etc.)     | deepseek      |
-| ACQUIRE_API_KEY           | API key for the selected AI service               | (empty)       |
+| Variable                | Description                                          | Default Value |
+| ----------------------- | ---------------------------------------------------- | ------------- |
+| ACQUIRE_NATIVE_LANGUAGE | User's native language code                          | zh-CN         |
+| ACQUIRE_TARGET_LANGUAGE | Language being learned                               | en-US         |
+| ACQUIRE_LANGUAGE_LEVEL  | User's language proficiency (A1, A2, B1, B2, C1, C2) | B1            |
+| ACQUIRE_AI_MODEL        | AI model to use (deepseek, gpt-4o-mini, etc.)        | deepseek      |
+| ACQUIRE_API_KEY         | API key for the selected AI service                  | (empty)       |
 
 ## Priority of Settings
 
@@ -52,4 +54,4 @@ For production builds, make sure to remove or ignore the `.env` file to prevent 
 
 ## Related Documentation
 
-[Back to Development Guide](DEVELOPMENT.md) 
+[Back to Development Guide](DEVELOPMENT.md)

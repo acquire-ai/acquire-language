@@ -2,4 +2,4 @@
  * Platform Entry
  */
 export * from './factory';
-export * from './youtube'; 
+export * from './youtube';

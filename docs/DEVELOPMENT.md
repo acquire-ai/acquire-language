@@ -76,19 +76,19 @@ The background script runs throughout the extension's lifecycle, responsible for
 ```typescript
 // Example: Save word to vocabulary
 async function saveWordToVocabulary(word: string, context: string) {
-  const vocabulary = await getVocabulary();
-  
-  if (vocabulary[word]) {
-    vocabulary[word].contexts.push(context);
-  } else {
-    vocabulary[word] = {
-      word,
-      contexts: [context],
-      createdAt: new Date().toISOString(),
-    };
-  }
-  
-  await browser.storage.local.set({ vocabulary });
+    const vocabulary = await getVocabulary();
+
+    if (vocabulary[word]) {
+        vocabulary[word].contexts.push(context);
+    } else {
+        vocabulary[word] = {
+            word,
+            contexts: [context],
+            createdAt: new Date().toISOString(),
+        };
+    }
+
+    await browser.storage.local.set({ vocabulary });
 }
 ```
 
@@ -103,8 +103,8 @@ The content script is injected into matching web pages (currently YouTube video 
 ```typescript
 // Example: Initialize subtitle handler
 function initializeHandler() {
-  // Wait for video player to load
-  waitForVideoPlayer();
+    // Wait for video player to load
+    waitForVideoPlayer();
 }
 ```
 
@@ -132,7 +132,7 @@ private createSubtitleContainer() {
   // Create custom subtitle container
   this.subtitleContainer = document.createElement('div');
   this.subtitleContainer.id = 'acquire-language-subtitle';
-  
+
   // Add to document
   document.body.appendChild(this.subtitleContainer);
 }
@@ -150,18 +150,18 @@ The options page allows users to customize extension behavior, including:
 ```typescript
 // Settings interface
 interface Settings {
-  nativeLanguage: string;
-  targetLanguage: string;
-  languageLevel: string;
-  aiModel: string;
-  apiKey: string;
-  subtitleSettings: {
-    fontSize: number;
-    position: 'top' | 'bottom';
-    backgroundColor: string;
-    textColor: string;
-    opacity: number;
-  };
+    nativeLanguage: string;
+    targetLanguage: string;
+    languageLevel: string;
+    aiModel: string;
+    apiKey: string;
+    subtitleSettings: {
+        fontSize: number;
+        position: 'top' | 'bottom';
+        backgroundColor: string;
+        textColor: string;
+        opacity: number;
+    };
 }
 ```
 
@@ -177,14 +177,14 @@ The vocabulary notebook page displays saved words, providing:
 ```typescript
 // Word interface
 interface Word {
-  word: string;
-  contexts: string[];
-  createdAt: string;
+    word: string;
+    contexts: string[];
+    createdAt: string;
 }
 
 // Vocabulary interface
 interface VocabularyData {
-  [key: string]: Word;
+    [key: string]: Word;
 }
 ```
 
@@ -206,51 +206,54 @@ The AI service module handles interactions with AI models (like OpenAI GPT-4o-mi
 ```typescript
 // AI service interface
 export interface AIService {
-  getWordDefinition(word: string, context: string, targetLanguage: string): Promise<string>;
-  translateText(text: string, sourceLanguage: string, targetLanguage: string): Promise<string>;
+    getWordDefinition(word: string, context: string, targetLanguage: string): Promise<string>;
+    translateText(text: string, sourceLanguage: string, targetLanguage: string): Promise<string>;
 }
 
 // Create AI service
 export function createAIService(model: string, apiKey: string): AIService {
-  switch (model) {
-    case 'deepseek':
-      return new DeepSeekAIService(apiKey);
-    case 'gpt-4o-mini':
-      return new GPT4oMiniAIService(apiKey);
-    default:
-      return new DeepSeekAIService(apiKey);
-  }
+    switch (model) {
+        case 'deepseek':
+            return new DeepSeekAIService(apiKey);
+        case 'gpt-4o-mini':
+            return new GPT4oMiniAIService(apiKey);
+        default:
+            return new DeepSeekAIService(apiKey);
+    }
 }
 ```
 
 ## Data Flow
 
 1. **Subtitle Processing Flow**:
-   - Content script detects YouTube video page
-   - Initializes YouTubeSubtitleHandler
-   - Handler finds and hides original subtitles
-   - Creates custom subtitle container
-   - Monitors subtitle changes and updates display
+
+    - Content script detects YouTube video page
+    - Initializes YouTubeSubtitleHandler
+    - Handler finds and hides original subtitles
+    - Creates custom subtitle container
+    - Monitors subtitle changes and updates display
 
 2. **Word Saving Flow**:
-   - User clicks word in subtitles
-   - Content script sends message to background script
-   - Background script saves word to browser.storage.local
-   - Vocabulary page reads and displays data from storage
+
+    - User clicks word in subtitles
+    - Content script sends message to background script
+    - Background script saves word to browser.storage.local
+    - Vocabulary page reads and displays data from storage
 
 3. **Settings Flow**:
-   - User modifies settings in options page
-   - Settings saved to browser.storage.local
-   - Content and background scripts read and apply settings
+
+    - User modifies settings in options page
+    - Settings saved to browser.storage.local
+    - Content and background scripts read and apply settings
 
 4. **Word Definition Flow**:
-   - User clicks word in subtitles
-   - Subtitle handler captures click event, gets word and context
-   - Calls AI service for word definition
-   - AI service gets user's native language from storage
-   - AI service explains target language word in user's native language
-   - Shows word definition popup
-   - User can add word to vocabulary notebook
+    - User clicks word in subtitles
+    - Subtitle handler captures click event, gets word and context
+    - Calls AI service for word definition
+    - AI service gets user's native language from storage
+    - AI service explains target language word in user's native language
+    - Shows word definition popup
+    - User can add word to vocabulary notebook
 
 ## Development Guide
 
@@ -262,43 +265,49 @@ For development environment configuration, please refer to:
 ### Adding New Features
 
 1. **Support New Video Platform**:
-   - Add new matching rules in `entrypoints/content.ts`
-   - Create new subtitle handler (similar to `YouTubeSubtitleHandler`)
-   - Implement platform-specific subtitle finding and processing logic
+
+    - Add new matching rules in `entrypoints/content.ts`
+    - Create new subtitle handler (similar to `YouTubeSubtitleHandler`)
+    - Implement platform-specific subtitle finding and processing logic
 
 2. **Add New Language**:
-   - Add new language to `LANGUAGES` array in `entrypoints/options/Options.tsx`
+
+    - Add new language to `LANGUAGES` array in `entrypoints/options/Options.tsx`
 
 3. **Extend Vocabulary Features**:
-   - Modify `Word` interface to add new properties
-   - Update `Vocabulary.tsx` component to display new properties
-   - Update saving logic in background script
+
+    - Modify `Word` interface to add new properties
+    - Update `Vocabulary.tsx` component to display new properties
+    - Update saving logic in background script
 
 4. **Support New AI Model**:
-   - Create new AI service class in `ai.ts`, implementing `AIService` interface
-   - Add new model support in `createAIService` function
-   - Add new model option in options page
+
+    - Create new AI service class in `ai.ts`, implementing `AIService` interface
+    - Add new model support in `createAIService` function
+    - Add new model option in options page
 
 5. **Enhance Word Definition Features**:
-   - Modify AI prompts for more detailed word information
-   - Update `WordPopup` component to display richer content
-   - Add pronunciation, images, and other multimedia content
+    - Modify AI prompts for more detailed word information
+    - Update `WordPopup` component to display richer content
+    - Add pronunciation, images, and other multimedia content
 
 ### Debugging Tips
 
 1. **View Extension Logs**:
-   - Open Chrome extension management page (`chrome://extensions`)
-   - Click "View" button for the extension
-   - Select "Background page" or other views to check console logs
+
+    - Open Chrome extension management page (`chrome://extensions`)
+    - Click "View" button for the extension
+    - Select "Background page" or other views to check console logs
 
 2. **Debug Content Scripts**:
-   - Open Developer Tools on YouTube page
-   - Check console logs
-   - Use breakpoints to debug JavaScript
+
+    - Open Developer Tools on YouTube page
+    - Check console logs
+    - Use breakpoints to debug JavaScript
 
 3. **Test Setting Changes**:
-   - Refresh YouTube page after modifying settings to apply changes
-   - Check if settings are correctly saved in `browser.storage.local`
+    - Refresh YouTube page after modifying settings to apply changes
+    - Check if settings are correctly saved in `browser.storage.local`
 
 ## Build and Release
 
@@ -337,33 +346,37 @@ This creates a ZIP file ready for upload to Chrome Web Store.
 ## FAQ
 
 1. **Subtitles Not Displaying**:
-   - Check if YouTube subtitles are enabled
-   - Check console for errors
-   - Try refreshing the page
+
+    - Check if YouTube subtitles are enabled
+    - Check console for errors
+    - Try refreshing the page
 
 2. **Settings Not Taking Effect**:
-   - Ensure to refresh YouTube page after saving settings
-   - Check if settings are correctly saved in `browser.storage.local`
+
+    - Ensure to refresh YouTube page after saving settings
+    - Check if settings are correctly saved in `browser.storage.local`
 
 3. **Extension Fails to Load**:
-   - Check `manifest.json` for syntax errors
-   - Ensure all dependencies are installed (`npm install`)
+    - Check `manifest.json` for syntax errors
+    - Ensure all dependencies are installed (`npm install`)
 
 ## User Experience Features
 
 The extension provides various features to enhance user experience:
 
 1. **Subtitle Enhancement**:
-   - Beautiful subtitle display
-   - Clickable words with definitions
-   - Word highlighting on hover
+
+    - Beautiful subtitle display
+    - Clickable words with definitions
+    - Word highlighting on hover
 
 2. **Learning Assistance**:
-   - Automatic video pause on subtitle hover for focused learning
-   - Automatic play resume on mouse leave
-   - Smart word definition popup positioning to avoid subtitle overlap
+
+    - Automatic video pause on subtitle hover for focused learning
+    - Automatic play resume on mouse leave
+    - Smart word definition popup positioning to avoid subtitle overlap
 
 3. **Vocabulary Management**:
-   - One-click word addition to vocabulary
-   - Context preservation
-   - Easy review access 
+    - One-click word addition to vocabulary
+    - Context preservation
+    - Easy review access

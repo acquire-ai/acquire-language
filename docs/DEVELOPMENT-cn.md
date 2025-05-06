@@ -76,19 +76,19 @@ acquire-language/
 ```typescript
 // 示例：保存单词到生词本
 async function saveWordToVocabulary(word: string, context: string) {
-  const vocabulary = await getVocabulary();
-  
-  if (vocabulary[word]) {
-    vocabulary[word].contexts.push(context);
-  } else {
-    vocabulary[word] = {
-      word,
-      contexts: [context],
-      createdAt: new Date().toISOString(),
-    };
-  }
-  
-  await browser.storage.local.set({ vocabulary });
+    const vocabulary = await getVocabulary();
+
+    if (vocabulary[word]) {
+        vocabulary[word].contexts.push(context);
+    } else {
+        vocabulary[word] = {
+            word,
+            contexts: [context],
+            createdAt: new Date().toISOString(),
+        };
+    }
+
+    await browser.storage.local.set({ vocabulary });
 }
 ```
 
@@ -103,8 +103,8 @@ async function saveWordToVocabulary(word: string, context: string) {
 ```typescript
 // 示例：初始化字幕处理器
 function initializeHandler() {
-  // 等待视频播放器加载
-  waitForVideoPlayer();
+    // 等待视频播放器加载
+    waitForVideoPlayer();
 }
 ```
 
@@ -132,7 +132,7 @@ private createSubtitleContainer() {
   // 创建自定义字幕容器
   this.subtitleContainer = document.createElement('div');
   this.subtitleContainer.id = 'acquire-language-subtitle';
-  
+
   // 添加到文档
   document.body.appendChild(this.subtitleContainer);
 }
@@ -142,14 +142,14 @@ private createSubtitleContainer() {
 // 示例：添加单词点击事件
 private addWordClickEvents() {
   if (!this.subtitleContainer) return;
-  
+
   const wordElements = this.subtitleContainer.querySelectorAll('.acquire-language-word');
-  
+
   wordElements.forEach(element => {
     element.addEventListener('click', async (event) => {
       // 阻止事件冒泡
       event.stopPropagation();
-      
+
       // 获取单词和位置
       const word = element.getAttribute('data-word') || '';
       const rect = element.getBoundingClientRect();
@@ -157,19 +157,19 @@ private addWordClickEvents() {
         x: rect.left + window.scrollX,
         y: rect.bottom + window.scrollY + 10
       };
-      
+
       // 显示加载状态
       this.wordPopup.showLoading(word, position);
-      
+
       // 获取单词释义
       try {
         // 调用 AI 服务获取释义
         const definition = await this.aiService.getWordDefinition(
-          word, 
+          word,
           this.currentSubtitle,
           this.settings.targetLanguage
         );
-        
+
         // 显示单词释义
         this.wordPopup.show(word, definition, position);
       } catch (error) {
@@ -223,18 +223,18 @@ private addSubtitleHoverEvents() {
 ```typescript
 // 设置接口
 interface Settings {
-  nativeLanguage: string;
-  targetLanguage: string;
-  languageLevel: string;
-  aiModel: string;
-  apiKey: string;
-  subtitleSettings: {
-    fontSize: number;
-    position: 'top' | 'bottom';
-    backgroundColor: string;
-    textColor: string;
-    opacity: number;
-  };
+    nativeLanguage: string;
+    targetLanguage: string;
+    languageLevel: string;
+    aiModel: string;
+    apiKey: string;
+    subtitleSettings: {
+        fontSize: number;
+        position: 'top' | 'bottom';
+        backgroundColor: string;
+        textColor: string;
+        opacity: number;
+    };
 }
 ```
 
@@ -250,14 +250,14 @@ interface Settings {
 ```typescript
 // 单词接口
 interface Word {
-  word: string;
-  contexts: string[];
-  createdAt: string;
+    word: string;
+    contexts: string[];
+    createdAt: string;
 }
 
 // 生词本接口
 interface VocabularyData {
-  [key: string]: Word;
+    [key: string]: Word;
 }
 ```
 
@@ -302,7 +302,7 @@ async getWordDefinition(word: string, context: string, targetLanguage: string): 
     const result = await browser.storage.local.get('settings');
     const settings = result.settings || { nativeLanguage: 'zh-CN' };
     const nativeLanguage = settings.nativeLanguage;
-    
+
     // 构建提示
     const prompt = `
 请根据以下上下文，解释单词 "${word}" 的含义。
@@ -314,7 +314,7 @@ async getWordDefinition(word: string, context: string, targetLanguage: string): 
 3. 词性 (名词、动词、形容词等)
 4. 一到两个例句
 `;
-    
+
     // 调用 AI API
     const response = await this.callAPI(prompt);
     return response;
@@ -338,14 +338,14 @@ async getWordDefinition(word: string, context: string, targetLanguage: string): 
 // 示例：智能定位弹出框
 private setPosition(position: { x: number, y: number }) {
   // ... 其他代码 ...
-  
+
   // 如果找到字幕容器，将弹出框放在字幕上方
   if (subtitleContainer) {
     const subtitleRect = subtitleContainer.getBoundingClientRect();
-    
+
     // 计算弹出框应该放置的垂直位置 - 字幕容器上方留出一定间距
     const topPosition = subtitleRect.top + window.scrollY - popupRect.height - 20;
-    
+
     // 如果计算出的位置是负数（超出屏幕顶部），则放在字幕下方
     if (topPosition < 0) {
       this.popupElement.style.top = `${subtitleRect.bottom + window.scrollY + 20}px`;
@@ -360,31 +360,34 @@ private setPosition(position: { x: number, y: number }) {
 ## 数据流
 
 1. **字幕处理流程**：
-   - 内容脚本检测 YouTube 视频页面
-   - 初始化 YouTubeSubtitleHandler
-   - 处理器查找并隐藏原始字幕
-   - 创建自定义字幕容器
-   - 监听字幕变化并更新显示
+
+    - 内容脚本检测 YouTube 视频页面
+    - 初始化 YouTubeSubtitleHandler
+    - 处理器查找并隐藏原始字幕
+    - 创建自定义字幕容器
+    - 监听字幕变化并更新显示
 
 2. **单词保存流程**：
-   - 用户在字幕中点击单词
-   - 内容脚本发送消息到后台脚本
-   - 后台脚本保存单词到 browser.storage.local
-   - 生词本页面从 storage 读取数据并显示
+
+    - 用户在字幕中点击单词
+    - 内容脚本发送消息到后台脚本
+    - 后台脚本保存单词到 browser.storage.local
+    - 生词本页面从 storage 读取数据并显示
 
 3. **设置流程**：
-   - 用户在选项页面修改设置
-   - 设置保存到 browser.storage.local
-   - 内容脚本和后台脚本读取设置并应用
+
+    - 用户在选项页面修改设置
+    - 设置保存到 browser.storage.local
+    - 内容脚本和后台脚本读取设置并应用
 
 4. **单词释义流程**：
-   - 用户点击字幕中的单词
-   - 字幕处理器捕获点击事件，获取单词和上下文
-   - 调用 AI 服务获取单词释义
-   - AI 服务从存储中获取用户的母语设置
-   - AI 服务使用用户的母语解释目标语言中的单词
-   - 显示单词释义弹出框
-   - 用户可以将单词添加到生词本
+    - 用户点击字幕中的单词
+    - 字幕处理器捕获点击事件，获取单词和上下文
+    - 调用 AI 服务获取单词释义
+    - AI 服务从存储中获取用户的母语设置
+    - AI 服务使用用户的母语解释目标语言中的单词
+    - 显示单词释义弹出框
+    - 用户可以将单词添加到生词本
 
 ## 开发指南
 
@@ -396,43 +399,49 @@ private setPosition(position: { x: number, y: number }) {
 ### 添加新功能
 
 1. **支持新的视频平台**：
-   - 在 `entrypoints/content.ts` 中添加新的匹配规则
-   - 创建新的字幕处理器（类似 `YouTubeSubtitleHandler`）
-   - 实现平台特定的字幕查找和处理逻辑
+
+    - 在 `entrypoints/content.ts` 中添加新的匹配规则
+    - 创建新的字幕处理器（类似 `YouTubeSubtitleHandler`）
+    - 实现平台特定的字幕查找和处理逻辑
 
 2. **添加新的语言**：
-   - 在 `entrypoints/options/Options.tsx` 的 `LANGUAGES` 数组中添加新语言
+
+    - 在 `entrypoints/options/Options.tsx` 的 `LANGUAGES` 数组中添加新语言
 
 3. **扩展生词本功能**：
-   - 修改 `Word` 接口添加新属性
-   - 更新 `Vocabulary.tsx` 组件显示新属性
-   - 在后台脚本中更新保存逻辑
+
+    - 修改 `Word` 接口添加新属性
+    - 更新 `Vocabulary.tsx` 组件显示新属性
+    - 在后台脚本中更新保存逻辑
 
 4. **支持新的 AI 模型**：
-   - 在 `ai.ts` 中创建新的 AI 服务类，实现 `AIService` 接口
-   - 在 `createAIService` 函数中添加新模型的支持
-   - 在选项页面中添加新模型选项
+
+    - 在 `ai.ts` 中创建新的 AI 服务类，实现 `AIService` 接口
+    - 在 `createAIService` 函数中添加新模型的支持
+    - 在选项页面中添加新模型选项
 
 5. **增强单词释义功能**：
-   - 修改 AI 提示以获取更详细的单词信息
-   - 更新 `WordPopup` 组件以显示更丰富的内容
-   - 添加发音、图片等多媒体内容
+    - 修改 AI 提示以获取更详细的单词信息
+    - 更新 `WordPopup` 组件以显示更丰富的内容
+    - 添加发音、图片等多媒体内容
 
 ### 调试技巧
 
 1. **查看扩展日志**：
-   - 打开 Chrome 扩展管理页面 (`chrome://extensions`)
-   - 点击扩展的"查看视图"按钮
-   - 选择"背景页"或其他视图查看控制台日志
+
+    - 打开 Chrome 扩展管理页面 (`chrome://extensions`)
+    - 点击扩展的"查看视图"按钮
+    - 选择"背景页"或其他视图查看控制台日志
 
 2. **调试内容脚本**：
-   - 在 YouTube 页面打开开发者工具
-   - 查看控制台日志
-   - 使用断点调试 JavaScript
+
+    - 在 YouTube 页面打开开发者工具
+    - 查看控制台日志
+    - 使用断点调试 JavaScript
 
 3. **测试设置变更**：
-   - 修改设置后，刷新 YouTube 页面以应用新设置
-   - 检查 `browser.storage.local` 中的设置是否正确保存
+    - 修改设置后，刷新 YouTube 页面以应用新设置
+    - 检查 `browser.storage.local` 中的设置是否正确保存
 
 ## 构建和发布
 
@@ -471,33 +480,37 @@ npm run zip
 ## 常见问题
 
 1. **字幕不显示**：
-   - 检查 YouTube 是否启用了字幕
-   - 检查控制台是否有错误
-   - 尝试刷新页面
+
+    - 检查 YouTube 是否启用了字幕
+    - 检查控制台是否有错误
+    - 尝试刷新页面
 
 2. **设置不生效**：
-   - 确保保存设置后刷新 YouTube 页面
-   - 检查 `browser.storage.local` 中的设置是否正确保存
+
+    - 确保保存设置后刷新 YouTube 页面
+    - 检查 `browser.storage.local` 中的设置是否正确保存
 
 3. **扩展加载失败**：
-   - 检查 `manifest.json` 是否有语法错误
-   - 确保所有依赖都已安装 (`npm install`) 
+    - 检查 `manifest.json` 是否有语法错误
+    - 确保所有依赖都已安装 (`npm install`)
 
 ## 用户体验功能
 
 扩展提供了多种增强用户体验的功能：
 
 1. **字幕增强**：
-   - 美观的字幕显示
-   - 单词可点击，获取释义
-   - 鼠标悬停效果，突出显示单词
+
+    - 美观的字幕显示
+    - 单词可点击，获取释义
+    - 鼠标悬停效果，突出显示单词
 
 2. **学习辅助**：
-   - 鼠标悬停在字幕上时自动暂停视频，方便用户专注学习
-   - 离开字幕区域时自动恢复播放
-   - 单词释义弹出框智能定位，避免遮挡字幕
+
+    - 鼠标悬停在字幕上时自动暂停视频，方便用户专注学习
+    - 离开字幕区域时自动恢复播放
+    - 单词释义弹出框智能定位，避免遮挡字幕
 
 3. **生词本管理**：
-   - 一键添加单词到生词本
-   - 保存单词的上下文
-   - 方便后续复习 
+    - 一键添加单词到生词本
+    - 保存单词的上下文
+    - 方便后续复习

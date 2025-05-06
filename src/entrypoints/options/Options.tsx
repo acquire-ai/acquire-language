@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Settings, DEFAULT_SETTINGS, loadSettings, saveSettings as saveSetting } from '@/core/config/settings';
+import {
+    Settings,
+    DEFAULT_SETTINGS,
+    loadSettings,
+    saveSettings as saveSetting,
+} from '@/core/config/settings';
 import { getAvailableAIModels, getAIProviderSettings } from '@/services/ai';
 
 // Language proficiency levels
@@ -34,13 +39,13 @@ function Options() {
             try {
                 const userSettings = await loadSettings();
                 setSettings(userSettings);
-                
+
                 // Initialize provider options
                 if (userSettings.aiProvider) {
                     setProviderOptions(userSettings.options || {});
                 }
             } catch (error) {
-                console.error("Failed to load settings:", error);
+                console.error('Failed to load settings:', error);
             }
         };
 
@@ -53,7 +58,7 @@ function Options() {
             // Create the settings object with provider options
             const updatedSettings = {
                 ...settings,
-                options: providerOptions
+                options: providerOptions,
             };
             await saveSetting(updatedSettings);
             setSaveMessage('Settings saved successfully');
@@ -71,15 +76,15 @@ function Options() {
 
         if (name.includes('.')) {
             const [parent, child] = name.split('.');
-            setSettings(prev => ({
+            setSettings((prev) => ({
                 ...prev,
                 [parent]: {
-                    ...prev[parent as keyof Settings] as Record<string, any>,
+                    ...(prev[parent as keyof Settings] as Record<string, any>),
                     [child]: value,
                 },
             }));
         } else {
-            setSettings(prev => ({
+            setSettings((prev) => ({
                 ...prev,
                 [name]: value,
             }));
@@ -89,35 +94,35 @@ function Options() {
     // Handle option changes
     const handleOptionChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        
+
         // Handle nested object properties (e.g., "options.queryParams.version")
         if (name.includes('.')) {
             const parts = name.split('.');
             if (parts.length === 2) {
-                setProviderOptions(prev => ({
+                setProviderOptions((prev) => ({
                     ...prev,
                     [parts[0]]: {
-                        ...prev[parts[0]] || {},
-                        [parts[1]]: value
-                    }
+                        ...(prev[parts[0]] || {}),
+                        [parts[1]]: value,
+                    },
                 }));
             } else if (parts.length === 3) {
                 // Handle 3 levels deep (e.g. "queryParams.version")
-                setProviderOptions(prev => ({
+                setProviderOptions((prev) => ({
                     ...prev,
                     [parts[0]]: {
-                        ...prev[parts[0]] || {},
+                        ...(prev[parts[0]] || {}),
                         [parts[1]]: {
-                            ...prev[parts[0]]?.[parts[1]] || {},
-                            [parts[2]]: value
-                        }
-                    }
+                            ...(prev[parts[0]]?.[parts[1]] || {}),
+                            [parts[2]]: value,
+                        },
+                    },
                 }));
             }
         } else {
-            setProviderOptions(prev => ({
+            setProviderOptions((prev) => ({
                 ...prev,
-                [name]: value
+                [name]: value,
             }));
         }
     };
@@ -127,10 +132,10 @@ function Options() {
         const { name, value } = e.target;
         const [parent, child] = name.split('.');
 
-        setSettings(prev => ({
+        setSettings((prev) => ({
             ...prev,
             [parent]: {
-                ...prev[parent as keyof Settings] as Record<string, any>,
+                ...(prev[parent as keyof Settings] as Record<string, any>),
                 [child]: parseFloat(value),
             },
         }));
@@ -139,19 +144,22 @@ function Options() {
     // Handle AI provider change
     const handleProviderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const newProvider = e.target.value;
-        
+
         // Reset model and provider options when changing providers
         let defaultModel = '';
-        if (!CUSTOM_MODEL_PROVIDERS.includes(newProvider) && availableModels[newProvider].length > 0) {
+        if (
+            !CUSTOM_MODEL_PROVIDERS.includes(newProvider) &&
+            availableModels[newProvider].length > 0
+        ) {
             defaultModel = availableModels[newProvider][0];
         }
-        
-        setSettings(prev => ({
+
+        setSettings((prev) => ({
             ...prev,
             aiProvider: newProvider,
             aiModel: defaultModel,
         }));
-        
+
         // Reset provider options
         setProviderOptions({});
     };
@@ -162,39 +170,42 @@ function Options() {
     // Add this helper function to render fields recursively
     const renderConfigField = (field: any, key: string, parentKey: string = '') => {
         const fieldName = parentKey ? `${parentKey}.${key}` : key;
-        
+
         // Skip apiKey as it's already handled above
         if (key === 'apiKey') return null;
-        
+
         if (field.type === 'object' && field.properties) {
             return (
-                <div key={fieldName} className="ml-4 mt-3 border-l-2 pl-3 border-gray-200 dark:border-gray-700">
-                    <label className="block text-sm font-medium mb-1">
-                        {field.name}
-                    </label>
+                <div
+                    key={fieldName}
+                    className="ml-4 mt-3 border-l-2 pl-3 border-gray-200 dark:border-gray-700"
+                >
+                    <label className="block text-sm font-medium mb-1">{field.name}</label>
                     <div>
-                        {Object.entries(field.properties).map(([propKey, propField]) => 
-                            renderConfigField(propField, propKey, fieldName)
+                        {Object.entries(field.properties).map(([propKey, propField]) =>
+                            renderConfigField(propField, propKey, fieldName),
                         )}
                     </div>
                 </div>
             );
         }
-        
+
         return (
             <div key={fieldName} className="mb-3">
                 <label className="block text-sm font-medium mb-1">
                     {field.name}
                     {field.required && <span className="text-red-500 ml-1">*</span>}
                 </label>
-                
+
                 {field.type === 'string' && (
                     <input
                         type="text"
                         name={fieldName}
                         value={
-                            parentKey 
-                                ? providerOptions[parentKey.split('.')[0]]?.[parentKey.split('.')[1]]?.[key] || '' 
+                            parentKey
+                                ? providerOptions[parentKey.split('.')[0]]?.[
+                                      parentKey.split('.')[1]
+                                  ]?.[key] || ''
                                 : providerOptions[key] || ''
                         }
                         onChange={handleOptionChange}
@@ -203,14 +214,16 @@ function Options() {
                         required={field.required}
                     />
                 )}
-                
+
                 {field.type === 'number' && (
                     <input
                         type="number"
                         name={fieldName}
                         value={
-                            parentKey 
-                                ? providerOptions[parentKey.split('.')[0]]?.[parentKey.split('.')[1]]?.[key] || '' 
+                            parentKey
+                                ? providerOptions[parentKey.split('.')[0]]?.[
+                                      parentKey.split('.')[1]
+                                  ]?.[key] || ''
                                 : providerOptions[key] || ''
                         }
                         onChange={handleOptionChange}
@@ -219,13 +232,15 @@ function Options() {
                         required={field.required}
                     />
                 )}
-                
+
                 {field.type === 'enum' && field.options && (
                     <select
                         name={fieldName}
                         value={
-                            parentKey 
-                                ? providerOptions[parentKey.split('.')[0]]?.[parentKey.split('.')[1]]?.[key] || '' 
+                            parentKey
+                                ? providerOptions[parentKey.split('.')[0]]?.[
+                                      parentKey.split('.')[1]
+                                  ]?.[key] || ''
                                 : providerOptions[key] || ''
                         }
                         onChange={handleOptionChange}
@@ -234,11 +249,13 @@ function Options() {
                     >
                         <option value="">Select an option</option>
                         {field.options.map((option: string) => (
-                            <option key={option} value={option}>{option}</option>
+                            <option key={option} value={option}>
+                                {option}
+                            </option>
                         ))}
                     </select>
                 )}
-                
+
                 <p className="text-xs text-gray-500 mt-1">{field.description}</p>
             </div>
         );
@@ -260,8 +277,10 @@ function Options() {
                             onChange={handleChange}
                             className="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600"
                         >
-                            {LANGUAGES.map(lang => (
-                                <option key={lang.code} value={lang.code}>{lang.name}</option>
+                            {LANGUAGES.map((lang) => (
+                                <option key={lang.code} value={lang.code}>
+                                    {lang.name}
+                                </option>
                             ))}
                         </select>
                     </div>
@@ -274,8 +293,10 @@ function Options() {
                             onChange={handleChange}
                             className="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600"
                         >
-                            {LANGUAGES.map(lang => (
-                                <option key={lang.code} value={lang.code}>{lang.name}</option>
+                            {LANGUAGES.map((lang) => (
+                                <option key={lang.code} value={lang.code}>
+                                    {lang.name}
+                                </option>
                             ))}
                         </select>
                     </div>
@@ -283,7 +304,7 @@ function Options() {
                     <div className="mb-4">
                         <label className="block text-sm font-medium mb-1">Language Level</label>
                         <div className="flex flex-wrap gap-2">
-                            {LANGUAGE_LEVELS.map(level => (
+                            {LANGUAGE_LEVELS.map((level) => (
                                 <label key={level} className="flex items-center">
                                     <input
                                         type="radio"
@@ -311,7 +332,7 @@ function Options() {
                             onChange={handleProviderChange}
                             className="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600"
                         >
-                            {Object.keys(availableModels).map(provider => (
+                            {Object.keys(availableModels).map((provider) => (
                                 <option key={provider} value={provider}>
                                     {provider.charAt(0).toUpperCase() + provider.slice(1)}
                                 </option>
@@ -337,12 +358,16 @@ function Options() {
                                 onChange={handleChange}
                                 className="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600"
                             >
-                                {settings.aiProvider && availableModels[settings.aiProvider]?.length > 0 ? 
-                                    availableModels[settings.aiProvider].map(model => (
-                                        <option key={model} value={model}>{model}</option>
-                                    )) : 
+                                {settings.aiProvider &&
+                                availableModels[settings.aiProvider]?.length > 0 ? (
+                                    availableModels[settings.aiProvider].map((model) => (
+                                        <option key={model} value={model}>
+                                            {model}
+                                        </option>
+                                    ))
+                                ) : (
                                     <option value="">Please select a provider first</option>
-                                }
+                                )}
                             </select>
                         )}
                     </div>
@@ -363,9 +388,9 @@ function Options() {
                     {settings.aiProvider && Object.entries(providerFields).length > 0 && (
                         <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
                             <h3 className="font-medium mb-3">Provider Configuration</h3>
-                            
-                            {Object.entries(providerFields).map(([key, field]) => 
-                                renderConfigField(field, key)
+
+                            {Object.entries(providerFields).map(([key, field]) =>
+                                renderConfigField(field, key),
                             )}
                         </div>
                     )}
@@ -476,4 +501,4 @@ function Options() {
     );
 }
 
-export default Options; 
+export default Options;

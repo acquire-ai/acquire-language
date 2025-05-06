@@ -4,13 +4,13 @@
  * This script runs on platform pages and is responsible for initializing subtitle handlers.
  * It detects platform video pages and activates subtitle enhancement features after the video player loads.
  */
-import { defineContentScript } from "wxt/sandbox";
-import { createPlatformHandler } from "@/platforms";
-import { createAIService } from "@/services/ai";
-import { loadSettings } from "@/core/config/settings";
+import { defineContentScript } from 'wxt/sandbox';
+import { createPlatformHandler } from '@/platforms';
+import { createAIService } from '@/services/ai';
+import { loadSettings } from '@/core/config/settings';
 
 export default defineContentScript({
-    matches: ["*://*.youtube.com/*"],
+    matches: ['*://*.youtube.com/*'],
 
     async main() {
         let subtitleHandler: any = null;
@@ -18,24 +18,22 @@ export default defineContentScript({
         const settings = await loadSettings();
 
         // Create AI service using separate provider and model fields
-        const aiService = createAIService(
-            {
-                providerType: settings.aiProvider,
-                model: settings.aiModel,
-                apiKey: settings.apiKey,
-                baseURL: settings.options?.baseURL,
-                providerName: settings.options?.providerName,
-                options: settings.options
-            }
-        );
+        const aiService = createAIService({
+            providerType: settings.aiProvider,
+            model: settings.aiModel,
+            apiKey: settings.apiKey,
+            baseURL: settings.options?.baseURL,
+            providerName: settings.options?.providerName,
+            options: settings.options,
+        });
 
         const processedSubtitleRequests = new Set<string>();
 
-        if (window.location.pathname.includes("/watch")) {
-            if (document.readyState === "complete") {
+        if (window.location.pathname.includes('/watch')) {
+            if (document.readyState === 'complete') {
                 await initializeHandler();
             } else {
-                window.addEventListener("load", async () => {
+                window.addEventListener('load', async () => {
                     await initializeHandler();
                 });
             }
@@ -44,7 +42,7 @@ export default defineContentScript({
         }
 
         chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-            if (message.type === "SUBTITLE_REQUEST_DETECTED") {
+            if (message.type === 'SUBTITLE_REQUEST_DETECTED') {
                 if (!subtitleHandler) {
                     initializeHandler().then(() => {
                         // Process subtitle request after initialization
@@ -75,9 +73,9 @@ export default defineContentScript({
             }
 
             window.dispatchEvent(
-                new CustomEvent("acquireLanguageSubtitleData", {
+                new CustomEvent('acquireLanguageSubtitleData', {
                     detail: { url, lang, videoId },
-                })
+                }),
             );
         }
 
@@ -89,7 +87,7 @@ export default defineContentScript({
                 if (lastUrl !== window.location.href) {
                     lastUrl = window.location.href;
 
-                    if (window.location.pathname.includes("/watch")) {
+                    if (window.location.pathname.includes('/watch')) {
                         processedSubtitleRequests.clear();
                         await initializeHandler();
                     }
@@ -107,16 +105,14 @@ export default defineContentScript({
         async function waitForVideoPlayer() {
             return new Promise<void>((resolve) => {
                 const checkForVideoPlayer = setInterval(async () => {
-                    const videoPlayer = document.querySelector("video");
+                    const videoPlayer = document.querySelector('video');
                     if (videoPlayer) {
                         clearInterval(checkForVideoPlayer);
                         clearTimeout(timeout);
 
                         try {
                             // Create platform handler
-                            const platformHandler = createPlatformHandler(
-                                window.location.href
-                            );
+                            const platformHandler = createPlatformHandler(window.location.href);
 
                             if (platformHandler) {
                                 // Initialize platform handler
@@ -127,10 +123,10 @@ export default defineContentScript({
                                 // Initialize subtitle handler
                                 await subtitleHandler.initialize();
                             } else {
-                                console.error("Failed to create platform handler");
+                                console.error('Failed to create platform handler');
                             }
                         } catch (error) {
-                            console.error("Failed to initialize subtitle handler:", error);
+                            console.error('Failed to initialize subtitle handler:', error);
                         }
 
                         resolve();

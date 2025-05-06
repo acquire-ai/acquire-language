@@ -20,4 +20,4 @@ export interface VocabularyData {
 }
 
 // 导出Settings接口以保持向后兼容性
-export type { Settings }; 
+export type { Settings };

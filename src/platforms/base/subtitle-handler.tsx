@@ -1,13 +1,13 @@
 /**
  * Subtitle handler base class
  */
-import { AIService } from "@/core/types/ai.ts";
-import { SubtitleHandler } from "@/core/types/platform.ts";
-import { WordPopup } from "@/components/word-popup";
+import { AIService } from '@/core/types/ai.ts';
+import { SubtitleHandler } from '@/core/types/platform.ts';
+import { WordPopup } from '@/components/word-popup';
 import { createRoot } from 'react-dom/client';
 import { Subtitle } from '@/components/subtitles';
 import React, { useState, useEffect } from 'react';
-import { Settings, loadSettings } from "@/core/config/settings";
+import { Settings, loadSettings } from '@/core/config/settings';
 
 const SubtitleContainer: React.FC<{
     handler: BaseSubtitleHandler;
@@ -38,17 +38,13 @@ const SubtitleContainer: React.FC<{
         };
     }, [handler]);
 
-    const handleWordClick = async (word: string, position: { x: number, y: number }) => {
+    const handleWordClick = async (word: string, position: { x: number; y: number }) => {
         handler.showWordLoading(word, position);
 
-        const definition = await handler.getWordDefinition(
-            word,
-            subtitles.join("\n")
-        );
+        const definition = await handler.getWordDefinition(word, subtitles.join('\n'));
 
         handler.showWordDefinition(word, definition, position);
     };
-
 
     return (
         <Subtitle
@@ -111,7 +107,7 @@ export abstract class BaseSubtitleHandler implements SubtitleHandler {
         }
     }
 
-    showWordLoading(word: string, position: { x: number, y: number }): void {
+    showWordLoading(word: string, position: { x: number; y: number }): void {
         this.wordPopup.showLoading(word, position);
     }
 
@@ -119,11 +115,11 @@ export abstract class BaseSubtitleHandler implements SubtitleHandler {
         return await this.aiService.getWordDefinition(
             word,
             context,
-            this.settings?.nativeLanguage || "zh-CN"
+            this.settings?.nativeLanguage || 'zh-CN',
         );
     }
 
-    showWordDefinition(word: string, definition: string, position: { x: number, y: number }): void {
+    showWordDefinition(word: string, definition: string, position: { x: number; y: number }): void {
         this.wordPopup.show(word, definition, position);
     }
 
@@ -142,12 +138,7 @@ export abstract class BaseSubtitleHandler implements SubtitleHandler {
     private renderSubtitleContainer() {
         if (!this.containerRoot || !this.settings) return;
 
-        this.containerRoot.render(
-            <SubtitleContainer
-                handler={this}
-                settings={this.settings}
-            />
-        );
+        this.containerRoot.render(<SubtitleContainer handler={this} settings={this.settings} />);
     }
 
     private async loadSettings() {
@@ -167,4 +158,4 @@ export abstract class BaseSubtitleHandler implements SubtitleHandler {
 
         this.wordPopup.destroy();
     }
-} 
+}

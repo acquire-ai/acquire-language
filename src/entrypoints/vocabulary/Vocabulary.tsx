@@ -54,13 +54,13 @@ function Vocabulary() {
     };
 
     // Filter words
-    const filteredWords = Object.values(vocabulary).filter(word =>
-        word.word.toLowerCase().includes(searchTerm.toLowerCase())
+    const filteredWords = Object.values(vocabulary).filter((word) =>
+        word.word.toLowerCase().includes(searchTerm.toLowerCase()),
     );
 
     // Sort words by creation time
-    const sortedWords = [...filteredWords].sort((a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    const sortedWords = [...filteredWords].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
 
     return (
@@ -86,8 +86,7 @@ function Vocabulary() {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div
-                            className="md:col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 h-[70vh] overflow-y-auto">
+                        <div className="md:col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 h-[70vh] overflow-y-auto">
                             <h2 className="text-xl font-semibold mb-4 sticky top-0 bg-white dark:bg-gray-800 py-2">
                                 单词列表 ({sortedWords.length})
                             </h2>
@@ -95,8 +94,11 @@ function Vocabulary() {
                                 {sortedWords.map((word) => (
                                     <li
                                         key={word.word}
-                                        className={`p-2 rounded-md cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 flex justify-between items-center ${selectedWord?.word === word.word ? 'bg-blue-100 dark:bg-blue-900' : ''
-                                            }`}
+                                        className={`p-2 rounded-md cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 flex justify-between items-center ${
+                                            selectedWord?.word === word.word
+                                                ? 'bg-blue-100 dark:bg-blue-900'
+                                                : ''
+                                        }`}
                                         onClick={() => setSelectedWord(word)}
                                     >
                                         <span>{word.word}</span>
@@ -114,8 +116,7 @@ function Vocabulary() {
                             </ul>
                         </div>
 
-                        <div
-                            className="md:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 h-[70vh] overflow-y-auto">
+                        <div className="md:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 h-[70vh] overflow-y-auto">
                             {selectedWord ? (
                                 <div>
                                     <h2 className="text-2xl font-bold mb-4 sticky top-0 bg-white dark:bg-gray-800 py-2">
@@ -126,7 +127,10 @@ function Vocabulary() {
                                         <h3 className="text-lg font-semibold mb-2">上下文</h3>
                                         <ul className="space-y-4">
                                             {selectedWord.contexts.map((context, index) => (
-                                                <li key={index} className="bg-gray-100 dark:bg-gray-700 p-3 rounded-md">
+                                                <li
+                                                    key={index}
+                                                    className="bg-gray-100 dark:bg-gray-700 p-3 rounded-md"
+                                                >
                                                     {context}
                                                 </li>
                                             ))}
@@ -134,12 +138,12 @@ function Vocabulary() {
                                     </div>
 
                                     <div className="text-sm text-gray-500 dark:text-gray-400">
-                                        添加时间: {new Date(selectedWord.createdAt).toLocaleString()}
+                                        添加时间:{' '}
+                                        {new Date(selectedWord.createdAt).toLocaleString()}
                                     </div>
                                 </div>
                             ) : (
-                                <div
-                                    className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+                                <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
                                     从左侧选择一个单词查看详情
                                 </div>
                             )}
@@ -151,4 +155,4 @@ function Vocabulary() {
     );
 }
 
-export default Vocabulary; 
+export default Vocabulary;

@@ -1,10 +1,10 @@
 /**
  * Acquire Language Background Script
  */
-import {defineBackground} from "wxt/sandbox";
-import {StorageManager} from "@/core/storage";
-import {Word} from "@/core/types/storage";
-import {saveSettings, loadSettings} from "@/core/config/settings";
+import { defineBackground } from 'wxt/sandbox';
+import { StorageManager } from '@/core/storage';
+import { Word } from '@/core/types/storage';
+import { saveSettings, loadSettings } from '@/core/config/settings';
 
 export default defineBackground({
     main() {
@@ -41,7 +41,7 @@ async function initializeSettings() {
             await saveSettings(settings);
         }
     } catch (error) {
-        console.error("Failed to initialize settings from environment variables:", error);
+        console.error('Failed to initialize settings from environment variables:', error);
     }
 }
 
@@ -51,16 +51,16 @@ async function initializeSettings() {
 function listenForSubtitleRequests() {
     chrome.webRequest.onBeforeRequest.addListener(
         (details) => {
-            if (details.method !== "GET") return;
+            if (details.method !== 'GET') return;
 
             // ignore requests from chrome extension
-            if (details.initiator?.startsWith("chrome-extension://")) {
+            if (details.initiator?.startsWith('chrome-extension://')) {
                 return;
             }
 
             const url = details.url;
 
-            if (!url.includes("/api/timedtext") && !url.includes("timedtext")) {
+            if (!url.includes('/api/timedtext') && !url.includes('timedtext')) {
                 return;
             }
 
@@ -68,43 +68,45 @@ function listenForSubtitleRequests() {
                 const urlObject = new URL(url);
 
                 const lang =
-                    urlObject.searchParams.get("tlang") ||
-                    urlObject.searchParams.get("lang") ||
-                    "";
+                    urlObject.searchParams.get('tlang') || urlObject.searchParams.get('lang') || '';
 
                 const videoId =
-                    urlObject.searchParams.get("v") ||
-                    urlObject.pathname.split("/").pop() ||
-                    "";
+                    urlObject.searchParams.get('v') || urlObject.pathname.split('/').pop() || '';
 
                 // send message to content script
                 if (details.tabId > 0) {
                     fetchSubtitle(urlObject.href)
-                        .then(subtitleContent => {
-                            chrome.tabs.sendMessage(details.tabId, {
-                                type: "ACQ_SUBTITLE_FETCHED",
-                                data: {url: urlObject.href, lang, videoId, response: subtitleContent},
-                            }).catch(err => console.error("Failed to send message to content script:", err));
+                        .then((subtitleContent) => {
+                            chrome.tabs
+                                .sendMessage(details.tabId, {
+                                    type: 'ACQ_SUBTITLE_FETCHED',
+                                    data: {
+                                        url: urlObject.href,
+                                        lang,
+                                        videoId,
+                                        response: subtitleContent,
+                                    },
+                                })
+                                .catch((err) =>
+                                    console.error('Failed to send message to content script:', err),
+                                );
                         })
-                        .catch(err => console.error("Failed to fetch subtitle:", err));
+                        .catch((err) => console.error('Failed to fetch subtitle:', err));
                 }
-
             } catch (e) {
-                console.error("Failed to capture subtitle request:", e);
+                console.error('Failed to capture subtitle request:', e);
             }
         },
-        {urls: ["*://*.youtube.com/*timedtext*", "*://*.youtube.com/api/*"]}
+        { urls: ['*://*.youtube.com/*timedtext*', '*://*.youtube.com/api/*'] },
     );
 
     // Listen for messages from content script
     browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-        if (message.type === "SAVE_WORD") {
+        if (message.type === 'SAVE_WORD') {
             // Save word to vocabulary
             saveWordToVocabulary(message.word, message.context)
-                .then(() => sendResponse({success: true}))
-                .catch((error) =>
-                    sendResponse({success: false, error: error.message})
-                );
+                .then(() => sendResponse({ success: true }))
+                .catch((error) => sendResponse({ success: false, error: error.message }));
             return true; // Indicates that the response will be sent asynchronously
         }
     });
@@ -118,15 +120,12 @@ async function fetchSubtitle(url: string) {
         }
         return await response.text();
     } catch (error) {
-        console.error("Failed to fetch subtitle:", error);
+        console.error('Failed to fetch subtitle:', error);
         throw error;
     }
 }
 
-async function saveWordToVocabulary(
-    word: string,
-    context: string
-): Promise<Word> {
+async function saveWordToVocabulary(word: string, context: string): Promise<Word> {
     const vocabulary = await StorageManager.getVocabulary();
 
     // Check if word already exists

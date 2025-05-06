@@ -1,7 +1,7 @@
 /**
  * interface of platform handler
  */
-import {AIService} from "./ai";
+import { AIService } from './ai';
 
 export interface SubtitleHandler {
     subtitles: string[];
@@ -10,7 +10,6 @@ export interface SubtitleHandler {
 
     destroy(): void;
 }
-
 
 export interface PlatformHandler {
     isSupported(url: string): boolean;

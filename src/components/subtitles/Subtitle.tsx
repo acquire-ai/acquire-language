@@ -11,14 +11,19 @@ interface SubtitleProps {
         textColor: string;
         opacity: number;
     };
-    onWordClick?: (word: string, position: { x: number, y: number }) => void;
+    onWordClick?: (word: string, position: { x: number; y: number }) => void;
     visible?: boolean;
 }
 
-export const Subtitle: React.FC<SubtitleProps> = ({ texts, settings, onWordClick, visible = true }) => {
+export const Subtitle: React.FC<SubtitleProps> = ({
+    texts,
+    settings,
+    onWordClick,
+    visible = true,
+}) => {
     const [videoRect, setVideoRect] = useState<DOMRect | null>(null);
     const [scaleFactor, setScaleFactor] = useState<number>(1);
-    const initialVideoSizeRef = useRef<{ width: number, height: number } | null>(null);
+    const initialVideoSizeRef = useRef<{ width: number; height: number } | null>(null);
 
     useEffect(() => {
         const updateVideoRect = () => {
@@ -31,7 +36,7 @@ export const Subtitle: React.FC<SubtitleProps> = ({ texts, settings, onWordClick
             if (!initialVideoSizeRef.current && rect.width > 0 && rect.height > 0) {
                 initialVideoSizeRef.current = {
                     width: rect.width,
-                    height: rect.height
+                    height: rect.height,
                 };
             }
 
@@ -96,4 +101,4 @@ export const Subtitle: React.FC<SubtitleProps> = ({ texts, settings, onWordClick
             {renderSubtitleTexts()}
         </SubtitleContainer>
     );
-}; 
+};

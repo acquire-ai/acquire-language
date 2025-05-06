@@ -5,10 +5,10 @@ declare global {
                 local: {
                     get: any;
                     set: any;
-                }
-            }
-        }
+                };
+            };
+        };
     }
 }
 
-export { }; 
+export {};

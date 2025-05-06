@@ -23,18 +23,18 @@ export interface Settings {
 
 // Default settings
 export const DEFAULT_SETTINGS: Settings = {
-    nativeLanguage: "zh-CN",
-    targetLanguage: "en-US",
-    languageLevel: "B1",
-    aiProvider: "deepseek",
-    aiModel: "deepseek-chat",
-    apiKey: "",
+    nativeLanguage: 'zh-CN',
+    targetLanguage: 'en-US',
+    languageLevel: 'B1',
+    aiProvider: 'deepseek',
+    aiModel: 'deepseek-chat',
+    apiKey: '',
     options: {}, // Initialize with empty object
     subtitleSettings: {
         fontSize: 20,
-        position: "bottom",
-        backgroundColor: "rgba(0, 0, 0, 0.7)",
-        textColor: "#ffffff",
+        position: 'bottom',
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        textColor: '#ffffff',
         opacity: 0.8,
     },
 };
@@ -68,7 +68,7 @@ export function loadEnvSettings(): Partial<Settings> {
 
     // Only include non-empty values
     return Object.fromEntries(
-        Object.entries(envSettings).filter(([_, value]) => value !== '')
+        Object.entries(envSettings).filter(([_, value]) => value !== ''),
     ) as Partial<Settings>;
 }
 
@@ -77,10 +77,10 @@ export function loadEnvSettings(): Partial<Settings> {
  */
 export async function loadStorageSettings(): Promise<Settings> {
     try {
-        const result = await chrome.storage.sync.get("settings");
+        const result = await chrome.storage.sync.get('settings');
         return result.settings || DEFAULT_SETTINGS;
     } catch (error) {
-        console.error("Failed to load settings from storage:", error);
+        console.error('Failed to load settings from storage:', error);
         return DEFAULT_SETTINGS;
     }
 }
@@ -110,8 +110,8 @@ export async function loadSettings(): Promise<Settings> {
  */
 export async function saveSettings(settings: Settings): Promise<void> {
     try {
-        await chrome.storage.sync.set({settings});
+        await chrome.storage.sync.set({ settings });
     } catch (error) {
-        console.error("Failed to save settings:", error);
+        console.error('Failed to save settings:', error);
     }
-} 
+}
