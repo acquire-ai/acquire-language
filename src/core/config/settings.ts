@@ -77,7 +77,7 @@ export function loadEnvSettings(): Partial<Settings> {
  */
 export async function loadStorageSettings(): Promise<Settings> {
     try {
-        const result = await browser.storage.local.get("settings");
+        const result = await chrome.storage.sync.get("settings");
         return result.settings || DEFAULT_SETTINGS;
     } catch (error) {
         console.error("Failed to load settings from storage:", error);
@@ -110,7 +110,7 @@ export async function loadSettings(): Promise<Settings> {
  */
 export async function saveSettings(settings: Settings): Promise<void> {
     try {
-        await browser.storage.local.set({ settings });
+        await chrome.storage.sync.set({settings});
     } catch (error) {
         console.error("Failed to save settings:", error);
     }
