@@ -150,6 +150,10 @@ export abstract class BaseSubtitleHandler implements SubtitleHandler {
         this.renderSubtitleContainer();
     }
 
+    public updateAIService(newAIService: AIService): void {
+        this.aiService = newAIService;
+    }
+
     destroy(): void {
         if (this.container) {
             if (this.containerRoot) {

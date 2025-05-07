@@ -29,8 +29,9 @@ export default defineContentScript({
                 options: settings.options,
             });
 
-            if (subtitleHandler && typeof subtitleHandler.updateSettings === 'function') {
+            if (subtitleHandler) {
                 subtitleHandler.updateSettings(settings);
+                subtitleHandler.updateAIService(aiService);
             }
         }
 
