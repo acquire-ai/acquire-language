@@ -9,4 +9,4 @@
 export { WordPopupManager as WordPopup } from './WordPopupManager';
 
 // Also export the React component directly for those who want to use it
-export { WordPopup as WordPopupComponent } from './WordPopup'; 
+export { WordPopup as WordPopupComponent } from './WordPopup';

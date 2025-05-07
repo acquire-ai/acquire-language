@@ -49,4 +49,4 @@ export const SubtitleText: React.FC<SubtitleTextProps> = ({ text, onWordClick })
             {renderWords()}
         </div>
     );
-}; 
+};

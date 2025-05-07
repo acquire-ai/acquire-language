@@ -23,10 +23,18 @@ function App() {
     return (
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-4">
             <div className="flex justify-center space-x-4 mb-6">
-                <a href="https://wxt.dev" target="_blank" className="hover:scale-110 transition-transform">
+                <a
+                    href="https://wxt.dev"
+                    target="_blank"
+                    className="hover:scale-110 transition-transform"
+                >
                     <img src={wxtLogo} className="h-16 w-16" alt="WXT logo" />
                 </a>
-                <a href="https://react.dev" target="_blank" className="hover:scale-110 transition-transform">
+                <a
+                    href="https://react.dev"
+                    target="_blank"
+                    className="hover:scale-110 transition-transform"
+                >
                     <img src={reactLogo} className="h-16 w-16 animate-spin-slow" alt="React logo" />
                 </a>
             </div>

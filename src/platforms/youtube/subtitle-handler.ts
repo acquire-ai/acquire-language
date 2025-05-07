@@ -4,9 +4,8 @@
  * This class is responsible for getting YouTube subtitles and displaying them in a more beautiful way.
  * It uses webRequest to intercept YouTube's subtitle requests and get the complete subtitle data.
  */
-import {BaseSubtitleHandler} from "../base/subtitle-handler";
-import {AIService} from "@/core/types/ai.ts";
-
+import { BaseSubtitleHandler } from '../base/subtitle-handler';
+import { AIService } from '@/core/types/ai.ts';
 
 interface SubtitleItem {
     start: number;
@@ -31,11 +30,11 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     async initialize(): Promise<void> {
         await this.loadSettings();
         this.hideYouTubeSubtitles();
-        
+
         super.createSubtitleContainer();
-        
+
         this.setupYouTubeSubtitles();
-        
+
         this.listenToBackgroundScript();
         this.startPeriodicCheck();
     }
@@ -45,7 +44,7 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     }
 
     private hideYouTubeSubtitles() {
-        const style = document.createElement("style");
+        const style = document.createElement('style');
         style.textContent = `
             .ytp-caption-segment {
                 opacity: 0 !important;
@@ -60,8 +59,6 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
         document.head.appendChild(style);
     }
 
-
-
     /**
      * Add subtitle hover events - pause video
      */
@@ -70,8 +67,8 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
 
         let wasPlaying = false;
 
-        this.container.addEventListener("mouseenter", () => {
-            const video = document.querySelector("video");
+        this.container.addEventListener('mouseenter', () => {
+            const video = document.querySelector('video');
             if (video) {
                 wasPlaying = !video.paused;
                 if (wasPlaying) {
@@ -80,8 +77,8 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
             }
         });
 
-        this.container.addEventListener("mouseleave", () => {
-            const video = document.querySelector("video");
+        this.container.addEventListener('mouseleave', () => {
+            const video = document.querySelector('video');
             if (video && wasPlaying) {
                 video.play();
                 wasPlaying = false;
@@ -91,11 +88,11 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
 
     private listenToBackgroundScript() {
         chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-            if (message.type === "ACQ_SUBTITLE_FETCHED") {
-                const {url, lang, videoId, response} = message.data;
-                console.log("Get subtitle from background script", url, lang, videoId);
+            if (message.type === 'ACQ_SUBTITLE_FETCHED') {
+                const { url, lang, videoId, response } = message.data;
+                console.log('Get subtitle from background script', url, lang, videoId);
                 this.parseSubtitle(response);
-                console.log("Subtitle data length:", this.subtitleData.length);
+                console.log('Subtitle data length:', this.subtitleData.length);
                 this.subtitleEnabled = true;
             }
 
@@ -104,11 +101,10 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
 
         // check if subtitle is enabled, if not, update subtitleEnabled state
         const checkSubtitleStatus = () => {
-            const subsToggleElement = document.querySelector(".ytp-subtitles-button");
+            const subsToggleElement = document.querySelector('.ytp-subtitles-button');
 
             if (subsToggleElement) {
-                const isSubtitleEnabled =
-                    subsToggleElement.getAttribute("aria-pressed") === "true";
+                const isSubtitleEnabled = subsToggleElement.getAttribute('aria-pressed') === 'true';
 
                 if (this.subtitleEnabled !== isSubtitleEnabled) {
                     this.subtitleEnabled = isSubtitleEnabled;
@@ -125,9 +121,9 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
     }
 
     private parseSubtitle(response: string) {
-        this.subtitleData  = this.parseJsonSubtitle(response);
+        this.subtitleData = this.parseJsonSubtitle(response);
         if (!this.subtitleData || this.subtitleData.length === 0) {
-            console.warn("Subtitle parsing result is empty");
+            console.warn('Subtitle parsing result is empty');
         }
     }
 
@@ -152,7 +148,7 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
                 const duration = event.dDurationMs || 0;
                 const end = start + duration;
 
-                let text = "";
+                let text = '';
                 for (const seg of event.segs) {
                     if (seg.utf8) {
                         text += seg.utf8;
@@ -167,10 +163,10 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
                     text,
                 });
             }
-            
+
             return subtitles;
         } catch (error) {
-            console.error("Failed to parse json subtitle:", error);
+            console.error('Failed to parse json subtitle:', error);
             return [];
         }
     }
@@ -201,9 +197,9 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
             return;
         }
 
-        const videoPlayer = document.querySelector("video");
+        const videoPlayer = document.querySelector('video');
         if (!videoPlayer) return;
-        
+
         const currentTime = videoPlayer.currentTime * 1000;
         this.matchIndices = this.findSubtitleIndices(currentTime);
 
@@ -234,19 +230,20 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
                 subtitleTexts.push(nextSubtitle.text);
             }
         }
-        return subtitleTexts
+        return subtitleTexts;
     }
 
     private findSubtitleIndices(currentTime: number): number[] {
-        return this.subtitleData.reduce((indices: number[], sub:SubtitleItem, index:number):number[] => {
-            if (currentTime >= sub.start && currentTime < sub.end) {
-                indices.push(index);
-            }
-            return indices;
-        }, []);
+        return this.subtitleData.reduce(
+            (indices: number[], sub: SubtitleItem, index: number): number[] => {
+                if (currentTime >= sub.start && currentTime < sub.end) {
+                    indices.push(index);
+                }
+                return indices;
+            },
+            [],
+        );
     }
-
-
 
     /**
      * Destroy subtitle handler
@@ -266,5 +263,4 @@ export class YouTubeSubtitleHandler extends BaseSubtitleHandler {
 
         super.destroy();
     }
-
-} 
+}

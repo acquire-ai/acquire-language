@@ -1,8 +1,13 @@
 /**
  * Storage management utilities
  */
-import {VocabularyData} from '../types/storage';
-import {Settings, DEFAULT_SETTINGS, loadSettings, saveSettings as saveSettingsToStorage} from '../config/settings';
+import { VocabularyData } from '../types/storage';
+import {
+    Settings,
+    DEFAULT_SETTINGS,
+    loadSettings,
+    saveSettings as saveSettingsToStorage,
+} from '../config/settings';
 
 /**
  * Storage Manager
@@ -24,7 +29,7 @@ export class StorageManager {
      * @param value Value
      */
     static async set<T>(key: string, value: T): Promise<void> {
-        await browser.storage.local.set({[key]: value});
+        await browser.storage.local.set({ [key]: value });
     }
 
     /**
@@ -48,7 +53,7 @@ export class StorageManager {
      * @returns Vocabulary data
      */
     static async getVocabulary(): Promise<VocabularyData> {
-        return await this.get<VocabularyData>('vocabulary') || {};
+        return (await this.get<VocabularyData>('vocabulary')) || {};
     }
 
     /**
@@ -58,4 +63,4 @@ export class StorageManager {
     static async saveVocabulary(vocabulary: VocabularyData): Promise<void> {
         await this.set('vocabulary', vocabulary);
     }
-} 
+}

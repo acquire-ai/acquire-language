@@ -21,7 +21,7 @@ export const SubtitleContainer: React.FC<SubtitleContainerProps> = ({
     videoRect,
     children,
     visible = true,
-    scaleFactor = 1
+    scaleFactor = 1,
 }) => {
     if (!videoRect || !visible) {
         return null;
@@ -66,21 +66,18 @@ export const SubtitleContainer: React.FC<SubtitleContainerProps> = ({
         userSelect: 'none',
         textAlign: 'center',
         maxWidth: '90%',
-        boxShadow: scaleFactor > 1.2 ? `0 ${Math.round(4 * scaleFactor)}px ${Math.round(8 * scaleFactor)}px rgba(0, 0, 0, 0.3)` : 'none',
+        boxShadow:
+            scaleFactor > 1.2
+                ? `0 ${Math.round(4 * scaleFactor)}px ${Math.round(8 * scaleFactor)}px rgba(0, 0, 0, 0.3)`
+                : 'none',
         textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)',
     };
 
     return (
-        <div
-            id="acquire-language-subtitle-wrapper"
-            style={containerStyle}
-        >
-            <div
-                id="acquire-language-subtitle"
-                style={subtitleStyle}
-            >
+        <div id="acquire-language-subtitle-wrapper" style={containerStyle}>
+            <div id="acquire-language-subtitle" style={subtitleStyle}>
                 {children}
             </div>
         </div>
     );
-}; 
+};

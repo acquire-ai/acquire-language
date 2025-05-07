@@ -8,7 +8,7 @@
  * @returns Promise
  */
 export function delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -17,10 +17,7 @@ export function delay(ms: number): Promise<void> {
  * @param timeout 超时时间（毫秒）
  * @returns 元素或null
  */
-export async function waitForElement(
-    selector: string,
-    timeout = 10000
-): Promise<Element | null> {
+export async function waitForElement(selector: string, timeout = 10000): Promise<Element | null> {
     const startTime = Date.now();
 
     while (Date.now() - startTime < timeout) {
@@ -40,7 +37,7 @@ export async function waitForElement(
  * @returns 是否匹配
  */
 export function isUrlMatch(url: string, patterns: string[]): boolean {
-    return patterns.some(pattern => {
+    return patterns.some((pattern) => {
         const regex = new RegExp(pattern.replace(/\*/g, '.*'));
         return regex.test(url);
     });
@@ -73,4 +70,4 @@ export function getLanguageName(code: string): string {
     };
 
     return languages[code] || code;
-} 
+}

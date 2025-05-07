@@ -1,9 +1,9 @@
 /**
  * Platform factory
  */
-import {PlatformHandler} from '@/core/types/platform';
-import {isYouTubeVideoUrl} from '@/core/utils';
-import {YouTubePlatformHandler} from './youtube';
+import { PlatformHandler } from '@/core/types/platform';
+import { isYouTubeVideoUrl } from '@/core/utils';
+import { YouTubePlatformHandler } from './youtube';
 
 /**
  * Create platform handler
@@ -17,4 +17,4 @@ export function createPlatformHandler(url: string): PlatformHandler | null {
 
     // Future support for more platforms
     return null;
-} 
+}

@@ -1,76 +1,73 @@
 /**
  * AI Service Factory
  */
-import { AIService, AIServiceConfig } from "@/core/types/ai.ts";
-import { createOpenAI } from "@ai-sdk/openai";
-import { createAnthropic } from "@ai-sdk/anthropic";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { createDeepSeek } from "@ai-sdk/deepseek";
+import { AIService, AIServiceConfig } from '@/core/types/ai.ts';
+import { createOpenAI } from '@ai-sdk/openai';
+import { createAnthropic } from '@ai-sdk/anthropic';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { createDeepSeek } from '@ai-sdk/deepseek';
 import { createAzure } from '@ai-sdk/azure';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 
-import { ProviderV1 } from "@ai-sdk/provider";
-import { VercelAIAdapter } from "./vercel-adapter";
+import { ProviderV1 } from '@ai-sdk/provider';
+import { VercelAIAdapter } from './vercel-adapter';
 
 type ModelConfigType = Record<string, string[]>;
 
 // Available models for each provider
 export const AVAILABLE_MODELS: ModelConfigType = {
-    openai: ["gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"],
-    anthropic: ["claude-3-5-sonnet", "claude-3-opus", "claude-3-haiku"],
-    google: ["gemini-1.5-pro", "gemini-1.5-flash"],
-    deepseek: ["deepseek-chat", "deepseek-reasoner"],
-    azure: ["gpt-4o"],
-    "openai-compatible": [],
+    openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-3.5-turbo'],
+    anthropic: ['claude-3-5-sonnet', 'claude-3-opus', 'claude-3-haiku'],
+    google: ['gemini-1.5-pro', 'gemini-1.5-flash'],
+    deepseek: ['deepseek-chat', 'deepseek-reasoner'],
+    azure: ['gpt-4o'],
+    'openai-compatible': [],
 };
 
-
-export function createAIService(
-    config: AIServiceConfig
-): AIService {
+export function createAIService(config: AIServiceConfig): AIService {
     let ai: ProviderV1;
 
     switch (config.providerType) {
-        case "openai":
+        case 'openai':
             ai = createOpenAI({
                 apiKey: config.apiKey,
                 baseURL: config.baseURL,
                 organization: config.options?.organization,
-                project: config.options?.project
+                project: config.options?.project,
             });
             break;
-        case "anthropic":
+        case 'anthropic':
             ai = createAnthropic({
                 apiKey: config.apiKey,
-                baseURL: config.baseURL
+                baseURL: config.baseURL,
             });
             break;
-        case "google":
+        case 'google':
             ai = createGoogleGenerativeAI({
                 apiKey: config.apiKey,
-                baseURL: config.baseURL
+                baseURL: config.baseURL,
             });
             break;
-        case "deepseek":
+        case 'deepseek':
             ai = createDeepSeek({
                 apiKey: config.apiKey,
-                baseURL: config.baseURL
+                baseURL: config.baseURL,
             });
             break;
-        case "azure":
+        case 'azure':
             ai = createAzure({
                 apiKey: config.apiKey,
                 resourceName: config.options?.resourceName,
                 baseURL: config.baseURL,
-                apiVersion: config.options?.apiVersion || '2024-10-01-preview'
+                apiVersion: config.options?.apiVersion || '2024-10-01-preview',
             });
             break;
-        case "openai-compatible":
+        case 'openai-compatible':
             ai = createOpenAICompatible({
                 name: config.providerName || config.options?.providerName || 'custom-provider',
                 apiKey: config.apiKey,
                 baseURL: config.baseURL || '',
-                queryParams: config.options?.queryParams || {}
+                queryParams: config.options?.queryParams || {},
             });
             break;
         default:
@@ -119,185 +116,189 @@ export type ProviderConfig = Record<string, ConfigField>;
  */
 export function getAIProviderSettings(provider: string): ProviderConfig {
     switch (provider) {
-        case "openai":
+        case 'openai':
             return {
                 apiKey: {
-                    name: "API Key",
-                    type: "string",
+                    name: 'API Key',
+                    type: 'string',
                     required: true,
-                    description: "Your OpenAI API key"
+                    description: 'Your OpenAI API key',
                 },
                 organization: {
-                    name: "Organization ID",
-                    type: "string",
+                    name: 'Organization ID',
+                    type: 'string',
                     required: false,
-                    description: "Your OpenAI organization ID (optional)"
+                    description: 'Your OpenAI organization ID (optional)',
                 },
                 baseURL: {
-                    name: "Base URL",
-                    type: "string",
+                    name: 'Base URL',
+                    type: 'string',
                     required: false,
-                    description: "Custom base URL for API calls"
+                    description: 'Custom base URL for API calls',
                 },
                 project: {
-                    name: "Project",
-                    type: "string",
+                    name: 'Project',
+                    type: 'string',
                     required: false,
-                    description: "OpenAI project"
-                }
+                    description: 'OpenAI project',
+                },
             };
-        case "anthropic":
+        case 'anthropic':
             return {
                 apiKey: {
-                    name: "API Key",
-                    type: "string",
+                    name: 'API Key',
+                    type: 'string',
                     required: true,
-                    description: "Your Anthropic API key"
+                    description: 'Your Anthropic API key',
                 },
                 baseURL: {
-                    name: "Base URL",
-                    type: "string",
+                    name: 'Base URL',
+                    type: 'string',
                     required: false,
-                    description: "Custom base URL for API calls (default: https://api.anthropic.com/v1)"
+                    description:
+                        'Custom base URL for API calls (default: https://api.anthropic.com/v1)',
                 },
                 thinking: {
-                    name: "Thinking",
-                    type: "object",
+                    name: 'Thinking',
+                    type: 'object',
                     required: false,
-                    description: "Thinking configuration for Anthropic models",
+                    description: 'Thinking configuration for Anthropic models',
                     properties: {
                         type: {
-                            name: "Type",
-                            type: "enum",
+                            name: 'Type',
+                            type: 'enum',
                             required: true,
-                            description: "Type of thinking",
-                            options: ["enabled", "disabled"]
+                            description: 'Type of thinking',
+                            options: ['enabled', 'disabled'],
                         },
                         budgetTokens: {
-                            name: "Budget Tokens",
-                            type: "number",
+                            name: 'Budget Tokens',
+                            type: 'number',
                             required: false,
-                            description: "Token budget for thinking"
-                        }
-                    }
-                }
+                            description: 'Token budget for thinking',
+                        },
+                    },
+                },
             };
-        case "google":
+        case 'google':
             return {
                 apiKey: {
-                    name: "API Key",
-                    type: "string",
+                    name: 'API Key',
+                    type: 'string',
                     required: true,
-                    description: "Your Google AI API key"
+                    description: 'Your Google AI API key',
                 },
                 baseURL: {
-                    name: "Base URL",
-                    type: "string",
+                    name: 'Base URL',
+                    type: 'string',
                     required: false,
-                    description: "Custom base URL for API calls (default: https://generativelanguage.googleapis.com/v1beta)"
+                    description:
+                        'Custom base URL for API calls (default: https://generativelanguage.googleapis.com/v1beta)',
                 },
                 responseModalities: {
-                    name: "Response Modalities",
-                    type: "array",
+                    name: 'Response Modalities',
+                    type: 'array',
                     required: false,
-                    description: "Types of content the model can generate",
-                    itemType: "enum",
-                    options: ["TEXT", "IMAGE"]
+                    description: 'Types of content the model can generate',
+                    itemType: 'enum',
+                    options: ['TEXT', 'IMAGE'],
                 },
                 thinkingConfig: {
-                    name: "Thinking Config",
-                    type: "object",
+                    name: 'Thinking Config',
+                    type: 'object',
                     required: false,
-                    description: "Configuration for model thinking",
+                    description: 'Configuration for model thinking',
                     properties: {
                         thinkingBudget: {
-                            name: "Thinking Budget",
-                            type: "number",
+                            name: 'Thinking Budget',
+                            type: 'number',
                             required: false,
-                            description: "Token budget for thinking"
-                        }
-                    }
-                }
+                            description: 'Token budget for thinking',
+                        },
+                    },
+                },
             };
-        case "deepseek":
+        case 'deepseek':
             return {
                 apiKey: {
-                    name: "API Key",
-                    type: "string",
+                    name: 'API Key',
+                    type: 'string',
                     required: true,
-                    description: "Your DeepSeek API key"
+                    description: 'Your DeepSeek API key',
                 },
                 baseURL: {
-                    name: "Base URL",
-                    type: "string",
+                    name: 'Base URL',
+                    type: 'string',
                     required: false,
-                    description: "Base URL for API calls"
-                }
+                    description: 'Base URL for API calls',
+                },
             };
-        case "azure":
+        case 'azure':
             return {
                 apiKey: {
-                    name: "API Key",
-                    type: "string",
+                    name: 'API Key',
+                    type: 'string',
                     required: true,
-                    description: "Your Azure OpenAI API key"
+                    description: 'Your Azure OpenAI API key',
                 },
                 resourceName: {
-                    name: "Resource Name",
-                    type: "string",
+                    name: 'Resource Name',
+                    type: 'string',
                     required: false,
-                    description: "Name of your Azure OpenAI resource"
+                    description: 'Name of your Azure OpenAI resource',
                 },
                 baseURL: {
-                    name: "Base URL",
-                    type: "string",
+                    name: 'Base URL',
+                    type: 'string',
                     required: false,
-                    description: "Base URL for API calls (overrides resourceName if provided)"
+                    description: 'Base URL for API calls (overrides resourceName if provided)',
                 },
                 apiVersion: {
-                    name: "API Version",
-                    type: "string",
+                    name: 'API Version',
+                    type: 'string',
                     required: false,
-                    description: "Azure OpenAI API version",
-                    default: "2024-10-01-preview"
-                }
+                    description: 'Azure OpenAI API version',
+                    default: '2024-10-01-preview',
+                },
             };
-        case "openai-compatible":
+        case 'openai-compatible':
             return {
                 apiKey: {
-                    name: "API Key",
-                    type: "string",
+                    name: 'API Key',
+                    type: 'string',
                     required: true,
-                    description: "Provider API key for authenticating requests"
+                    description: 'Provider API key for authenticating requests',
                 },
                 providerName: {
-                    name: "Provider Name",
-                    type: "string",
+                    name: 'Provider Name',
+                    type: 'string',
                     required: true,
-                    description: "Name of the OpenAI compatible provider (e.g., lmstudio, nim, baseten)"
+                    description:
+                        'Name of the OpenAI compatible provider (e.g., lmstudio, nim, baseten)',
                 },
                 baseURL: {
-                    name: "Base URL",
-                    type: "string",
+                    name: 'Base URL',
+                    type: 'string',
                     required: true,
-                    description: "Base URL for API calls (e.g., https://api.provider.com/v1)"
+                    description: 'Base URL for API calls (e.g., https://api.provider.com/v1)',
                 },
                 options: {
-                    name: "Advanced Options",
-                    type: "object",
+                    name: 'Advanced Options',
+                    type: 'object',
                     required: false,
-                    description: "Advanced provider-specific options",
+                    description: 'Advanced provider-specific options',
                     properties: {
                         queryParams: {
-                            name: "Query Parameters",
-                            type: "object",
+                            name: 'Query Parameters',
+                            type: 'object',
                             required: false,
-                            description: "Custom URL query parameters (e.g., api-version for Azure AI services)"
-                        }
-                    }
-                }
+                            description:
+                                'Custom URL query parameters (e.g., api-version for Azure AI services)',
+                        },
+                    },
+                },
             };
         default:
             return {};
     }
-} 
+}

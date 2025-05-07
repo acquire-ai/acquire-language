@@ -4,10 +4,10 @@ import { WordPopup } from './WordPopup';
 
 /**
  * WordPopupManager - Creates and manages the WordPopup React component
- * 
+ *
  * This class bridges the gap between the imperative API used by the rest of the codebase
  * and the React component-based implementation.
- * 
+ *
  * Implemented as a singleton to ensure only one popup exists at a time.
  */
 export class WordPopupManager {
@@ -15,7 +15,7 @@ export class WordPopupManager {
     private root: ReturnType<typeof createRoot> | null = null;
     private word: string = '';
     private definition: string = '';
-    private position: { x: number, y: number } = { x: 0, y: 0 };
+    private position: { x: number; y: number } = { x: 0, y: 0 };
     private isLoading: boolean = false;
     private savedWords: Set<string> = new Set();
 
@@ -71,7 +71,10 @@ export class WordPopupManager {
 
         // Container doesn't need position: absolute because the React component handles its own positioning
         document.body.appendChild(this.containerElement);
-        console.log('WordPopupManager: new container created and appended to body', this.containerElement);
+        console.log(
+            'WordPopupManager: new container created and appended to body',
+            this.containerElement,
+        );
 
         // Create React root
         this.root = createRoot(this.containerElement);
@@ -88,7 +91,7 @@ export class WordPopupManager {
         console.log('WordPopupManager: render called', {
             hasRoot: !!this.root,
             word: this.word,
-            isLoading: this.isLoading
+            isLoading: this.isLoading,
         });
 
         if (!this.root) {
@@ -106,7 +109,7 @@ export class WordPopupManager {
                     isSaved={this.savedWords.has(this.word)}
                     onClose={() => this.hide()}
                     onSave={(word) => this.saveWord(word)}
-                />
+                />,
             );
             console.log('WordPopupManager: React component rendered successfully');
         } catch (error) {
@@ -117,7 +120,7 @@ export class WordPopupManager {
     /**
      * Show loading state
      */
-    showLoading(word: string, position: { x: number, y: number }) {
+    showLoading(word: string, position: { x: number; y: number }) {
         console.log('WordPopupManager: showLoading called', { word, position });
 
         // 确保有有效的位置
@@ -144,8 +147,12 @@ export class WordPopupManager {
     /**
      * Show word definition
      */
-    show(word: string, definition: string, position: { x: number, y: number }) {
-        console.log('WordPopupManager: show called', { word, definition: definition.substring(0, 50) + '...', position });
+    show(word: string, definition: string, position: { x: number; y: number }) {
+        console.log('WordPopupManager: show called', {
+            word,
+            definition: definition.substring(0, 50) + '...',
+            position,
+        });
 
         // 确保有有效的位置
         const adjustedPosition = this.validatePosition(position);
@@ -168,7 +175,7 @@ export class WordPopupManager {
         this.render();
     }
 
-    private validatePosition(position: { x: number, y: number }): { x: number, y: number } {
+    private validatePosition(position: { x: number; y: number }): { x: number; y: number } {
         // 确保位置是有效的数字
         let x = typeof position.x === 'number' ? position.x : 0;
         let y = typeof position.y === 'number' ? position.y : 0;
@@ -207,15 +214,18 @@ export class WordPopupManager {
         }
 
         // Send message to background script
-        browser.runtime.sendMessage({
-            type: 'SAVE_WORD',
-            word,
-            context,
-        }).then(response => {
-            console.log('保存单词响应:', response);
-        }).catch(error => {
-            console.error('保存单词失败:', error);
-        });
+        browser.runtime
+            .sendMessage({
+                type: 'SAVE_WORD',
+                word,
+                context,
+            })
+            .then((response) => {
+                console.log('保存单词响应:', response);
+            })
+            .catch((error) => {
+                console.error('保存单词失败:', error);
+            });
 
         // Update component to show saved state
         this.render();
@@ -255,4 +265,4 @@ export class WordPopupManager {
             console.error('WordPopupManager: Error during cleanup', error);
         }
     }
-} 
+}

@@ -4,12 +4,11 @@
  * This implementation uses the Vercel provider SDK to interact with multiple provider providers
  * through a unified interface.
  */
-import {generateText} from "ai";
-import {AIService} from "@/core/types/ai";
-import {getLanguageName} from "@/core/utils";
-import {translatePrompt} from "@/prompts";
-import {loadSettings} from "@/core/config/settings";
-
+import { generateText } from 'ai';
+import { AIService } from '@/core/types/ai';
+import { getLanguageName } from '@/core/utils';
+import { translatePrompt } from '@/prompts';
+import { loadSettings } from '@/core/config/settings';
 
 export class VercelAIAdapter implements AIService {
     readonly provider: any;
@@ -23,13 +22,13 @@ export class VercelAIAdapter implements AIService {
     async getWordDefinition(
         word: string,
         context: string,
-        targetLanguage: string
+        targetLanguage: string,
     ): Promise<string> {
         try {
             const settings = await loadSettings();
             const nativeLanguage = settings.nativeLanguage;
             const prompt = translatePrompt(word, context, nativeLanguage);
-            const {text} = await generateText({
+            const { text } = await generateText({
                 model: this.provider(this.model),
                 prompt,
                 maxTokens: 500,
@@ -38,10 +37,7 @@ export class VercelAIAdapter implements AIService {
 
             return text;
         } catch (error: any) {
-            console.error(
-                `Failed to get word definition with ${this.model}:`,
-                error
-            );
+            console.error(`Failed to get word definition with ${this.model}:`, error);
             return `Failed to get definition for "${word}": ${error.message}`;
         }
     }
@@ -52,19 +48,19 @@ export class VercelAIAdapter implements AIService {
     async translateText(
         text: string,
         sourceLanguage: string,
-        targetLanguage: string
+        targetLanguage: string,
     ): Promise<string> {
         // TODO: This is incorrect, we should use the native language unite.
         try {
             const prompt = `
 Please translate the following ${this.getLanguageName(
-                sourceLanguage
+                sourceLanguage,
             )} text to ${this.getLanguageName(targetLanguage)}:
 "${text}"
 Please only return the translation result, without any additional explanations.
 `;
 
-            const {text: translatedText} = await generateText({
+            const { text: translatedText } = await generateText({
                 model: this.provider(this.model),
                 prompt,
                 maxTokens: 500,
@@ -73,10 +69,7 @@ Please only return the translation result, without any additional explanations.
 
             return translatedText;
         } catch (error: any) {
-            console.error(
-                `Failed to translate text with ${this.model}:`,
-                error
-            );
+            console.error(`Failed to translate text with ${this.model}:`, error);
             return `Translation failed: ${error.message}`;
         }
     }

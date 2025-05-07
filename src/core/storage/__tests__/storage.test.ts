@@ -6,157 +6,157 @@ import * as settingsModule from '../../config/settings';
 
 // Mock loadSettings function
 vi.mock('../../config/settings', () => {
-  return {
-    // Keep default settings export
-    DEFAULT_SETTINGS: {
-      nativeLanguage: "zh-CN",
-      targetLanguage: "en-US",
-      languageLevel: "B1",
-      aiProvider: "deepseek",
-      aiModel: "deepseek-chat",
-      apiKey: "",
-      subtitleSettings: {
-        fontSize: 20,
-        position: "bottom",
-        backgroundColor: "rgba(0, 0, 0, 0.7)",
-        textColor: "#ffffff",
-        opacity: 0.8,
-      }
-    },
-    // Mock loadSettings function
-    loadSettings: vi.fn(),
-    // Mock saveSettings function
-    saveSettings: vi.fn()
-  };
+    return {
+        // Keep default settings export
+        DEFAULT_SETTINGS: {
+            nativeLanguage: 'zh-CN',
+            targetLanguage: 'en-US',
+            languageLevel: 'B1',
+            aiProvider: 'deepseek',
+            aiModel: 'deepseek-chat',
+            apiKey: '',
+            subtitleSettings: {
+                fontSize: 20,
+                position: 'bottom',
+                backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                textColor: '#ffffff',
+                opacity: 0.8,
+            },
+        },
+        // Mock loadSettings function
+        loadSettings: vi.fn(),
+        // Mock saveSettings function
+        saveSettings: vi.fn(),
+    };
 });
 
 // Mock browser.storage.local API
 const mockStorage = {
-  local: {
-    get: vi.fn(),
-    set: vi.fn()
-  }
+    local: {
+        get: vi.fn(),
+        set: vi.fn(),
+    },
 };
 
 // Override global mocks
 beforeEach(() => {
-  vi.resetAllMocks();
-  // Ensure global mock is overridden
-  (global as any).browser = {
-    storage: mockStorage
-  };
+    vi.resetAllMocks();
+    // Ensure global mock is overridden
+    (global as any).browser = {
+        storage: mockStorage,
+    };
 });
 
 describe('Storage Manager Tests', () => {
-  describe('get method', () => {
-    it('should return data from storage', async () => {
-      mockStorage.local.get.mockResolvedValue({ testKey: 'testValue' });
+    describe('get method', () => {
+        it('should return data from storage', async () => {
+            mockStorage.local.get.mockResolvedValue({ testKey: 'testValue' });
 
-      const result = await StorageManager.get('testKey');
+            const result = await StorageManager.get('testKey');
 
-      expect(mockStorage.local.get).toHaveBeenCalledWith('testKey');
-      expect(result).toBe('testValue');
+            expect(mockStorage.local.get).toHaveBeenCalledWith('testKey');
+            expect(result).toBe('testValue');
+        });
+
+        it('should return null when data does not exist', async () => {
+            mockStorage.local.get.mockResolvedValue({});
+
+            const result = await StorageManager.get('testKey');
+
+            expect(mockStorage.local.get).toHaveBeenCalledWith('testKey');
+            expect(result).toBeNull();
+        });
     });
 
-    it('should return null when data does not exist', async () => {
-      mockStorage.local.get.mockResolvedValue({});
+    describe('set method', () => {
+        it('should correctly set storage data', async () => {
+            await StorageManager.set('testKey', 'testValue');
 
-      const result = await StorageManager.get('testKey');
-
-      expect(mockStorage.local.get).toHaveBeenCalledWith('testKey');
-      expect(result).toBeNull();
-    });
-  });
-
-  describe('set method', () => {
-    it('should correctly set storage data', async () => {
-      await StorageManager.set('testKey', 'testValue');
-
-      expect(mockStorage.local.set).toHaveBeenCalledWith({ testKey: 'testValue' });
-    });
-  });
-
-  describe('getSettings method', () => {
-    it('should return stored settings', async () => {
-      const mockSettings: Settings = {
-        ...DEFAULT_SETTINGS,
-        nativeLanguage: 'ja-JP',
-      };
-
-      // Mock loadSettings to return mock settings
-      (settingsModule.loadSettings as any).mockResolvedValue(mockSettings);
-
-      const result = await StorageManager.getSettings();
-
-      expect(settingsModule.loadSettings).toHaveBeenCalled();
-      expect(result).toEqual(mockSettings);
+            expect(mockStorage.local.set).toHaveBeenCalledWith({ testKey: 'testValue' });
+        });
     });
 
-    it('should return default settings when settings do not exist', async () => {
-      // Mock loadSettings to return default settings
-      (settingsModule.loadSettings as any).mockResolvedValue(DEFAULT_SETTINGS);
+    describe('getSettings method', () => {
+        it('should return stored settings', async () => {
+            const mockSettings: Settings = {
+                ...DEFAULT_SETTINGS,
+                nativeLanguage: 'ja-JP',
+            };
 
-      const result = await StorageManager.getSettings();
+            // Mock loadSettings to return mock settings
+            (settingsModule.loadSettings as any).mockResolvedValue(mockSettings);
 
-      expect(settingsModule.loadSettings).toHaveBeenCalled();
-      expect(result).toEqual(DEFAULT_SETTINGS);
-    });
-  });
+            const result = await StorageManager.getSettings();
 
-  describe('saveSettings method', () => {
-    it('should correctly save settings', async () => {
-      const settings: Settings = {
-        ...DEFAULT_SETTINGS,
-        targetLanguage: 'fr-FR',
-      };
+            expect(settingsModule.loadSettings).toHaveBeenCalled();
+            expect(result).toEqual(mockSettings);
+        });
 
-      await StorageManager.saveSettings(settings);
+        it('should return default settings when settings do not exist', async () => {
+            // Mock loadSettings to return default settings
+            (settingsModule.loadSettings as any).mockResolvedValue(DEFAULT_SETTINGS);
 
-      expect(settingsModule.saveSettings).toHaveBeenCalledWith(settings);
-    });
-  });
+            const result = await StorageManager.getSettings();
 
-  describe('getVocabulary method', () => {
-    it('should return stored vocabulary', async () => {
-      const mockVocabulary: VocabularyData = {
-        'test': {
-          word: 'test',
-          contexts: ['This is a test'],
-          createdAt: '2023-01-01'
-        }
-      };
-
-      mockStorage.local.get.mockResolvedValue({ vocabulary: mockVocabulary });
-
-      const result = await StorageManager.getVocabulary();
-
-      expect(mockStorage.local.get).toHaveBeenCalledWith('vocabulary');
-      expect(result).toEqual(mockVocabulary);
+            expect(settingsModule.loadSettings).toHaveBeenCalled();
+            expect(result).toEqual(DEFAULT_SETTINGS);
+        });
     });
 
-    it('should return empty object when vocabulary does not exist', async () => {
-      mockStorage.local.get.mockResolvedValue({});
+    describe('saveSettings method', () => {
+        it('should correctly save settings', async () => {
+            const settings: Settings = {
+                ...DEFAULT_SETTINGS,
+                targetLanguage: 'fr-FR',
+            };
 
-      const result = await StorageManager.getVocabulary();
+            await StorageManager.saveSettings(settings);
 
-      expect(mockStorage.local.get).toHaveBeenCalledWith('vocabulary');
-      expect(result).toEqual({});
+            expect(settingsModule.saveSettings).toHaveBeenCalledWith(settings);
+        });
     });
-  });
 
-  describe('saveVocabulary method', () => {
-    it('should correctly save vocabulary', async () => {
-      const vocabulary: VocabularyData = {
-        'example': {
-          word: 'example',
-          contexts: ['This is an example'],
-          createdAt: '2023-01-01'
-        }
-      };
+    describe('getVocabulary method', () => {
+        it('should return stored vocabulary', async () => {
+            const mockVocabulary: VocabularyData = {
+                test: {
+                    word: 'test',
+                    contexts: ['This is a test'],
+                    createdAt: '2023-01-01',
+                },
+            };
 
-      await StorageManager.saveVocabulary(vocabulary);
+            mockStorage.local.get.mockResolvedValue({ vocabulary: mockVocabulary });
 
-      expect(mockStorage.local.set).toHaveBeenCalledWith({ vocabulary });
+            const result = await StorageManager.getVocabulary();
+
+            expect(mockStorage.local.get).toHaveBeenCalledWith('vocabulary');
+            expect(result).toEqual(mockVocabulary);
+        });
+
+        it('should return empty object when vocabulary does not exist', async () => {
+            mockStorage.local.get.mockResolvedValue({});
+
+            const result = await StorageManager.getVocabulary();
+
+            expect(mockStorage.local.get).toHaveBeenCalledWith('vocabulary');
+            expect(result).toEqual({});
+        });
     });
-  });
-}); 
+
+    describe('saveVocabulary method', () => {
+        it('should correctly save vocabulary', async () => {
+            const vocabulary: VocabularyData = {
+                example: {
+                    word: 'example',
+                    contexts: ['This is an example'],
+                    createdAt: '2023-01-01',
+                },
+            };
+
+            await StorageManager.saveVocabulary(vocabulary);
+
+            expect(mockStorage.local.set).toHaveBeenCalledWith({ vocabulary });
+        });
+    });
+});

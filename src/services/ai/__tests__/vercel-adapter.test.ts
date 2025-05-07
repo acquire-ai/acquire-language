@@ -8,32 +8,32 @@ global.browser = {
     storage: {
         local: {
             get: vi.fn().mockResolvedValue({
-                settings: { nativeLanguage: 'zh-CN' }
-            })
-        }
-    }
+                settings: { nativeLanguage: 'zh-CN' },
+            }),
+        },
+    },
 } as any;
 
 // Mock generateText function from Vercel AI SDK
 vi.mock('ai', () => ({
-    generateText: vi.fn().mockResolvedValue({ text: 'mocked response' })
+    generateText: vi.fn().mockResolvedValue({ text: 'mocked response' }),
 }));
 
 // Mock the translatePrompt function
 vi.mock('@/prompts', () => ({
-    translatePrompt: vi.fn().mockReturnValue('mocked prompt template')
+    translatePrompt: vi.fn().mockReturnValue('mocked prompt template'),
 }));
 
 // Mock the getLanguageName function
 vi.mock('@/core/utils', () => ({
     getLanguageName: vi.fn((code) => {
         const languages = {
-            'en': 'English',
+            en: 'English',
             'zh-CN': 'Chinese',
-            'es': 'Spanish'
+            es: 'Spanish',
         };
         return languages[code] || code;
-    })
+    }),
 }));
 
 describe('VercelAIAdapter test', () => {
@@ -61,11 +61,13 @@ describe('VercelAIAdapter test', () => {
         const result = await adapter.getWordDefinition('test', 'This is a test context', 'en');
 
         expect(result).toBe('mocked response');
-        expect(generateText).toHaveBeenCalledWith(expect.objectContaining({
-            prompt: 'mocked prompt template',
-            maxTokens: 500,
-            temperature: 0.3
-        }));
+        expect(generateText).toHaveBeenCalledWith(
+            expect.objectContaining({
+                prompt: 'mocked prompt template',
+                maxTokens: 500,
+                temperature: 0.3,
+            }),
+        );
     });
 
     it('should handle translateText correctly', async () => {
@@ -73,11 +75,13 @@ describe('VercelAIAdapter test', () => {
         const result = await adapter.translateText('Hello world', 'en', 'zh-CN');
 
         expect(result).toBe('mocked response');
-        expect(generateText).toHaveBeenCalledWith(expect.objectContaining({
-            prompt: expect.stringContaining('Hello world'),
-            maxTokens: 500,
-            temperature: 0.3
-        }));
+        expect(generateText).toHaveBeenCalledWith(
+            expect.objectContaining({
+                prompt: expect.stringContaining('Hello world'),
+                maxTokens: 500,
+                temperature: 0.3,
+            }),
+        );
     });
 
     it('should handle errors in getWordDefinition', async () => {
@@ -108,4 +112,4 @@ describe('VercelAIAdapter test', () => {
 
         expect(mockProviderWithSpy).toHaveBeenCalledWith('test-model');
     });
-}); 
+});
