@@ -1,6 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { VercelAIAdapter } from '../vercel-adapter';
-import { AIServiceConfig } from '../../../core/types/ai';
 import { generateText } from 'ai';
 
 // Mock browser.storage.local

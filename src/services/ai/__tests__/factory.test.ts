@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createAIService, AVAILABLE_MODELS } from '../factory';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { AVAILABLE_MODELS, createAIService } from '../factory';
 import { VercelAIAdapter } from '../vercel-adapter';
 import { AIServiceConfig } from '../../../core/types/ai';
 

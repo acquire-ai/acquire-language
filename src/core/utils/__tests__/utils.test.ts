@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { delay, isUrlMatch, isYouTubeVideoUrl, getLanguageName } from '../index';
+import { describe, expect, it } from 'vitest';
+import { delay, getLanguageName, isUrlMatch, isYouTubeVideoUrl } from '../index';
 
 describe('Utility Functions Tests', () => {
     describe('delay', () => {

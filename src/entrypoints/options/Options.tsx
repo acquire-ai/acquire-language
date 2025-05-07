@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import {
-    Settings,
     DEFAULT_SETTINGS,
     loadSettings,
     saveSettings as saveSetting,
+    Settings,
 } from '@/core/config/settings';
-import { getAvailableAIModels, getAIProviderSettings } from '@/services/ai';
+import { getAIProviderSettings, getAvailableAIModels } from '@/services/ai';
 
 // Language proficiency levels
 const LANGUAGE_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];

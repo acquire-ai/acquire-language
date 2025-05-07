@@ -4,7 +4,9 @@
 
 ## Project Overview
 
-Acquire Language is a Chrome extension designed to help users learn languages through video content (currently supporting YouTube). The extension creates an immersive learning environment by enhancing video subtitles, providing word definitions, and offering a vocabulary notebook.
+Acquire Language is a Chrome extension designed to help users learn languages through video content (currently
+supporting YouTube). The extension creates an immersive learning environment by enhancing video subtitles, providing
+word definitions, and offering a vocabulary notebook.
 
 ## Tech Stack
 
@@ -123,18 +125,20 @@ The YouTube subtitle handler is the core functional module, responsible for:
 
 ```typescript
 // Example: Create custom subtitle container
-private createSubtitleContainer() {
-  // Find original subtitle container
-  this.findOriginalSubtitleContainer();
-  // Hide YouTube's original subtitles
-  this.hideYouTubeSubtitles();
+private
+createSubtitleContainer()
+{
+    // Find original subtitle container
+    this.findOriginalSubtitleContainer();
+    // Hide YouTube's original subtitles
+    this.hideYouTubeSubtitles();
 
-  // Create custom subtitle container
-  this.subtitleContainer = document.createElement('div');
-  this.subtitleContainer.id = 'acquire-language-subtitle';
+    // Create custom subtitle container
+    this.subtitleContainer = document.createElement('div');
+    this.subtitleContainer.id = 'acquire-language-subtitle';
 
-  // Add to document
-  document.body.appendChild(this.subtitleContainer);
+    // Add to document
+    document.body.appendChild(this.subtitleContainer);
 }
 ```
 
@@ -200,13 +204,15 @@ The popup window appears when clicking the extension icon, providing quick acces
 
 The AI service module handles interactions with AI models (like OpenAI GPT-4o-mini or DeepSeek), providing:
 
-- **Word Definitions**: Get detailed word definitions based on context, explaining target language words in the user's native language
+- **Word Definitions**: Get detailed word definitions based on context, explaining target language words in the user's
+  native language
 - **Text Translation**: Translate subtitle text to the user's native language
 
 ```typescript
 // AI service interface
 export interface AIService {
     getWordDefinition(word: string, context: string, targetLanguage: string): Promise<string>;
+
     translateText(text: string, sourceLanguage: string, targetLanguage: string): Promise<string>;
 }
 

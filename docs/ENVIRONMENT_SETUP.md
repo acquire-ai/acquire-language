@@ -23,7 +23,7 @@ This document explains how to set up environment variables for development.
 ## Available Environment Variables
 
 | Variable                | Description                                          | Default Value |
-| ----------------------- | ---------------------------------------------------- | ------------- |
+|-------------------------|------------------------------------------------------|---------------|
 | ACQUIRE_NATIVE_LANGUAGE | User's native language code                          | zh-CN         |
 | ACQUIRE_TARGET_LANGUAGE | Language being learned                               | en-US         |
 | ACQUIRE_LANGUAGE_LEVEL  | User's language proficiency (A1, A2, B1, B2, C1, C2) | B1            |
@@ -50,7 +50,8 @@ For local development, we recommend:
 
 This saves you from having to repeatedly enter API keys and other settings in the browser interface during development.
 
-For production builds, make sure to remove or ignore the `.env` file to prevent including sensitive information in your repository or builds.
+For production builds, make sure to remove or ignore the `.env` file to prevent including sensitive information in your
+repository or builds.
 
 ## Related Documentation
 

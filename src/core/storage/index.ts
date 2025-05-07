@@ -2,12 +2,7 @@
  * Storage management utilities
  */
 import { VocabularyData } from '../types/storage';
-import {
-    Settings,
-    DEFAULT_SETTINGS,
-    loadSettings,
-    saveSettings as saveSettingsToStorage,
-} from '../config/settings';
+import { loadSettings, saveSettings as saveSettingsToStorage, Settings } from '../config/settings';
 
 /**
  * Storage Manager

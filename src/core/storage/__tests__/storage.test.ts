@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { StorageManager } from '../index';
+import * as settingsModule from '../../config/settings';
 import { DEFAULT_SETTINGS } from '../../config/settings';
 import { Settings, VocabularyData } from '../../types/storage';
-import * as settingsModule from '../../config/settings';
 
 // Mock loadSettings function
 vi.mock('../../config/settings', () => {

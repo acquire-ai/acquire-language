@@ -4,7 +4,8 @@
 
 ## 项目概述
 
-习得语言（Acquire Language）是一个 Chrome 扩展，旨在帮助用户通过观看视频（目前支持 YouTube）学习语言。扩展通过增强视频字幕、提供单词释义、生词本等功能，为语言学习者创造沉浸式学习环境。
+习得语言（Acquire Language）是一个 Chrome 扩展，旨在帮助用户通过观看视频（目前支持
+YouTube）学习语言。扩展通过增强视频字幕、提供单词释义、生词本等功能，为语言学习者创造沉浸式学习环境。
 
 ## 技术栈
 
@@ -123,61 +124,65 @@ YouTube 字幕处理器是扩展的核心功能模块，负责：
 
 ```typescript
 // 示例：创建自定义字幕容器
-private createSubtitleContainer() {
-  // 查找原始字幕容器
-  this.findOriginalSubtitleContainer();
-  // 隐藏 YouTube 原始字幕
-  this.hideYouTubeSubtitles();
+private
+createSubtitleContainer()
+{
+    // 查找原始字幕容器
+    this.findOriginalSubtitleContainer();
+    // 隐藏 YouTube 原始字幕
+    this.hideYouTubeSubtitles();
 
-  // 创建自定义字幕容器
-  this.subtitleContainer = document.createElement('div');
-  this.subtitleContainer.id = 'acquire-language-subtitle';
+    // 创建自定义字幕容器
+    this.subtitleContainer = document.createElement('div');
+    this.subtitleContainer.id = 'acquire-language-subtitle';
 
-  // 添加到文档
-  document.body.appendChild(this.subtitleContainer);
+    // 添加到文档
+    document.body.appendChild(this.subtitleContainer);
 }
 ```
 
 ```typescript
 // 示例：添加单词点击事件
-private addWordClickEvents() {
-  if (!this.subtitleContainer) return;
+private
+addWordClickEvents()
+{
+    if (!this.subtitleContainer) return;
 
-  const wordElements = this.subtitleContainer.querySelectorAll('.acquire-language-word');
+    const wordElements = this.subtitleContainer.querySelectorAll('.acquire-language-word');
 
-  wordElements.forEach(element => {
-    element.addEventListener('click', async (event) => {
-      // 阻止事件冒泡
-      event.stopPropagation();
+    wordElements.forEach(element => {
+        element.addEventListener('click', async (event) => {
+            // 阻止事件冒泡
+            event.stopPropagation();
 
-      // 获取单词和位置
-      const word = element.getAttribute('data-word') || '';
-      const rect = element.getBoundingClientRect();
-      const position = {
-        x: rect.left + window.scrollX,
-        y: rect.bottom + window.scrollY + 10
-      };
+            // 获取单词和位置
+            const word = element.getAttribute('data-word') || '';
+            const rect = element.getBoundingClientRect();
+            const position = {
+                x: rect.left + window.scrollX,
+                y: rect.bottom + window.scrollY + 10
+            };
 
-      // 显示加载状态
-      this.wordPopup.showLoading(word, position);
+            // 显示加载状态
+            this.wordPopup.showLoading(word, position);
 
-      // 获取单词释义
-      try {
-        // 调用 AI 服务获取释义
-        const definition = await this.aiService.getWordDefinition(
-          word,
-          this.currentSubtitle,
-          this.settings.targetLanguage
-        );
+            // 获取单词释义
+            try {
+                // 调用 AI 服务获取释义
+                const definition = await this.aiService.getWordDefinition(
+                    word,
+                    this.currentSubtitle,
+                    this.settings.targetLanguage
+                );
 
-        // 显示单词释义
-        this.wordPopup.show(word, definition, position);
-      } catch (error) {
-        console.error('获取单词释义失败:', error);
-        this.wordPopup.show(word, `获取释义失败: ${error.message}`, position);
-      }
+                // 显示单词释义
+                this.wordPopup.show(word, definition, position);
+            } catch (error) {
+                console.error('获取单词释义失败:', error);
+                this.wordPopup.show(word, `获取释义失败: ${error.message}`, position);
+            }
+        });
     });
-  });
 }
 ```
 
@@ -279,32 +284,42 @@ AI 服务模块负责与 AI 模型（如 OpenAI GPT-4o-mini 或 DeepSeek）交�
 ```typescript
 // AI 服务接口
 export interface AIService {
-  getWordDefinition(word: string, context: string, targetLanguage: string): Promise<string>;
-  translateText(text: string, sourceLanguage: string, targetLanguage: string): Promise<string>;
+    getWordDefinition(word: string, context: string, targetLanguage: string): Promise<string>;
+
+    translateText(text: string, sourceLanguage: string, targetLanguage: string): Promise<string>;
 }
 
 // 创建 AI 服务
 export function createAIService(model: string, apiKey: string): AIService {
-  switch (model) {
-    case 'deepseek':
-      return new DeepSeekAIService(apiKey);
-    case 'gpt-4o-mini':
-      return new GPT4oMiniAIService(apiKey);
-    default:
-      return new DeepSeekAIService(apiKey);
-  }
+    switch (model) {
+        case 'deepseek':
+            return new DeepSeekAIService(apiKey);
+        case 'gpt-4o-mini':
+            return new GPT4oMiniAIService(apiKey);
+        default:
+            return new DeepSeekAIService(apiKey);
+    }
 }
 
 // 示例：获取单词释义
-async getWordDefinition(word: string, context: string, targetLanguage: string): Promise<string> {
-  try {
-    // 从存储中获取设置，获取用户的母语
-    const result = await browser.storage.local.get('settings');
-    const settings = result.settings || { nativeLanguage: 'zh-CN' };
-    const nativeLanguage = settings.nativeLanguage;
+async
+getWordDefinition(word
+:
+string, context
+:
+string, targetLanguage
+:
+string
+):
+Promise < string > {
+    try {
+        // 从存储中获取设置，获取用户的母语
+        const result = await browser.storage.local.get('settings');
+        const settings = result.settings || { nativeLanguage: 'zh-CN' };
+        const nativeLanguage = settings.nativeLanguage;
 
-    // 构建提示
-    const prompt = `
+        // 构建提示
+        const prompt = `
 请根据以下上下文，解释单词 "${word}" 的含义。
 上下文: "${context}"
 请用${this.getLanguageName(nativeLanguage)}回答，简洁明了地解释这个单词在当前上下文中的含义。
@@ -315,13 +330,13 @@ async getWordDefinition(word: string, context: string, targetLanguage: string): 
 4. 一到两个例句
 `;
 
-    // 调用 AI API
-    const response = await this.callAPI(prompt);
-    return response;
-  } catch (error) {
-    console.error('获取单词释义失败:', error);
-    return `获取 "${word}" 的释义失败`;
-  }
+        // 调用 AI API
+        const response = await this.callAPI(prompt);
+        return response;
+    } catch(error) {
+        console.error('获取单词释义失败:', error);
+        return `获取 "${word}" 的释义失败`;
+    }
 }
 ```
 

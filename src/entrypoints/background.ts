@@ -4,7 +4,7 @@
 import { defineBackground } from 'wxt/sandbox';
 import { StorageManager } from '@/core/storage';
 import { Word } from '@/core/types/storage';
-import { saveSettings, loadSettings } from '@/core/config/settings';
+import { loadSettings, saveSettings } from '@/core/config/settings';
 
 export default defineBackground({
     main() {
