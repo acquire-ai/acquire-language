@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import Vocabulary from './Vocabulary.tsx';
-import '@/entrypoints/popup/style.css'; // Reuse popup styles
+import '@/assets/style.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
