@@ -2,7 +2,6 @@
  * Acquire Language WXT Configuration File
  */
 import { defineConfig } from 'wxt';
-import tailwindcss from '@tailwindcss/vite';
 import { config } from 'dotenv';
 
 const env = config().parsed || {};
@@ -22,7 +21,6 @@ export default defineConfig({
 
     // Vite configuration
     vite: () => ({
-        plugins: [tailwindcss()],
         define: {
             'window.__ENV__': acquireEnv,
         },
