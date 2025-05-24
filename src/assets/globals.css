@@ -1,0 +1,261 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        /* 高科技亮色主题 */
+        --background: 210 30% 98%;
+        --foreground: 210 80% 10%;
+
+        --card: 0 0% 100%;
+        --card-foreground: 210 80% 10%;
+
+        --popover: 0 0% 100%;
+        --popover-foreground: 210 80% 10%;
+
+        /* 主色：更柔和的科技绿 */
+        --primary: 165 50% 40%;
+        --primary-foreground: 0 0% 100%;
+
+        /* 次色：科技蓝 */
+        --secondary: 196 80% 45%;
+        --secondary-foreground: 0 0% 100%;
+
+        /* 强调色：紫色 */
+        --accent: 265 70% 60%;
+        --accent-foreground: 0 0% 100%;
+
+        --muted: 210 20% 92%;
+        --muted-foreground: 210 40% 40%;
+
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 0 0% 100%;
+
+        --border: 210 20% 88%;
+        --input: 210 20% 88%;
+        --ring: 165 50% 40%;
+
+        --radius: 0.75rem;
+    }
+
+    .dark {
+        /* 高科技暗色主题 - 赛博朋克风格 */
+        --background: 220 30% 8%;
+        --foreground: 210 15% 94%;
+
+        --card: 220 30% 12%;
+        --card-foreground: 210 15% 94%;
+
+        --popover: 220 30% 12%;
+        --popover-foreground: 210 15% 94%;
+
+        /* 暗色主题中的主色：更柔和的科技绿 */
+        --primary: 165 60% 45%;
+        --primary-foreground: 0 0% 100%;
+
+        /* 暗色主题中的次色：科技蓝 */
+        --secondary: 196 70% 45%;
+        --secondary-foreground: 0 0% 100%;
+
+        /* 暗色主题中的强调色：霓虹紫 */
+        --accent: 265 70% 60%;
+        --accent-foreground: 0 0% 100%;
+
+        --muted: 220 30% 16%;
+        --muted-foreground: 210 15% 75%;
+
+        --destructive: 0 70% 50%;
+        --destructive-foreground: 0 0% 100%;
+
+        --border: 220 30% 18%;
+        --input: 220 30% 18%;
+        --ring: 165 60% 45%;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+    body {
+        @apply bg-background text-foreground;
+    }
+}
+
+/* 更活泼的动画 */
+.animate-float {
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+/* 更活泼的悬停效果 */
+.hover-lift {
+    transition:
+        transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 0.3s ease-in-out;
+}
+
+.hover-lift:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow:
+        0 12px 28px -5px rgba(0, 0, 0, 0.15),
+        0 10px 12px -6px rgba(0, 0, 0, 0.1);
+}
+
+/* 添加一些活泼的按钮效果 */
+.btn-bounce {
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.btn-bounce:hover {
+    transform: scale(1.05);
+}
+
+.btn-bounce:active {
+    transform: scale(0.95);
+}
+
+/* 暗色模式下的卡片增强 */
+.dark .card-glow {
+    box-shadow: 0 0 20px -5px rgba(0, 200, 170, 0.15);
+    transition: box-shadow 0.3s ease;
+}
+
+.dark .card-glow:hover {
+    box-shadow: 0 0 25px -5px rgba(0, 200, 170, 0.2);
+}
+
+/* 暗色模式下的渐变边框 */
+.dark .gradient-border {
+    position: relative;
+    border: none !important;
+}
+
+.dark .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(to right, hsl(165, 60%, 45%), hsl(196, 70%, 45%));
+    -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+    mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+}
+
+/* 暗色模式下的文本渐变 */
+.dark .gradient-text {
+    background: linear-gradient(to right, hsl(165, 60%, 50%), hsl(196, 70%, 50%));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+/* 暗色模式下的按钮增强 */
+.dark .enhanced-button {
+    background: linear-gradient(to right, hsl(165, 60%, 40%), hsl(196, 70%, 40%));
+    border: none;
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.dark .enhanced-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to right, hsl(165, 60%, 45%), hsl(196, 70%, 45%));
+    z-index: -1;
+    transition: opacity 0.3s ease;
+    opacity: 0;
+}
+
+.dark .enhanced-button:hover::before {
+    opacity: 1;
+}
+
+/* 添加高科技效果 */
+.dark .tech-glow {
+    text-shadow: 0 0 6px rgba(0, 200, 170, 0.5);
+}
+
+.dark .tech-pulse {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(0, 200, 170, 0.3);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(0, 200, 170, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 200, 170, 0);
+    }
+}
+
+/* 添加赛博朋克风格的扫描线效果 - 修复点击问题 */
+.dark .scanline {
+    position: relative;
+}
+
+.dark .scanline::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, transparent 50%, rgba(0, 200, 170, 0.02) 50%);
+    background-size: 100% 4px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* 确保弹出内容在扫描线上方 */
+.popover-content,
+[data-radix-popper-content-wrapper],
+[role='listbox'],
+[role='dialog'] {
+    z-index: 999 !important;
+}
+
+/* 确保所有交互元素在扫描线上方 */
+button,
+select,
+input,
+a,
+[role='combobox'],
+[role='option'] {
+    position: relative;
+    z-index: 1;
+}
+
+/* 特别处理Select组件 */
+.select-trigger {
+    position: relative;
+    z-index: 2;
+}
+
+.select-content {
+    z-index: 999 !important;
+}

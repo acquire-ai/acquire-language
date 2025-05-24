@@ -1,42 +1,81 @@
 /**
- * Settings management module
- * Handles loading settings from environment variables and browser storage
+ * Settings management module for Acquire Language
+ * Uses the new storage structure with improved organization
  */
 
-// Define the settings type
-export interface Settings {
+// 定义设置类型
+export interface GeneralSettings {
+    appLanguage: string;
     nativeLanguage: string;
-    targetLanguage: string;
-    languageLevel: string;
-    aiProvider: string;
-    aiModel: string;
-    apiKey: string;
-    options?: Record<string, any>; // Add options field for provider-specific configuration
-    subtitleSettings: {
-        fontSize: number;
-        position: 'top' | 'bottom';
-        backgroundColor: string;
-        textColor: string;
-        opacity: number;
-    };
+    learnLanguage: string;
+    languageLevel: string; // 用户当前语言水平
 }
 
-// Default settings
-export const DEFAULT_SETTINGS: Settings = {
-    nativeLanguage: 'zh-CN',
-    targetLanguage: 'en-US',
-    languageLevel: 'B1',
-    aiProvider: 'deepseek',
-    aiModel: 'deepseek-chat',
-    apiKey: '',
-    options: {}, // Initialize with empty object
-    subtitleSettings: {
-        fontSize: 20,
-        position: 'bottom',
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        textColor: '#ffffff',
-        opacity: 0.8,
+export interface SubtitleSettings {
+    showNativeSubtitles: boolean;
+    showLearningSubtitles: boolean;
+    subtitleSize: number;
+    subtitlePosition: string;
+    subtitleColor: string;
+    subtitleBgColor: string;
+    subtitleBgOpacity: number;
+}
+
+export interface AIServer {
+    id: string;
+    name: string;
+    provider: string;
+    model: string;
+    settings: Record<string, any>;
+    isDefault: boolean;
+}
+
+export interface AppSettings {
+    general: GeneralSettings;
+    subtitle: SubtitleSettings;
+    aiServers: AIServer[];
+    lastUpdated: number;
+}
+
+// 默认设置
+export const DEFAULT_SETTINGS: AppSettings = {
+    general: {
+        appLanguage: 'en',
+        nativeLanguage: 'zh-CN',
+        learnLanguage: 'en',
+        languageLevel: 'b1', // 默认为B1 - Intermediate
     },
+    subtitle: {
+        showNativeSubtitles: true,
+        showLearningSubtitles: true,
+        subtitleSize: 20,
+        subtitlePosition: 'bottom',
+        subtitleColor: '#ffffff',
+        subtitleBgColor: '#000000',
+        subtitleBgOpacity: 80,
+    },
+    aiServers: [
+        {
+            id: 'default',
+            name: 'Default DeepSeek',
+            provider: 'deepseek',
+            model: 'deepseek-chat',
+            settings: {
+                apiKey: '',
+                baseURL: '',
+            },
+            isDefault: true,
+        },
+    ],
+    lastUpdated: Date.now(),
+};
+
+// 存储键
+const STORAGE_KEY = 'acquire_language_settings';
+
+// 检查是否在Chrome扩展环境中
+const isChromeExtension = (): boolean => {
+    return typeof chrome !== 'undefined' && chrome?.storage?.sync !== undefined;
 };
 
 /**
@@ -54,76 +93,196 @@ function getEnvVar(name: string, defaultValue: string): string {
 }
 
 /**
- * Load settings from environment variables
+ * Load settings from environment variables and merge with defaults
  */
-export function loadEnvSettings(): Partial<Settings> {
-    const envSettings: Partial<Settings> = {
-        nativeLanguage: getEnvVar('ACQUIRE_NATIVE_LANGUAGE', ''),
-        targetLanguage: getEnvVar('ACQUIRE_TARGET_LANGUAGE', ''),
-        languageLevel: getEnvVar('ACQUIRE_LANGUAGE_LEVEL', ''),
-        aiProvider: getEnvVar('ACQUIRE_AI_PROVIDER', ''),
-        aiModel: getEnvVar('ACQUIRE_AI_MODEL', ''),
-        apiKey: getEnvVar('ACQUIRE_API_KEY', ''),
-    };
+export function loadEnvSettings(): Partial<AppSettings> {
+    const envApiKey = getEnvVar('ACQUIRE_API_KEY', '');
+    const envProvider = getEnvVar('ACQUIRE_AI_PROVIDER', '');
+    const envModel = getEnvVar('ACQUIRE_AI_MODEL', '');
+    const envNativeLanguage = getEnvVar('ACQUIRE_NATIVE_LANGUAGE', '');
+    const envTargetLanguage = getEnvVar('ACQUIRE_TARGET_LANGUAGE', '');
+    const envLanguageLevel = getEnvVar('ACQUIRE_LANGUAGE_LEVEL', '');
 
-    // Only include non-empty values
-    return Object.fromEntries(
-        Object.entries(envSettings).filter(([_, value]) => value !== ''),
-    ) as Partial<Settings>;
-}
+    const envSettings: Partial<AppSettings> = {};
 
-/**
- * Load settings from browser storage
- */
-export async function loadStorageSettings(): Promise<Settings> {
-    try {
-        const result = await chrome.storage.sync.get('settings');
-        return result.settings || DEFAULT_SETTINGS;
-    } catch (error) {
-        console.error('Failed to load settings from storage:', error);
-        return DEFAULT_SETTINGS;
+    // Apply general settings from env
+    if (envNativeLanguage || envTargetLanguage || envLanguageLevel) {
+        envSettings.general = {
+            ...DEFAULT_SETTINGS.general,
+            ...(envNativeLanguage && { nativeLanguage: envNativeLanguage }),
+            ...(envTargetLanguage && { learnLanguage: envTargetLanguage }),
+            ...(envLanguageLevel && { languageLevel: envLanguageLevel }),
+        };
     }
+
+    // Apply AI server settings from env
+    if (envApiKey || envProvider || envModel) {
+        envSettings.aiServers = [
+            {
+                ...DEFAULT_SETTINGS.aiServers[0],
+                ...(envProvider && { provider: envProvider }),
+                ...(envModel && { model: envModel }),
+                settings: {
+                    ...DEFAULT_SETTINGS.aiServers[0].settings,
+                    ...(envApiKey && { apiKey: envApiKey }),
+                },
+            },
+        ];
+    }
+
+    return envSettings;
 }
 
-/**
- * Load settings combining environment variables and stored settings
- * Environment variables take precedence over stored settings
- */
-export async function loadSettings(): Promise<Settings> {
-    // First get settings from storage
-    const storageSettings = await loadStorageSettings();
-
-    // Then overlay with environment variables
-    const envSettings = loadEnvSettings();
-
-    // Merge settings with environment variables taking precedence
-    const mergedSettings = {
-        ...storageSettings,
-        ...envSettings,
-    };
-
-    return mergedSettings;
-}
-
-/**
- * Save settings to browser storage
- */
-export async function saveSettings(settings: Settings): Promise<void> {
+// 保存设置
+export const saveSettings = async (settings: Partial<AppSettings>): Promise<void> => {
     try {
-        await chrome.storage.sync.set({ settings });
+        // 先获取当前设置
+        const currentSettings = await getSettings();
+
+        // 合并新设置
+        const updatedSettings: AppSettings = {
+            ...currentSettings,
+            ...settings,
+            lastUpdated: Date.now(),
+        };
+
+        if (isChromeExtension()) {
+            // 使用Chrome扩展API保存
+            return new Promise((resolve, reject) => {
+                if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
+                    chrome.storage.sync.set({ [STORAGE_KEY]: updatedSettings }, () => {
+                        if (chrome.runtime.lastError) {
+                            console.error('Error saving settings:', chrome.runtime.lastError);
+                            reject(chrome.runtime.lastError);
+                        } else {
+                            console.log('Settings saved successfully');
+                            resolve();
+                        }
+                    });
+                } else {
+                    console.warn('Chrome storage API not available. Settings not saved.');
+                    resolve(); // Resolve immediately as saving is skipped
+                }
+            });
+        } else {
+            // 降级到localStorage
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSettings));
+            console.log('Settings saved to localStorage');
+        }
     } catch (error) {
         console.error('Failed to save settings:', error);
+        throw error;
     }
-}
+};
+
+// 获取设置
+export const getSettings = async (): Promise<AppSettings> => {
+    try {
+        let storageSettings: AppSettings = DEFAULT_SETTINGS;
+
+        if (isChromeExtension()) {
+            // 使用Chrome扩展API获取
+            storageSettings = await new Promise((resolve) => {
+                if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
+                    chrome.storage.sync.get([STORAGE_KEY], (result) => {
+                        if (chrome.runtime.lastError) {
+                            console.error('Error loading settings:', chrome.runtime.lastError);
+                            resolve(DEFAULT_SETTINGS);
+                        } else if (result && result[STORAGE_KEY]) {
+                            console.log('Settings loaded from chrome.storage.sync');
+                            resolve(result[STORAGE_KEY] as AppSettings);
+                        } else {
+                            console.log('No settings found, using defaults');
+                            resolve(DEFAULT_SETTINGS);
+                        }
+                    });
+                } else {
+                    console.warn('Chrome storage API not available. Using default settings.');
+                    resolve(DEFAULT_SETTINGS);
+                }
+            });
+        } else {
+            // 降级到localStorage
+            const storedSettings = localStorage.getItem(STORAGE_KEY);
+            if (storedSettings) {
+                console.log('Settings loaded from localStorage');
+                storageSettings = JSON.parse(storedSettings) as AppSettings;
+            } else {
+                console.log('No settings found, using defaults');
+                storageSettings = DEFAULT_SETTINGS;
+            }
+        }
+
+        // 合并环境变量设置
+        const envSettings = loadEnvSettings();
+        const mergedSettings: AppSettings = {
+            ...storageSettings,
+            ...envSettings,
+            // 确保嵌套对象也被正确合并
+            general: {
+                ...storageSettings.general,
+                ...envSettings.general,
+            },
+            subtitle: {
+                ...storageSettings.subtitle,
+                ...envSettings.subtitle,
+            },
+            aiServers: envSettings.aiServers || storageSettings.aiServers,
+        };
+
+        return mergedSettings;
+    } catch (error) {
+        console.error('Failed to load settings:', error);
+        return DEFAULT_SETTINGS;
+    }
+};
+
+// 保存特定部分的设置
+export const saveGeneralSettings = async (settings: GeneralSettings): Promise<void> => {
+    return saveSettings({ general: settings });
+};
+
+export const saveSubtitleSettings = async (settings: SubtitleSettings): Promise<void> => {
+    return saveSettings({ subtitle: settings });
+};
+
+export const saveAIServers = async (aiServers: AIServer[]): Promise<void> => {
+    return saveSettings({ aiServers });
+};
+
+// 防抖函数，用于自动保存
+export const debounce = <T extends (...args: any[]) => any>(
+    func: T,
+    wait: number,
+): ((...args: Parameters<T>) => void) => {
+    let timeout: NodeJS.Timeout | null = null;
+
+    return (...args: Parameters<T>) => {
+        if (timeout) {
+            clearTimeout(timeout);
+        }
+
+        timeout = setTimeout(() => {
+            func(...args);
+        }, wait);
+    };
+};
 
 /**
  * Watch for settings changes
  * @param callback Function to call when settings change
  */
-export function watchSettings(callback: (settings: Settings) => void): void {
-    chrome.storage.onChanged.addListener((changes, area) => {
-        if (area === 'sync' && changes.settings) {
-            callback(changes.settings.newValue);
-        }
-    });
+export function watchSettings(callback: (settings: AppSettings) => void): void {
+    if (isChromeExtension()) {
+        chrome.storage.onChanged.addListener((changes, area) => {
+            if (area === 'sync' && changes[STORAGE_KEY]) {
+                callback(changes[STORAGE_KEY].newValue);
+            }
+        });
+    }
 }
+
+// 为了向后兼容，导出一些别名
+export type Settings = AppSettings;
+export const DEFAULT_SETTINGS_LEGACY = DEFAULT_SETTINGS;
+export const loadSettings = getSettings;
