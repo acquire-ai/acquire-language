@@ -2,7 +2,7 @@ export function Logo() {
     return (
         <div className="relative h-10 w-10 overflow-hidden rounded-md group">
             <img
-                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/icons8-language-skill-color-96-Ua56RzwEqmVN29CIFTnZpeQ9IHyrDG.png"
+                src="/icon/96.png"
                 alt="Acquire Language Logo"
                 width={40}
                 height={40}

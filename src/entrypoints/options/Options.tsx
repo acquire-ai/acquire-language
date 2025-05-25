@@ -40,7 +40,7 @@ export default function Options() {
                             <p className="text-muted-foreground">
                                 Customize your language learning adventure!
                             </p>
-                        </div>
+                </div>
 
                         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                             <TabsList className="grid w-full grid-cols-3 relative z-10">
