@@ -1,5 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { marked } from 'marked';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { X, Save, Check } from 'lucide-react';
+import { cn } from '@/core/utils';
 
 interface WordPopupProps {
     word: string;
@@ -10,6 +13,8 @@ interface WordPopupProps {
     isLoading?: boolean;
     isSaved?: boolean;
 }
+
+type SaveState = 'unsaved' | 'saving' | 'saved';
 
 /**
  * WordPopup Component - Displays word definitions in a popup
@@ -24,111 +29,84 @@ export const WordPopup: React.FC<WordPopupProps> = ({
     isSaved = false,
 }) => {
     const popupRef = useRef<HTMLDivElement>(null);
-    const [popupPosition, setPopupPosition] = useState({ left: '0px', top: '0px' });
-    const [saveState, setSaveState] = useState<'unsaved' | 'saving' | 'saved'>(
-        isSaved ? 'saved' : 'unsaved',
-    );
+    const [popupPosition, setPopupPosition] = useState({ left: position.x, top: position.y });
+    const [saveState, setSaveState] = useState<SaveState>(isSaved ? 'saved' : 'unsaved');
 
-    // Process Markdown content
     const getFormattedDefinition = () => {
-        // Handle code block wrapping if present
-        let cleanDefinition = definition.trim();
-        if (cleanDefinition.startsWith('```') && cleanDefinition.endsWith('```')) {
-            cleanDefinition = cleanDefinition
-                .replace(/^```(markdown|md)?/m, '')
-                .replace(/```$/m, '')
-                .trim();
+        if (!definition) {
+            return { __html: '<p>No definition available.</p>' };
         }
 
-        try {
-            return {
-                __html: marked.parse(cleanDefinition, {
-                    async: false,
-                    breaks: true,
-                    gfm: true,
-                }) as string,
-            };
-        } catch (error) {
-            console.error('Failed to parse markdown', error);
-            return { __html: `<p>${cleanDefinition.replace(/\n/g, '<br>')}</p>` };
+        let formattedDefinition = definition;
+
+        // Convert **text** to <strong>text</strong>
+        formattedDefinition = formattedDefinition.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+        // Convert numbered lists (1. 2. 3.) to proper <ol><li> structure
+        const lines = formattedDefinition.split('\n');
+        let inOrderedList = false;
+        let result = '';
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            const numberedMatch = line.match(/^(\d+)\.\s*(.+)$/);
+
+            if (numberedMatch) {
+                if (!inOrderedList) {
+                    result += '<ol>';
+                    inOrderedList = true;
+                }
+                result += `<li>${numberedMatch[2]}</li>`;
+            } else {
+                if (inOrderedList) {
+                    result += '</ol>';
+                    inOrderedList = false;
+                }
+                if (line) {
+                    result += `<p>${line}</p>`;
+                }
+            }
         }
+
+        if (inOrderedList) {
+            result += '</ol>';
+        }
+
+        return { __html: result };
     };
 
-    // Update save state when isSaved prop changes
     useEffect(() => {
-        setSaveState(isSaved ? 'saved' : 'unsaved');
-    }, [isSaved]);
-
-    // Calculate position based on viewport and subtitle container
-    useEffect(() => {
-        if (!popupRef.current) return;
-
         const calculatePosition = () => {
+            if (!popupRef.current) return;
+
+            const popup = popupRef.current;
+            const rect = popup.getBoundingClientRect();
             const viewportWidth = window.innerWidth;
             const viewportHeight = window.innerHeight;
 
-            const popupRect = popupRef.current!.getBoundingClientRect();
-            const popupWidth = popupRect.width || 400; // Default width if not available
-            const popupHeight = popupRect.height || 300; // Default height if not available
+            let left = position.x;
+            let top = position.y;
 
-            // 默认将弹窗放在点击位置上方，与点击位置左侧对齐
-            let left = position.x - 20; // 左侧偏移一点，更好地对齐
-            let top = position.y - popupHeight - 15; // 放在点击位置上方，留出一点间距
-
-            // 确保弹窗不会超出视口右侧
-            if (left + popupWidth > viewportWidth) {
-                left = viewportWidth - popupWidth - 20;
+            // Adjust horizontal position
+            if (left + rect.width > viewportWidth) {
+                left = viewportWidth - rect.width - 10;
+            }
+            if (left < 10) {
+                left = 10;
             }
 
-            // 确保弹窗不会超出视口左侧
-            if (left < 20) {
-                left = 20;
+            // Adjust vertical position
+            if (top + rect.height > viewportHeight) {
+                top = position.y - rect.height - 10;
+            }
+            if (top < 10) {
+                top = 10;
             }
 
-            // 如果弹窗放在上方会超出视口顶部，则放在点击位置下方
-            if (top < 20) {
-                top = position.y + 15; // 放在点击位置下方，留出一点间距
-            }
-
-            // 检查是否有字幕容器
-            const subtitleContainer = document.getElementById('acquire-language-subtitle');
-
-            if (subtitleContainer) {
-                const subtitleRect = subtitleContainer.getBoundingClientRect();
-
-                // 调整垂直位置，避免遮挡字幕
-                if (top + popupHeight > subtitleRect.top - 20) {
-                    // 如果弹窗会与字幕重叠，则放在字幕上方
-                    top = subtitleRect.top - popupHeight - 20;
-                }
-
-                // 如果上方放不下，且下方位置合适，则放在字幕下方
-                if (top < 20 && position.y > subtitleRect.bottom + popupHeight + 20) {
-                    top = subtitleRect.bottom + 20;
-                }
-
-                // 水平居中处理（可选）
-                // 只有当点击位置接近字幕中心时才居中显示
-                const clickDistance = Math.abs(
-                    position.x - (subtitleRect.left + subtitleRect.width / 2),
-                );
-                if (clickDistance < 100) {
-                    // 如果点击位置接近字幕中心
-                    const centerPosition =
-                        subtitleRect.left + subtitleRect.width / 2 - popupWidth / 2;
-                    left = Math.max(20, centerPosition);
-                }
-            }
-
-            setPopupPosition({
-                left: `${Math.round(left)}px`,
-                top: `${Math.round(top)}px`,
-            });
+            setPopupPosition({ left, top });
         };
 
         calculatePosition();
-
-        // Recalculate position if window is resized
         window.addEventListener('resize', calculatePosition);
         return () => window.removeEventListener('resize', calculatePosition);
     }, [position, popupRef.current]);
@@ -140,191 +118,68 @@ export const WordPopup: React.FC<WordPopupProps> = ({
     };
 
     return (
-        <div
+        <Card
             ref={popupRef}
+            className={cn(
+                'fixed z-[10000] w-[400px] max-h-[350px] overflow-auto',
+                'card-glow gradient-border hover-lift',
+                'bg-background border-border shadow-lg',
+            )}
             style={{
-                position: 'absolute',
                 left: popupPosition.left,
                 top: popupPosition.top,
-                width: '400px',
-                maxHeight: '350px',
-                backgroundColor: 'white',
-                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
-                borderRadius: '12px',
-                border: '1px solid #eaeaea',
-                overflow: 'auto',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-                fontSize: '16px',
-                lineHeight: '1.6',
-                padding: '0',
-                zIndex: 10000,
             }}
         >
-            {/* Header with word and actions */}
-            <div
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '16px',
-                    paddingBottom: '12px',
-                    borderBottom: '1px solid #eaeaea',
-                }}
-            >
-                <h3
-                    style={{
-                        margin: 0,
-                        fontSize: '22px',
-                        fontWeight: 600,
-                        color: '#2563eb',
-                    }}
-                >
-                    {word}
-                </h3>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 border-b border-border">
+                <h3 className="text-xl font-semibold text-primary tech-glow">{word}</h3>
+                <div className="flex items-center gap-2">
                     {!isLoading && saveState === 'unsaved' && (
-                        <button
+                        <Button
                             onClick={handleSave}
-                            style={{
-                                background: 'none',
-                                border: 'none',
-                                cursor: 'pointer',
-                                fontSize: '15px',
-                                color: '#3498db',
-                                padding: '4px 8px',
-                                borderRadius: '4px',
-                                marginRight: '16px',
-                                transition: 'background-color 0.2s',
-                            }}
-                            onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#ebf8ff')}
-                            onMouseOut={(e) =>
-                                (e.currentTarget.style.backgroundColor = 'transparent')
-                            }
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-2 text-primary hover:bg-primary/10"
                         >
+                            <Save className="h-4 w-4 mr-1" />
                             Save
-                        </button>
+                        </Button>
                     )}
                     {!isLoading && saveState === 'saving' && (
-                        <span style={{ color: '#3498db', fontSize: '15px', marginRight: '16px' }}>
+                        <span className="text-sm text-primary flex items-center">
+                            <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full mr-2" />
                             Saving...
                         </span>
                     )}
                     {!isLoading && saveState === 'saved' && (
-                        <span style={{ color: '#27ae60', fontSize: '15px', marginRight: '16px' }}>
+                        <span className="text-sm text-green-500 flex items-center">
+                            <Check className="h-4 w-4 mr-1" />
                             Saved
                         </span>
                     )}
-                    <button
+                    <Button
                         onClick={onClose}
-                        style={{
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            fontSize: '18px',
-                            color: '#999',
-                            width: '28px',
-                            height: '28px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            borderRadius: '50%',
-                            transition: 'background-color 0.2s',
-                        }}
-                        onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#f3f4f6')}
-                        onMouseOut={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
                     >
-                        ×
-                    </button>
+                        <X className="h-4 w-4" />
+                    </Button>
                 </div>
-            </div>
+            </CardHeader>
 
-            {/* Content area */}
-            <div style={{ padding: '16px' }}>
+            <CardContent className="p-4">
                 {isLoading ? (
-                    <div
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            padding: '32px 0',
-                        }}
-                    >
-                        <div
-                            style={{
-                                width: '28px',
-                                height: '28px',
-                                border: '3px solid #f3f3f3',
-                                borderTop: '3px solid #3498db',
-                                borderRadius: '50%',
-                                animation: 'spin 1s linear infinite',
-                            }}
-                        />
-                        <div style={{ marginLeft: '12px', color: '#666', fontSize: '15px' }}>
-                            Looking up definition...
-                        </div>
+                    <div className="flex items-center justify-center py-8">
+                        <div className="animate-spin h-7 w-7 border-3 border-primary border-t-transparent rounded-full" />
+                        <div className="ml-3 text-muted-foreground">Looking up definition...</div>
                     </div>
                 ) : (
                     <div
-                        className="word-definition-content"
+                        className="prose prose-sm max-w-none dark:prose-invert"
                         dangerouslySetInnerHTML={getFormattedDefinition()}
                     />
                 )}
-            </div>
-
-            {/* Global styles for definition content and animation */}
-            <style>{`
-                @keyframes spin {
-                    0% { transform: rotate(0deg); }
-                    100% { transform: rotate(360deg); }
-                }
-                
-                .word-definition-content h1, 
-                .word-definition-content h2, 
-                .word-definition-content h3, 
-                .word-definition-content h4 {
-                    margin-top: 1rem;
-                    margin-bottom: 0.5rem;
-                    font-weight: 600;
-                    color: #1f2937;
-                    font-size: 1.2em;
-                }
-                
-                .word-definition-content ol {
-                    padding-left: 1.5rem;
-                    margin-top: 0.75rem;
-                    margin-bottom: 0.75rem;
-                    font-size: 16px;
-                }
-                
-                .word-definition-content ol li {
-                    margin-bottom: 0.75rem;
-                    font-size: 16px;
-                }
-                
-                .word-definition-content p {
-                    margin-bottom: 0.75rem;
-                    line-height: 1.6;
-                    font-size: 16px;
-                }
-                
-                .word-definition-content strong {
-                    color: #4b5563;
-                    font-weight: 600;
-                }
-                
-                .word-definition-content ul {
-                    padding-left: 1.5rem;
-                    margin-top: 0.75rem;
-                    margin-bottom: 0.75rem;
-                    list-style-type: disc;
-                    font-size: 16px;
-                }
-                
-                .word-definition-content ul li {
-                    margin-bottom: 0.75rem;
-                    font-size: 16px;
-                }
-            `}</style>
-        </div>
+            </CardContent>
+        </Card>
     );
 };

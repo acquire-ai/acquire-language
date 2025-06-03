@@ -2,6 +2,9 @@
  * 通用工具函数
  */
 
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
 /**
  * 延迟函数
  * @param ms 毫秒
@@ -70,4 +73,14 @@ export function getLanguageName(code: string): string {
     };
 
     return languages[code] || code;
+}
+
+/**
+ * 合并CSS类名的工具函数
+ * 用于UI组件的样式处理
+ * @param inputs CSS类名
+ * @returns 合并后的类名字符串
+ */
+export function cn(...inputs: ClassValue[]) {
+    return twMerge(clsx(inputs));
 }

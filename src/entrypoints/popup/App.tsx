@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import reactLogo from '@/assets/react.svg';
-import wxtLogo from '/wxt.svg';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ThemeProvider } from '@/components/settings/theme-provider';
+import { ThemeToggle } from '@/components/settings/theme-toggle';
+import { Logo } from '@/components/settings/logo';
+import { Youtube, BookOpen, Settings, Sparkles } from 'lucide-react';
 
 function App() {
-    const [count, setCount] = useState(0);
-
     // Open options page
     const openOptionsPage = () => {
         browser.tabs.create({ url: '/options.html' });
@@ -21,56 +23,85 @@ function App() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-4">
-            <div className="flex justify-center space-x-4 mb-6">
-                <a
-                    href="https://wxt.dev"
-                    target="_blank"
-                    className="hover:scale-110 transition-transform"
-                >
-                    <img src={wxtLogo} className="h-16 w-16" alt="WXT logo" />
-                </a>
-                <a
-                    href="https://react.dev"
-                    target="_blank"
-                    className="hover:scale-110 transition-transform"
-                >
-                    <img src={reactLogo} className="h-16 w-16 animate-spin-slow" alt="React logo" />
-                </a>
+        <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+            forcedTheme={undefined}
+        >
+            <div className="w-80 min-h-96 bg-gradient-to-b from-background to-muted/20 relative">
+                <div className="scanline absolute inset-0 pointer-events-none z-0"></div>
+
+                {/* Header */}
+                <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 relative z-10">
+                    <div className="flex h-14 items-center justify-between px-4">
+                        <div className="flex items-center gap-2">
+                            <Logo />
+                            <h1 className="text-lg font-bold tracking-tight gradient-text tech-glow">
+                                Acquire Language
+                            </h1>
+                        </div>
+                        <ThemeToggle />
+                    </div>
+                </header>
+
+                {/* Main Content */}
+                <main className="p-4 space-y-4 relative z-10">
+                    {/* Welcome Card */}
+                    <Card className="card-glow gradient-border hover-lift">
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-lg flex items-center gap-2 text-primary tech-glow">
+                                <Sparkles className="h-5 w-5" />
+                                Welcome Learning!
+                            </CardTitle>
+                            <CardDescription>
+                                Learn languages naturally by watching videos
+                            </CardDescription>
+                        </CardHeader>
+                    </Card>
+
+                    {/* Action Buttons */}
+                    <div className="space-y-3">
+                        <Button
+                            onClick={openYouTube}
+                            className="w-full h-12 enhanced-button btn-bounce tech-pulse"
+                            size="lg"
+                        >
+                            <Youtube className="mr-2 h-5 w-5" />
+                            Open YouTube
+                        </Button>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <Button
+                                onClick={openVocabularyPage}
+                                variant="outline"
+                                className="h-11 hover-lift gradient-border"
+                            >
+                                <BookOpen className="mr-2 h-4 w-4" />
+                                Vocabulary
+                            </Button>
+
+                            <Button
+                                onClick={openOptionsPage}
+                                variant="outline"
+                                className="h-11 hover-lift gradient-border"
+                            >
+                                <Settings className="mr-2 h-4 w-4" />
+                                Settings
+                            </Button>
+                        </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="pt-2 text-center">
+                        <p className="text-xs text-muted-foreground">
+                            Make language learning more natural
+                        </p>
+                    </div>
+                </main>
             </div>
-            <h1 className="text-2xl font-bold text-center mb-6">Acquire Language</h1>
-
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
-                <p className="text-center mb-4">Learn a language by watching videos</p>
-
-                <button
-                    onClick={openYouTube}
-                    className="w-full bg-red-600 hover:bg-red-700 dark:text-white light:text-black font-medium py-2 px-4 rounded-md transition-colors mb-4"
-                >
-                    Open YouTube
-                </button>
-
-                <div className="grid grid-cols-2 gap-4">
-                    <button
-                        onClick={openVocabularyPage}
-                        className="bg-green-500 hover:bg-green-600 dark:text-white light:text-black font-medium py-2 px-4 rounded-md transition-colors"
-                    >
-                        Vocabulary
-                    </button>
-
-                    <button
-                        onClick={openOptionsPage}
-                        className="bg-blue-500 hover:bg-blue-600 dark:text-white light:text-black font-medium py-2 px-4 rounded-md transition-colors"
-                    >
-                        Settings
-                    </button>
-                </div>
-            </div>
-
-            <div className="text-center text-xs text-gray-500 dark:text-gray-400">
-                Acquire Languages - Make language learning more natural
-            </div>
-        </div>
+        </ThemeProvider>
     );
 }
 
