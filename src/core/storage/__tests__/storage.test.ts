@@ -9,19 +9,35 @@ vi.mock('../../config/settings', () => {
     return {
         // Keep default settings export
         DEFAULT_SETTINGS: {
-            nativeLanguage: 'zh-CN',
-            targetLanguage: 'en-US',
-            languageLevel: 'B1',
-            aiProvider: 'deepseek',
-            aiModel: 'deepseek-chat',
-            apiKey: '',
-            subtitleSettings: {
-                fontSize: 20,
-                position: 'bottom',
-                backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                textColor: '#ffffff',
-                opacity: 0.8,
+            general: {
+                appLanguage: 'en',
+                nativeLanguage: 'zh-CN',
+                learnLanguage: 'en-US',
+                languageLevel: 'B1',
             },
+            subtitle: {
+                showNativeSubtitles: true,
+                showLearningSubtitles: true,
+                subtitleSize: 20,
+                subtitlePosition: 'bottom',
+                subtitleColor: '#ffffff',
+                subtitleBgColor: '#000000',
+                subtitleBgOpacity: 80,
+            },
+            aiServers: [
+                {
+                    id: 'default',
+                    name: 'Default DeepSeek',
+                    provider: 'deepseek',
+                    model: 'deepseek-chat',
+                    settings: {
+                        apiKey: '',
+                        baseURL: '',
+                    },
+                    isDefault: true,
+                },
+            ],
+            lastUpdated: Date.now(),
         },
         // Mock loadSettings function
         loadSettings: vi.fn(),
@@ -80,7 +96,10 @@ describe('Storage Manager Tests', () => {
         it('should return stored settings', async () => {
             const mockSettings: Settings = {
                 ...DEFAULT_SETTINGS,
-                nativeLanguage: 'ja-JP',
+                general: {
+                    ...DEFAULT_SETTINGS.general,
+                    nativeLanguage: 'ja-JP',
+                },
             };
 
             // Mock loadSettings to return mock settings
@@ -107,7 +126,10 @@ describe('Storage Manager Tests', () => {
         it('should correctly save settings', async () => {
             const settings: Settings = {
                 ...DEFAULT_SETTINGS,
-                targetLanguage: 'fr-FR',
+                general: {
+                    ...DEFAULT_SETTINGS.general,
+                    learnLanguage: 'fr-FR',
+                },
             };
 
             await StorageManager.saveSettings(settings);

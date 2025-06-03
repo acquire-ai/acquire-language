@@ -29,13 +29,33 @@ async function initializeSettings() {
         if (typeof window !== 'undefined' && (window as any).__ENV__) {
             const env = (window as any).__ENV__;
 
-            // Apply environment variables to settings
-            if (env.ACQUIRE_API_KEY) settings.apiKey = env.ACQUIRE_API_KEY;
-            if (env.ACQUIRE_NATIVE_LANGUAGE) settings.nativeLanguage = env.ACQUIRE_NATIVE_LANGUAGE;
-            if (env.ACQUIRE_TARGET_LANGUAGE) settings.targetLanguage = env.ACQUIRE_TARGET_LANGUAGE;
-            if (env.ACQUIRE_LANGUAGE_LEVEL) settings.languageLevel = env.ACQUIRE_LANGUAGE_LEVEL;
-            if (env.ACQUIRE_AI_PROVIDER) settings.aiProvider = env.ACQUIRE_AI_PROVIDER;
-            if (env.ACQUIRE_AI_MODEL) settings.aiModel = env.ACQUIRE_AI_MODEL;
+            // Apply environment variables to general settings
+            if (env.ACQUIRE_NATIVE_LANGUAGE) {
+                settings.general.nativeLanguage = env.ACQUIRE_NATIVE_LANGUAGE;
+            }
+            if (env.ACQUIRE_TARGET_LANGUAGE) {
+                settings.general.learnLanguage = env.ACQUIRE_TARGET_LANGUAGE;
+            }
+            if (env.ACQUIRE_LANGUAGE_LEVEL) {
+                settings.general.languageLevel = env.ACQUIRE_LANGUAGE_LEVEL;
+            }
+
+            // Apply environment variables to AI server settings
+            if (env.ACQUIRE_API_KEY || env.ACQUIRE_AI_PROVIDER || env.ACQUIRE_AI_MODEL) {
+                const defaultServer =
+                    settings.aiServers.find((server) => server.isDefault) || settings.aiServers[0];
+                if (defaultServer) {
+                    if (env.ACQUIRE_API_KEY) {
+                        defaultServer.settings.apiKey = env.ACQUIRE_API_KEY;
+                    }
+                    if (env.ACQUIRE_AI_PROVIDER) {
+                        defaultServer.provider = env.ACQUIRE_AI_PROVIDER;
+                    }
+                    if (env.ACQUIRE_AI_MODEL) {
+                        defaultServer.model = env.ACQUIRE_AI_MODEL;
+                    }
+                }
+            }
 
             // Save the updated settings
             await saveSettings(settings);

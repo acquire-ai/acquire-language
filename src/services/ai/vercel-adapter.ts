@@ -26,7 +26,7 @@ export class VercelAIAdapter implements AIService {
     ): Promise<string> {
         try {
             const settings = await loadSettings();
-            const nativeLanguage = settings.nativeLanguage;
+            const nativeLanguage = settings.general.nativeLanguage;
             const prompt = translatePrompt(word, context, nativeLanguage);
             const { text } = await generateText({
                 model: this.provider(this.model),

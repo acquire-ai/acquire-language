@@ -6,14 +6,7 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle, Server, Trash2, ChevronDown, ChevronUp, Bot } from 'lucide-react';
 import { AIServerForm } from './ai-server-form';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-    getSettings,
-    saveAIServers,
-    debounce,
-    type AIServer as AIServerType,
-} from '@/core/config/settings';
-
-export type AIServer = AIServerType;
+import { getSettings, saveAIServers, debounce, type AIServer } from '@/core/config/settings';
 
 export function AIServerSettings() {
     const [servers, setServers] = useState<AIServer[]>([

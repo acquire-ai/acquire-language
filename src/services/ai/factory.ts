@@ -1,7 +1,8 @@
 /**
  * AI Service Factory
  */
-import { AIService, AIServiceConfig } from '@/core/types/ai.ts';
+import { AIService } from '@/core/types/ai.ts';
+import { AIServer } from '@/core/config/settings';
 import { createOpenAI } from '@ai-sdk/openai';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
@@ -24,56 +25,56 @@ export const AVAILABLE_MODELS: ModelConfigType = {
     'openai-compatible': [],
 };
 
-export function createAIService(config: AIServiceConfig): AIService {
+export function createAIService(server: AIServer): AIService {
     let ai: ProviderV1;
 
-    switch (config.providerType) {
+    switch (server.provider) {
         case 'openai':
             ai = createOpenAI({
-                apiKey: config.apiKey,
-                baseURL: config.baseURL,
-                organization: config.options?.organization,
-                project: config.options?.project,
+                apiKey: server.settings.apiKey,
+                baseURL: server.settings.baseURL,
+                organization: server.settings.organization,
+                project: server.settings.project,
             });
             break;
         case 'anthropic':
             ai = createAnthropic({
-                apiKey: config.apiKey,
-                baseURL: config.baseURL,
+                apiKey: server.settings.apiKey,
+                baseURL: server.settings.baseURL,
             });
             break;
         case 'google':
             ai = createGoogleGenerativeAI({
-                apiKey: config.apiKey,
-                baseURL: config.baseURL,
+                apiKey: server.settings.apiKey,
+                baseURL: server.settings.baseURL,
             });
             break;
         case 'deepseek':
             ai = createDeepSeek({
-                apiKey: config.apiKey,
-                baseURL: config.baseURL,
+                apiKey: server.settings.apiKey,
+                baseURL: server.settings.baseURL,
             });
             break;
         case 'azure':
             ai = createAzure({
-                apiKey: config.apiKey,
-                resourceName: config.options?.resourceName,
-                baseURL: config.baseURL,
-                apiVersion: config.options?.apiVersion || '2024-10-01-preview',
+                apiKey: server.settings.apiKey,
+                resourceName: server.settings.resourceName,
+                baseURL: server.settings.baseURL,
+                apiVersion: server.settings.apiVersion || '2024-10-01-preview',
             });
             break;
         case 'openai-compatible':
             ai = createOpenAICompatible({
-                name: config.providerName || config.options?.providerName || 'custom-provider',
-                apiKey: config.apiKey,
-                baseURL: config.baseURL || '',
-                queryParams: config.options?.queryParams || {},
+                name: server.settings.providerName || server.name || 'custom-provider',
+                apiKey: server.settings.apiKey,
+                baseURL: server.settings.baseURL || '',
+                queryParams: server.settings.queryParams || {},
             });
             break;
         default:
-            throw new Error(`Unsupported provider: ${config.providerType}`);
+            throw new Error(`Unsupported provider: ${server.provider}`);
     }
-    return new VercelAIAdapter(ai, config.model);
+    return new VercelAIAdapter(ai, server.model);
 }
 
 /**

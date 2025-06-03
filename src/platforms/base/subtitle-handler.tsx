@@ -46,10 +46,27 @@ const SubtitleContainer: React.FC<{
         handler.showWordDefinition(word, definition, position);
     };
 
+    // Convert SubtitleSettings to the format expected by Subtitle component
+    const adaptedSettings = settings
+        ? {
+              fontSize: settings.subtitle.subtitleSize,
+              position: settings.subtitle.subtitlePosition as 'top' | 'bottom',
+              backgroundColor: settings.subtitle.subtitleBgColor,
+              textColor: settings.subtitle.subtitleColor,
+              opacity: settings.subtitle.subtitleBgOpacity / 100, // Convert percentage to decimal
+          }
+        : {
+              fontSize: 20,
+              position: 'bottom' as const,
+              backgroundColor: '#000000',
+              textColor: '#ffffff',
+              opacity: 0.8,
+          };
+
     return (
         <Subtitle
             texts={subtitles}
-            settings={settings!.subtitleSettings}
+            settings={adaptedSettings}
             onWordClick={handleWordClick}
             visible={subtitleEnabled}
         />
@@ -114,7 +131,7 @@ export abstract class BaseSubtitleHandler implements SubtitleHandler {
         return await this.aiService.getWordDefinition(
             word,
             context,
-            this.settings?.nativeLanguage || 'zh-CN',
+            this.settings?.general?.nativeLanguage || 'zh-CN',
         );
     }
 

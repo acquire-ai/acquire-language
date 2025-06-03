@@ -229,7 +229,7 @@ export const getSettings = async (): Promise<AppSettings> => {
             },
             aiServers: envSettings.aiServers || storageSettings.aiServers,
         };
-
+        console.log('mergedSettings', mergedSettings);
         return mergedSettings;
     } catch (error) {
         console.error('Failed to load settings:', error);
