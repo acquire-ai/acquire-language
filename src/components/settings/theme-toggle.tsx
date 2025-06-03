@@ -10,7 +10,7 @@ export function ThemeToggle() {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
-  // 确保组件只在客户端渲染后才显示，避免服务器/客户端不匹配
+  // make sure the component is only rendered after the client is mounted
   useEffect(() => {
     setMounted(true)
   }, [])
