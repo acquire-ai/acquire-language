@@ -14,11 +14,11 @@ export interface GeneralSettings {
 export interface SubtitleSettings {
     showNativeSubtitles: boolean;
     showLearningSubtitles: boolean;
-    subtitleSize: number;
-    subtitlePosition: string;
-    subtitleColor: string;
-    subtitleBgColor: string;
-    subtitleBgOpacity: number;
+    fontSize: number;
+    position: 'top' | 'bottom';
+    textColor: string;
+    backgroundColor: string;
+    opacity: number; // 0-1 decimal instead of 0-100 percentage
 }
 
 export interface AIServer {
@@ -48,11 +48,11 @@ export const DEFAULT_SETTINGS: AppSettings = {
     subtitle: {
         showNativeSubtitles: true,
         showLearningSubtitles: true,
-        subtitleSize: 20,
-        subtitlePosition: 'bottom',
-        subtitleColor: '#ffffff',
-        subtitleBgColor: '#000000',
-        subtitleBgOpacity: 80,
+        fontSize: 20,
+        position: 'bottom',
+        textColor: '#ffffff',
+        backgroundColor: '#000000',
+        opacity: 0.8,
     },
     aiServers: [
         {

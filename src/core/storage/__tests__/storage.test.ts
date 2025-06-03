@@ -18,11 +18,11 @@ vi.mock('../../config/settings', () => {
             subtitle: {
                 showNativeSubtitles: true,
                 showLearningSubtitles: true,
-                subtitleSize: 20,
-                subtitlePosition: 'bottom',
-                subtitleColor: '#ffffff',
-                subtitleBgColor: '#000000',
-                subtitleBgOpacity: 80,
+                fontSize: 20,
+                position: 'bottom',
+                textColor: '#ffffff',
+                backgroundColor: '#000000',
+                opacity: 0.8,
             },
             aiServers: [
                 {
