@@ -92,12 +92,11 @@ export function AIServerSettings() {
             const serverToRemove = prevServers.find((s) => s.id === id);
             const filteredServers = prevServers.filter((server) => server.id !== id);
 
-            // 如果没有服务器了，直接返回空数组
             if (filteredServers.length === 0) {
                 return [];
             }
 
-            // 如果删除的是默认服务器，则将第一个服务器设为默认
+            // if the removed server was the default, set the first remaining server as default
             if (serverToRemove?.isDefault) {
                 return filteredServers.map((server, index) => ({
                     ...server,

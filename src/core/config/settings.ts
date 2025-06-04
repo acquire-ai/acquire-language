@@ -41,7 +41,7 @@ export interface AppSettings {
 export const DEFAULT_SETTINGS: AppSettings = {
     general: {
         appLanguage: 'en',
-        nativeLanguage: 'zh-CN',
+        nativeLanguage: 'zh-cn',
         learnLanguage: 'en',
         languageLevel: 'b1', // 默认为B1 - Intermediate
     },
@@ -229,7 +229,6 @@ export const getSettings = async (): Promise<AppSettings> => {
             },
             aiServers: envSettings.aiServers || storageSettings.aiServers,
         };
-        console.log('mergedSettings', mergedSettings);
         return mergedSettings;
     } catch (error) {
         console.error('Failed to load settings:', error);
