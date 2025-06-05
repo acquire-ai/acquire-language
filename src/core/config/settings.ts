@@ -283,4 +283,3 @@ export function watchSettings(callback: (settings: AppSettings) => void): void {
 
 // 为了向后兼容，导出一些别名
 export type Settings = AppSettings;
-export const DEFAULT_SETTINGS_LEGACY = DEFAULT_SETTINGS;
