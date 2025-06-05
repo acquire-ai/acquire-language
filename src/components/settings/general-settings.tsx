@@ -50,19 +50,29 @@ export function GeneralSettings() {
     const [learnLanguage, setLearnLanguage] = useState('es');
     const [languageLevel, setLanguageLevel] = useState('a1');
     const [isSaving, setIsSaving] = useState(false);
+    const [isInitialized, setIsInitialized] = useState(false);
+
+    console.log('🔄 GeneralSettings 组件重新渲染:', {
+        appLanguage,
+        nativeLanguage,
+        learnLanguage,
+        languageLevel,
+        isInitialized,
+        timestamp: new Date().toISOString(),
+    });
 
     // 创建防抖保存函数
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const debouncedSave = useCallback(
         debounce((settings: GeneralSettingsType) => {
+            console.log('💾 开始保存 General Settings:', settings);
             setIsSaving(true);
             saveGeneralSettings(settings)
                 .then(() => {
-                    console.log(settings);
-                    console.log('Settings saved automatically');
+                    console.log('✅ General Settings 保存成功:', settings);
                 })
                 .catch((error) => {
-                    console.error('Failed to save settings:', error);
+                    console.error('❌ General Settings 保存失败:', error);
                 })
                 .finally(() => {
                     setIsSaving(false);
@@ -73,15 +83,23 @@ export function GeneralSettings() {
 
     // 加载设置
     useEffect(() => {
+        console.log('🚀 开始加载 General Settings');
         const loadSettings = async () => {
             try {
                 const settings = await getSettings();
+                console.log('📥 从存储加载的设置:', settings.general);
+
                 setAppLanguage(settings.general.appLanguage);
                 setNativeLanguage(settings.general.nativeLanguage);
                 setLearnLanguage(settings.general.learnLanguage);
                 setLanguageLevel(settings.general.languageLevel || 'a1');
+
+                console.log('🔧 设置状态已更新，即将标记为已初始化');
+                setIsInitialized(true);
+                console.log('✅ General Settings 初始化完成');
             } catch (error) {
-                console.error('Failed to load general settings:', error);
+                console.error('❌ 加载 General Settings 失败:', error);
+                setIsInitialized(true);
             }
         };
 
@@ -90,17 +108,28 @@ export function GeneralSettings() {
 
     // 当设置变更时自动保存
     useEffect(() => {
+        console.log('🔍 自动保存检查:', {
+            isInitialized,
+            appLanguage,
+            nativeLanguage,
+            learnLanguage,
+            languageLevel,
+        });
+
         // 确保组件已经挂载并加载了初始设置
-        if (appLanguage && nativeLanguage && learnLanguage && languageLevel) {
+        if (isInitialized) {
             const settings: GeneralSettingsType = {
                 appLanguage,
                 nativeLanguage,
                 learnLanguage,
                 languageLevel,
             };
+            console.log('🎯 触发自动保存:', settings);
             debouncedSave(settings);
+        } else {
+            console.log('⏳ 跳过自动保存 - 尚未初始化');
         }
-    }, [appLanguage, nativeLanguage, learnLanguage, languageLevel, debouncedSave]);
+    }, [appLanguage, nativeLanguage, learnLanguage, languageLevel, debouncedSave, isInitialized]);
 
     // 处理设置变更
     const handleAppLanguageChange = (value: string) => {

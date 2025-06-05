@@ -23,9 +23,9 @@ This document explains how to set up environment variables for development.
 ## Available Environment Variables
 
 | Variable                | Description                                          | Default Value |
-|-------------------------|------------------------------------------------------|---------------|
-| ACQUIRE_NATIVE_LANGUAGE | User's native language code                          | zh-CN         |
-| ACQUIRE_TARGET_LANGUAGE | Language being learned                               | en-US         |
+| ----------------------- | ---------------------------------------------------- | ------------- |
+| ACQUIRE_NATIVE_LANGUAGE | User's native language code                          | zh-cn         |
+| ACQUIRE_TARGET_LANGUAGE | Language being learned                               | en-us         |
 | ACQUIRE_LANGUAGE_LEVEL  | User's language proficiency (A1, A2, B1, B2, C1, C2) | B1            |
 | ACQUIRE_AI_MODEL        | AI model to use (deepseek, gpt-4o-mini, etc.)        | deepseek      |
 | ACQUIRE_API_KEY         | API key for the selected AI service                  | (empty)       |

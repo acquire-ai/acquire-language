@@ -97,7 +97,7 @@ describe('Content Script Tests', () => {
         const mockSettings = {
             general: {
                 appLanguage: 'en',
-                nativeLanguage: 'zh-CN',
+                nativeLanguage: 'zh-cn',
                 learnLanguage: 'en',
                 languageLevel: 'b1',
             },

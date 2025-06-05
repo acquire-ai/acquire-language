@@ -14,7 +14,7 @@ global.Response = Response;
         local: {
             get: vi.fn().mockResolvedValue({
                 settings: {
-                    nativeLanguage: 'zh-CN',
+                    nativeLanguage: 'zh-cn',
                 },
             }),
             set: vi.fn().mockResolvedValue(undefined),

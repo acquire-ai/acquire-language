@@ -43,7 +43,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
         appLanguage: 'en',
         nativeLanguage: 'en',
         learnLanguage: 'es',
-        languageLevel: 'a1', // 默认为A1 - Beginner
+        languageLevel: 'a1', // 默认为a1 - Beginner
     },
     subtitle: {
         showNativeSubtitles: true,

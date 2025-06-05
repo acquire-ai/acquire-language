@@ -11,9 +11,9 @@ vi.mock('../../config/settings', () => {
         DEFAULT_SETTINGS: {
             general: {
                 appLanguage: 'en',
-                nativeLanguage: 'zh-CN',
-                learnLanguage: 'en-US',
-                languageLevel: 'B1',
+                nativeLanguage: 'zh-cn',
+                learnLanguage: 'en-us',
+                languageLevel: 'b1',
             },
             subtitle: {
                 showNativeSubtitles: true,
@@ -95,11 +95,35 @@ describe('Storage Manager Tests', () => {
     describe('getSettings method', () => {
         it('should return stored settings', async () => {
             const mockSettings: Settings = {
-                ...DEFAULT_SETTINGS,
                 general: {
-                    ...DEFAULT_SETTINGS.general,
-                    nativeLanguage: 'ja-JP',
+                    appLanguage: 'en',
+                    nativeLanguage: 'zh-cn',
+                    learnLanguage: 'en-us',
+                    languageLevel: 'b1',
                 },
+                subtitle: {
+                    showNativeSubtitles: true,
+                    showLearningSubtitles: true,
+                    fontSize: 20,
+                    position: 'bottom',
+                    textColor: '#ffffff',
+                    backgroundColor: '#000000',
+                    opacity: 0.8,
+                },
+                aiServers: [
+                    {
+                        id: 'default',
+                        name: 'Default DeepSeek',
+                        provider: 'deepseek',
+                        model: 'deepseek-chat',
+                        settings: {
+                            apiKey: '',
+                            baseURL: '',
+                        },
+                        isDefault: true,
+                    },
+                ],
+                lastUpdated: Date.now(),
             };
 
             // Mock getSettings to return mock settings
@@ -125,11 +149,35 @@ describe('Storage Manager Tests', () => {
     describe('saveSettings method', () => {
         it('should correctly save settings', async () => {
             const settings: Settings = {
-                ...DEFAULT_SETTINGS,
                 general: {
-                    ...DEFAULT_SETTINGS.general,
-                    learnLanguage: 'fr-FR',
+                    appLanguage: 'zh',
+                    nativeLanguage: 'zh',
+                    learnLanguage: 'fr-fr',
+                    languageLevel: 'c1',
                 },
+                subtitle: {
+                    showNativeSubtitles: true,
+                    showLearningSubtitles: true,
+                    fontSize: 20,
+                    position: 'bottom',
+                    textColor: '#ffffff',
+                    backgroundColor: '#000000',
+                    opacity: 0.8,
+                },
+                aiServers: [
+                    {
+                        id: 'default',
+                        name: 'Default DeepSeek',
+                        provider: 'deepseek',
+                        model: 'deepseek-chat',
+                        settings: {
+                            apiKey: '',
+                            baseURL: '',
+                        },
+                        isDefault: true,
+                    },
+                ],
+                lastUpdated: Date.now(),
             };
 
             await StorageManager.saveSettings(settings);

@@ -9,37 +9,33 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getSettings, saveAIServers, debounce, type AIServer } from '@/core/config/settings';
 
 export function AIServerSettings() {
-    const [servers, setServers] = useState<AIServer[]>([
-        {
-            id: 'default',
-            name: 'Default OpenAI',
-            provider: 'openai',
-            model: 'gpt-4o',
-            settings: {
-                apiKey: '',
-                organization: '',
-                baseURL: '',
-                project: '',
-            },
-            isDefault: true,
-        },
-    ]);
-    const [expandedServer, setExpandedServer] = useState<string | null>('default');
+    const [servers, setServers] = useState<AIServer[]>([]);
+    const [expandedServer, setExpandedServer] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [isInitialized, setIsInitialized] = useState(false);
+
+    console.log('🔄 AIServerSettings 组件重新渲染:', {
+        serversCount: servers.length,
+        servers: servers.map((s) => ({ id: s.id, name: s.name, provider: s.provider })),
+        isInitialized,
+        timestamp: new Date().toISOString(),
+    });
 
     // 创建防抖保存函数
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const debouncedSave = useCallback(
         debounce((aiServers: AIServer[]) => {
+            console.log(
+                '💾 开始保存 AI Servers:',
+                aiServers.map((s) => ({ id: s.id, name: s.name, provider: s.provider })),
+            );
             setIsSaving(true);
             saveAIServers(aiServers)
                 .then(() => {
-                    console.log(aiServers);
-                    console.log('AI servers saved automatically');
+                    console.log('✅ AI Servers 保存成功');
                 })
                 .catch((error) => {
-                    console.error('Failed to save AI servers:', error);
+                    console.error('❌ AI Servers 保存失败:', error);
                 })
                 .finally(() => {
                     setIsSaving(false);
@@ -50,15 +46,28 @@ export function AIServerSettings() {
 
     // 加载设置
     useEffect(() => {
+        console.log('🚀 开始加载 AI Server Settings');
         const loadSettings = async () => {
             try {
                 const settings = await getSettings();
+                console.log('📥 从存储加载的 AI Servers:', settings.aiServers);
+
+                // 总是设置服务器数据，如果没有则使用默认设置中的数据
+                setServers(settings.aiServers || []);
+                console.log('🔧 AI Servers 状态已更新为:', settings.aiServers || []);
+
+                // 如果有服务器数据，设置第一个为展开状态
                 if (settings.aiServers && settings.aiServers.length > 0) {
-                    setServers(settings.aiServers);
+                    setExpandedServer(settings.aiServers[0].id);
+                    console.log('🎯 设置展开的服务器:', settings.aiServers[0].id);
                 }
+
+                console.log('🔧 即将标记 AI Servers 为已初始化');
                 setIsInitialized(true);
+                console.log('✅ AI Server Settings 初始化完成');
             } catch (error) {
-                console.error('Failed to load AI server settings:', error);
+                console.error('❌ 加载 AI Server Settings 失败:', error);
+                setIsInitialized(true);
             }
         };
 
@@ -67,8 +76,17 @@ export function AIServerSettings() {
 
     // 当设置变更时自动保存
     useEffect(() => {
+        console.log('🔍 AI Servers 自动保存检查:', {
+            isInitialized,
+            serversCount: servers.length,
+            servers: servers.map((s) => ({ id: s.id, name: s.name })),
+        });
+
         if (isInitialized) {
+            console.log('🎯 触发 AI Servers 自动保存');
             debouncedSave(servers);
+        } else {
+            console.log('⏳ 跳过 AI Servers 自动保存 - 尚未初始化');
         }
     }, [servers, debouncedSave, isInitialized]);
 

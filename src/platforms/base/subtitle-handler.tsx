@@ -122,7 +122,7 @@ export abstract class BaseSubtitleHandler implements SubtitleHandler {
         return await this.aiService.getWordDefinition(
             word,
             context,
-            this.settings?.general?.nativeLanguage || 'zh-CN',
+            this.settings?.general?.nativeLanguage,
         );
     }
 

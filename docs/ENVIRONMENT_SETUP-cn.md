@@ -22,13 +22,13 @@
 
 ## 可用的环境变量
 
-| 变量                      | 描述                               | 默认值      |
-|-------------------------|----------------------------------|----------|
-| ACQUIRE_NATIVE_LANGUAGE | 用户的母语代码                          | zh-CN    |
-| ACQUIRE_TARGET_LANGUAGE | 正在学习的语言                          | en-US    |
+| 变量                    | 描述                                    | 默认值   |
+| ----------------------- | --------------------------------------- | -------- |
+| ACQUIRE_NATIVE_LANGUAGE | 用户的母语代码                          | zh-cn    |
+| ACQUIRE_TARGET_LANGUAGE | 正在学习的语言                          | en-us    |
 | ACQUIRE_LANGUAGE_LEVEL  | 用户的语言水平 (A1, A2, B1, B2, C1, C2) | B1       |
-| ACQUIRE_AI_MODEL        | 使用的AI模型 (deepseek, gpt-4o-mini等) | deepseek |
-| ACQUIRE_API_KEY         | 所选AI服务的API密钥                     | (空)      |
+| ACQUIRE_AI_MODEL        | 使用的AI模型 (deepseek, gpt-4o-mini等)  | deepseek |
+| ACQUIRE_API_KEY         | 所选AI服务的API密钥                     | (空)     |
 
 ## 设置优先级
 
