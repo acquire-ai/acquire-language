@@ -10,9 +10,9 @@ vi.mock('@/services/ai', () => ({
     createAIService: vi.fn().mockReturnValue({} as AIService),
 }));
 
-// Mock loadSettings with the expected return value
+// Mock getSettings with the expected return value
 vi.mock('@/core/config/settings', () => ({
-    loadSettings: vi.fn().mockResolvedValue({
+    getSettings: vi.fn().mockResolvedValue({
         aiProvider: 'test-provider',
         aiModel: 'test-model',
         apiKey: 'test-key',
@@ -86,7 +86,7 @@ describe('Content Script Tests', () => {
     });
 
     it('should initialize AI service with correct configuration', async () => {
-        const { loadSettings } = await import('@/core/config/settings');
+        const { getSettings } = await import('@/core/config/settings');
         const { createAIService } = await import('@/services/ai');
 
         // Mock createAIService to verify it's called with correct parameters
@@ -126,7 +126,7 @@ describe('Content Script Tests', () => {
             lastUpdated: Date.now(),
         };
 
-        vi.mocked(loadSettings).mockResolvedValue(mockSettings);
+        vi.mocked(getSettings).mockResolvedValue(mockSettings);
 
         // Call the function we want to test directly
         const defaultServer =

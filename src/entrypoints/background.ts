@@ -4,7 +4,7 @@
 import { defineBackground } from 'wxt/sandbox';
 import { StorageManager } from '@/core/storage';
 import { Word } from '@/core/types/storage';
-import { loadSettings, saveSettings } from '@/core/config/settings';
+import { getSettings, saveSettings } from '@/core/config/settings';
 
 export default defineBackground({
     main() {
@@ -23,7 +23,7 @@ export default defineBackground({
 async function initializeSettings() {
     try {
         // Load current settings
-        const settings = await loadSettings();
+        const settings = await getSettings();
 
         // If this is a development build with injected environment variables
         if (typeof window !== 'undefined' && (window as any).__ENV__) {

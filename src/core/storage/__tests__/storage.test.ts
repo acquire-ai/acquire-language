@@ -4,7 +4,7 @@ import * as settingsModule from '../../config/settings';
 import { DEFAULT_SETTINGS } from '../../config/settings';
 import { Settings, VocabularyData } from '../../types/storage';
 
-// Mock loadSettings function
+// Mock getSettings function
 vi.mock('../../config/settings', () => {
     return {
         // Keep default settings export
@@ -39,8 +39,8 @@ vi.mock('../../config/settings', () => {
             ],
             lastUpdated: Date.now(),
         },
-        // Mock loadSettings function
-        loadSettings: vi.fn(),
+        // Mock getSettings function
+        getSettings: vi.fn(),
         // Mock saveSettings function
         saveSettings: vi.fn(),
     };
@@ -102,22 +102,22 @@ describe('Storage Manager Tests', () => {
                 },
             };
 
-            // Mock loadSettings to return mock settings
-            (settingsModule.loadSettings as any).mockResolvedValue(mockSettings);
+            // Mock getSettings to return mock settings
+            (settingsModule.getSettings as any).mockResolvedValue(mockSettings);
 
             const result = await StorageManager.getSettings();
 
-            expect(settingsModule.loadSettings).toHaveBeenCalled();
+            expect(settingsModule.getSettings).toHaveBeenCalled();
             expect(result).toEqual(mockSettings);
         });
 
         it('should return default settings when settings do not exist', async () => {
-            // Mock loadSettings to return default settings
-            (settingsModule.loadSettings as any).mockResolvedValue(DEFAULT_SETTINGS);
+            // Mock getSettings to return default settings
+            (settingsModule.getSettings as any).mockResolvedValue(DEFAULT_SETTINGS);
 
             const result = await StorageManager.getSettings();
 
-            expect(settingsModule.loadSettings).toHaveBeenCalled();
+            expect(settingsModule.getSettings).toHaveBeenCalled();
             expect(result).toEqual(DEFAULT_SETTINGS);
         });
     });

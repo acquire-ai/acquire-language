@@ -7,7 +7,7 @@ import { WordPopup } from '@/components/word-popup';
 import { createRoot } from 'react-dom/client';
 import { Subtitle } from '@/components/subtitles';
 import React, { useEffect, useState } from 'react';
-import { loadSettings, Settings } from '@/core/config/settings';
+import { getSettings, Settings } from '@/core/config/settings';
 
 const SubtitleContainer: React.FC<{
     handler: BaseSubtitleHandler;
@@ -149,7 +149,7 @@ export abstract class BaseSubtitleHandler implements SubtitleHandler {
     }
 
     protected async loadSettings() {
-        this.settings = await loadSettings();
+        this.settings = await getSettings();
         this.renderSubtitleContainer();
     }
 
