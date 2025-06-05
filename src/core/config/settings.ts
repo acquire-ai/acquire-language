@@ -78,61 +78,6 @@ const isChromeExtension = (): boolean => {
     return typeof chrome !== 'undefined' && chrome?.storage?.sync !== undefined;
 };
 
-/**
- * Get environment variable
- * @param name Environment variable name
- * @param defaultValue Default value
- * @returns Environment variable value
- */
-function getEnvVar(name: string, defaultValue: string): string {
-    if (typeof window !== 'undefined' && (window as any).__ENV__) {
-        const env = (window as any).__ENV__;
-        return env[name] || defaultValue;
-    }
-    return defaultValue;
-}
-
-/**
- * Load settings from environment variables and merge with defaults
- */
-export function loadEnvSettings(): Partial<AppSettings> {
-    const envApiKey = getEnvVar('ACQUIRE_API_KEY', '');
-    const envProvider = getEnvVar('ACQUIRE_AI_PROVIDER', '');
-    const envModel = getEnvVar('ACQUIRE_AI_MODEL', '');
-    const envNativeLanguage = getEnvVar('ACQUIRE_NATIVE_LANGUAGE', '');
-    const envTargetLanguage = getEnvVar('ACQUIRE_TARGET_LANGUAGE', '');
-    const envLanguageLevel = getEnvVar('ACQUIRE_LANGUAGE_LEVEL', '');
-
-    const envSettings: Partial<AppSettings> = {};
-
-    // Apply general settings from env
-    if (envNativeLanguage || envTargetLanguage || envLanguageLevel) {
-        envSettings.general = {
-            ...DEFAULT_SETTINGS.general,
-            ...(envNativeLanguage && { nativeLanguage: envNativeLanguage }),
-            ...(envTargetLanguage && { learnLanguage: envTargetLanguage }),
-            ...(envLanguageLevel && { languageLevel: envLanguageLevel }),
-        };
-    }
-
-    // Apply AI server settings from env
-    if (envApiKey || envProvider || envModel) {
-        envSettings.aiServers = [
-            {
-                ...DEFAULT_SETTINGS.aiServers[0],
-                ...(envProvider && { provider: envProvider }),
-                ...(envModel && { model: envModel }),
-                settings: {
-                    ...DEFAULT_SETTINGS.aiServers[0].settings,
-                    ...(envApiKey && { apiKey: envApiKey }),
-                },
-            },
-        ];
-    }
-
-    return envSettings;
-}
-
 // 保存设置
 export const saveSettings = async (settings: Partial<AppSettings>): Promise<void> => {
     try {
@@ -213,34 +158,8 @@ export const getSettings = async (): Promise<AppSettings> => {
             }
         }
 
-        // 检查是否有实际存储的设置（通过检查是否有 lastUpdated 字段）
-        const envSettings = loadEnvSettings();
-        const hasStoredSettings = storageSettings.lastUpdated !== DEFAULT_SETTINGS.lastUpdated;
-
-        let mergedSettings: AppSettings;
-
-        if (hasStoredSettings) {
-            // 如果有存储的设置，优先使用存储的设置，不被环境变量覆盖
-            console.log('Using stored settings, ignoring environment variables');
-            mergedSettings = storageSettings;
-        } else {
-            // 如果没有存储的设置，使用环境变量作为默认值
-            console.log('No stored settings found, using environment variables as defaults');
-            mergedSettings = {
-                ...DEFAULT_SETTINGS,
-                ...envSettings,
-                // 确保嵌套对象也被正确合并
-                general: {
-                    ...DEFAULT_SETTINGS.general,
-                    ...envSettings.general,
-                },
-                subtitle: {
-                    ...DEFAULT_SETTINGS.subtitle,
-                    ...envSettings.subtitle,
-                },
-                aiServers: envSettings.aiServers || DEFAULT_SETTINGS.aiServers,
-            };
-        }
+        // 直接返回存储的设置，如果没有则返回默认设置
+        const mergedSettings: AppSettings = storageSettings;
         return mergedSettings;
     } catch (error) {
         console.error('Failed to load settings:', error);
