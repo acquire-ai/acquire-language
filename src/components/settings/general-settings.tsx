@@ -50,6 +50,7 @@ export function GeneralSettings() {
     const [learnLanguage, setLearnLanguage] = useState('es');
     const [languageLevel, setLanguageLevel] = useState('a1');
     const [isSaving, setIsSaving] = useState(false);
+    const [isInitialized, setIsInitialized] = useState(false);
 
     // 创建防抖保存函数
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -58,8 +59,7 @@ export function GeneralSettings() {
             setIsSaving(true);
             saveGeneralSettings(settings)
                 .then(() => {
-                    console.log(settings);
-                    console.log('Settings saved automatically');
+                    console.log('Save General Settings success:', settings);
                 })
                 .catch((error) => {
                     console.error('Failed to save settings:', error);
@@ -76,22 +76,25 @@ export function GeneralSettings() {
         const loadSettings = async () => {
             try {
                 const settings = await getSettings();
+
                 setAppLanguage(settings.general.appLanguage);
                 setNativeLanguage(settings.general.nativeLanguage);
                 setLearnLanguage(settings.general.learnLanguage);
-                setLanguageLevel(settings.general.languageLevel || 'a1');
+                setLanguageLevel(settings.general.languageLevel);
+
+                setIsInitialized(true);
             } catch (error) {
                 console.error('Failed to load general settings:', error);
+                setIsInitialized(true);
             }
         };
 
         loadSettings();
     }, []);
 
-    // 当设置变更时自动保存
+    // Auto save settings
     useEffect(() => {
-        // 确保组件已经挂载并加载了初始设置
-        if (appLanguage && nativeLanguage && learnLanguage && languageLevel) {
+        if (isInitialized) {
             const settings: GeneralSettingsType = {
                 appLanguage,
                 nativeLanguage,
@@ -99,8 +102,10 @@ export function GeneralSettings() {
                 languageLevel,
             };
             debouncedSave(settings);
+        } else {
+            console.log('Skip auto save - not initialized');
         }
-    }, [appLanguage, nativeLanguage, learnLanguage, languageLevel, debouncedSave]);
+    }, [appLanguage, nativeLanguage, learnLanguage, languageLevel, debouncedSave, isInitialized]);
 
     // 处理设置变更
     const handleAppLanguageChange = (value: string) => {

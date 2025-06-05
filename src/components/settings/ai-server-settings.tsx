@@ -6,32 +6,11 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle, Server, Trash2, ChevronDown, ChevronUp, Bot } from 'lucide-react';
 import { AIServerForm } from './ai-server-form';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-    getSettings,
-    saveAIServers,
-    debounce,
-    type AIServer as AIServerType,
-} from '@/core/config/settings';
-
-export type AIServer = AIServerType;
+import { getSettings, saveAIServers, debounce, type AIServer } from '@/core/config/settings';
 
 export function AIServerSettings() {
-    const [servers, setServers] = useState<AIServer[]>([
-        {
-            id: 'default',
-            name: 'Default OpenAI',
-            provider: 'openai',
-            model: 'gpt-4o',
-            settings: {
-                apiKey: '',
-                organization: '',
-                baseURL: '',
-                project: '',
-            },
-            isDefault: true,
-        },
-    ]);
-    const [expandedServer, setExpandedServer] = useState<string | null>('default');
+    const [servers, setServers] = useState<AIServer[]>([]);
+    const [expandedServer, setExpandedServer] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [isInitialized, setIsInitialized] = useState(false);
 
@@ -42,8 +21,7 @@ export function AIServerSettings() {
             setIsSaving(true);
             saveAIServers(aiServers)
                 .then(() => {
-                    console.log(aiServers);
-                    console.log('AI servers saved automatically');
+                    console.log('Save AI Servers success:', aiServers);
                 })
                 .catch((error) => {
                     console.error('Failed to save AI servers:', error);
@@ -60,12 +38,11 @@ export function AIServerSettings() {
         const loadSettings = async () => {
             try {
                 const settings = await getSettings();
-                if (settings.aiServers && settings.aiServers.length > 0) {
-                    setServers(settings.aiServers);
-                }
+                setServers(settings.aiServers);
                 setIsInitialized(true);
             } catch (error) {
                 console.error('Failed to load AI server settings:', error);
+                setIsInitialized(true);
             }
         };
 
@@ -99,12 +76,11 @@ export function AIServerSettings() {
             const serverToRemove = prevServers.find((s) => s.id === id);
             const filteredServers = prevServers.filter((server) => server.id !== id);
 
-            // 如果没有服务器了，直接返回空数组
             if (filteredServers.length === 0) {
                 return [];
             }
 
-            // 如果删除的是默认服务器，则将第一个服务器设为默认
+            // if the removed server was the default, set the first remaining server as default
             if (serverToRemove?.isDefault) {
                 return filteredServers.map((server, index) => ({
                     ...server,

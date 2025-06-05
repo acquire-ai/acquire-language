@@ -124,8 +124,8 @@ YouTube 字幕处理器是扩展的核心功能模块，负责：
 
 ```typescript
 // 示例：创建自定义字幕容器
-private
-createSubtitleContainer()
+private;
+createSubtitleContainer();
 {
     // 查找原始字幕容器
     this.findOriginalSubtitleContainer();
@@ -143,14 +143,14 @@ createSubtitleContainer()
 
 ```typescript
 // 示例：添加单词点击事件
-private
-addWordClickEvents()
+private;
+addWordClickEvents();
 {
     if (!this.subtitleContainer) return;
 
     const wordElements = this.subtitleContainer.querySelectorAll('.acquire-language-word');
 
-    wordElements.forEach(element => {
+    wordElements.forEach((element) => {
         element.addEventListener('click', async (event) => {
             // 阻止事件冒泡
             event.stopPropagation();
@@ -160,7 +160,7 @@ addWordClickEvents()
             const rect = element.getBoundingClientRect();
             const position = {
                 x: rect.left + window.scrollX,
-                y: rect.bottom + window.scrollY + 10
+                y: rect.bottom + window.scrollY + 10,
             };
 
             // 显示加载状态
@@ -172,7 +172,7 @@ addWordClickEvents()
                 const definition = await this.aiService.getWordDefinition(
                     word,
                     this.currentSubtitle,
-                    this.settings.targetLanguage
+                    this.settings.targetLanguage,
                 );
 
                 // 显示单词释义
@@ -315,7 +315,7 @@ Promise < string > {
     try {
         // 从存储中获取设置，获取用户的母语
         const result = await browser.storage.local.get('settings');
-        const settings = result.settings || { nativeLanguage: 'zh-CN' };
+        const settings = result.settings || { nativeLanguage: 'zh-cn' };
         const nativeLanguage = settings.nativeLanguage;
 
         // 构建提示

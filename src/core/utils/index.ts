@@ -62,14 +62,14 @@ export function isYouTubeVideoUrl(url: string): boolean {
  */
 export function getLanguageName(code: string): string {
     const languages: Record<string, string> = {
-        'en-US': '英语',
-        'zh-CN': '中文',
-        'ja-JP': '日语',
-        'ko-KR': '韩语',
-        'fr-FR': '法语',
-        'de-DE': '德语',
-        'es-ES': '西班牙语',
-        'ru-RU': '俄语',
+        en: '英语',
+        'zh-cn': '中文',
+        'ja-jp': '日语',
+        'ko-kr': '韩语',
+        'fr-fr': '法语',
+        'de-de': '德语',
+        'es-es': '西班牙语',
+        'ru-ru': '俄语',
     };
 
     return languages[code] || code;

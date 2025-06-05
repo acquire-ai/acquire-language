@@ -3,15 +3,15 @@ import { VercelAIAdapter } from '../vercel-adapter';
 import { generateText } from 'ai';
 
 // Mock browser.storage.local
-global.browser = {
+(global as any).browser = {
     storage: {
         local: {
             get: vi.fn().mockResolvedValue({
-                settings: { nativeLanguage: 'zh-CN' },
+                settings: { nativeLanguage: 'zh-cn' },
             }),
         },
     },
-} as any;
+};
 
 // Mock generateText function from Vercel AI SDK
 vi.mock('ai', () => ({
@@ -25,10 +25,10 @@ vi.mock('@/prompts', () => ({
 
 // Mock the getLanguageName function
 vi.mock('@/core/utils', () => ({
-    getLanguageName: vi.fn((code) => {
-        const languages = {
+    getLanguageName: vi.fn((code: string) => {
+        const languages: Record<string, string> = {
             en: 'English',
-            'zh-CN': 'Chinese',
+            'zh-cn': 'Chinese',
             es: 'Spanish',
         };
         return languages[code] || code;
@@ -71,7 +71,7 @@ describe('VercelAIAdapter test', () => {
 
     it('should handle translateText correctly', async () => {
         const adapter = new VercelAIAdapter(mockProvider, mockModel);
-        const result = await adapter.translateText('Hello world', 'en', 'zh-CN');
+        const result = await adapter.translateText('Hello world', 'en', 'zh-cn');
 
         expect(result).toBe('mocked response');
         expect(generateText).toHaveBeenCalledWith(
@@ -97,7 +97,7 @@ describe('VercelAIAdapter test', () => {
         vi.mocked(generateText).mockRejectedValueOnce(new Error('Translation error'));
 
         const adapter = new VercelAIAdapter(mockProvider, mockModel);
-        const result = await adapter.translateText('Hello world', 'en', 'zh-CN');
+        const result = await adapter.translateText('Hello world', 'en', 'zh-cn');
 
         expect(result).toContain('Translation failed');
         expect(result).toContain('Translation error');

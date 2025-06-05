@@ -41,8 +41,8 @@ describe('Utility Functions Tests', () => {
     describe('getLanguageName', () => {
         it('should return the correct language name', () => {
             // The actual implementation returns Chinese names for languages
-            expect(getLanguageName('en-US')).toBe('英语');
-            expect(getLanguageName('zh-CN')).toBe('中文');
+            expect(getLanguageName('en-us')).toBe('英语');
+            expect(getLanguageName('zh-cn')).toBe('中文');
             expect(getLanguageName('unknown-code')).toBe('unknown-code');
         });
     });

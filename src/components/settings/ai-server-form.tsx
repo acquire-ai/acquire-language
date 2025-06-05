@@ -13,7 +13,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Check, Zap } from 'lucide-react';
-import type { AIServer } from './ai-server-settings';
+import type { AIServer } from '@/core/config/settings';
 import { getAIProviderSettings } from './utils/ai-provider-settings';
 import { providerModels } from './utils/provider-models';
 

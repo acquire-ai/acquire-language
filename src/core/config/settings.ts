@@ -14,11 +14,11 @@ export interface GeneralSettings {
 export interface SubtitleSettings {
     showNativeSubtitles: boolean;
     showLearningSubtitles: boolean;
-    subtitleSize: number;
-    subtitlePosition: string;
-    subtitleColor: string;
-    subtitleBgColor: string;
-    subtitleBgOpacity: number;
+    fontSize: number;
+    position: 'top' | 'bottom';
+    textColor: string;
+    backgroundColor: string;
+    opacity: number; // 0-1 decimal instead of 0-100 percentage
 }
 
 export interface AIServer {
@@ -41,18 +41,18 @@ export interface AppSettings {
 export const DEFAULT_SETTINGS: AppSettings = {
     general: {
         appLanguage: 'en',
-        nativeLanguage: 'zh-CN',
-        learnLanguage: 'en',
-        languageLevel: 'b1', // 默认为B1 - Intermediate
+        nativeLanguage: 'en',
+        learnLanguage: 'es',
+        languageLevel: 'a1', // 默认为a1 - Beginner
     },
     subtitle: {
         showNativeSubtitles: true,
         showLearningSubtitles: true,
-        subtitleSize: 20,
-        subtitlePosition: 'bottom',
-        subtitleColor: '#ffffff',
-        subtitleBgColor: '#000000',
-        subtitleBgOpacity: 80,
+        fontSize: 20,
+        position: 'bottom',
+        textColor: '#ffffff',
+        backgroundColor: '#000000',
+        opacity: 0.7,
     },
     aiServers: [
         {
@@ -77,61 +77,6 @@ const STORAGE_KEY = 'acquire_language_settings';
 const isChromeExtension = (): boolean => {
     return typeof chrome !== 'undefined' && chrome?.storage?.sync !== undefined;
 };
-
-/**
- * Get environment variable
- * @param name Environment variable name
- * @param defaultValue Default value
- * @returns Environment variable value
- */
-function getEnvVar(name: string, defaultValue: string): string {
-    if (typeof window !== 'undefined' && (window as any).__ENV__) {
-        const env = (window as any).__ENV__;
-        return env[name] || defaultValue;
-    }
-    return defaultValue;
-}
-
-/**
- * Load settings from environment variables and merge with defaults
- */
-export function loadEnvSettings(): Partial<AppSettings> {
-    const envApiKey = getEnvVar('ACQUIRE_API_KEY', '');
-    const envProvider = getEnvVar('ACQUIRE_AI_PROVIDER', '');
-    const envModel = getEnvVar('ACQUIRE_AI_MODEL', '');
-    const envNativeLanguage = getEnvVar('ACQUIRE_NATIVE_LANGUAGE', '');
-    const envTargetLanguage = getEnvVar('ACQUIRE_TARGET_LANGUAGE', '');
-    const envLanguageLevel = getEnvVar('ACQUIRE_LANGUAGE_LEVEL', '');
-
-    const envSettings: Partial<AppSettings> = {};
-
-    // Apply general settings from env
-    if (envNativeLanguage || envTargetLanguage || envLanguageLevel) {
-        envSettings.general = {
-            ...DEFAULT_SETTINGS.general,
-            ...(envNativeLanguage && { nativeLanguage: envNativeLanguage }),
-            ...(envTargetLanguage && { learnLanguage: envTargetLanguage }),
-            ...(envLanguageLevel && { languageLevel: envLanguageLevel }),
-        };
-    }
-
-    // Apply AI server settings from env
-    if (envApiKey || envProvider || envModel) {
-        envSettings.aiServers = [
-            {
-                ...DEFAULT_SETTINGS.aiServers[0],
-                ...(envProvider && { provider: envProvider }),
-                ...(envModel && { model: envModel }),
-                settings: {
-                    ...DEFAULT_SETTINGS.aiServers[0].settings,
-                    ...(envApiKey && { apiKey: envApiKey }),
-                },
-            },
-        ];
-    }
-
-    return envSettings;
-}
 
 // 保存设置
 export const saveSettings = async (settings: Partial<AppSettings>): Promise<void> => {
@@ -213,23 +158,8 @@ export const getSettings = async (): Promise<AppSettings> => {
             }
         }
 
-        // 合并环境变量设置
-        const envSettings = loadEnvSettings();
-        const mergedSettings: AppSettings = {
-            ...storageSettings,
-            ...envSettings,
-            // 确保嵌套对象也被正确合并
-            general: {
-                ...storageSettings.general,
-                ...envSettings.general,
-            },
-            subtitle: {
-                ...storageSettings.subtitle,
-                ...envSettings.subtitle,
-            },
-            aiServers: envSettings.aiServers || storageSettings.aiServers,
-        };
-
+        // 直接返回存储的设置，如果没有则返回默认设置
+        const mergedSettings: AppSettings = storageSettings;
         return mergedSettings;
     } catch (error) {
         console.error('Failed to load settings:', error);
@@ -284,5 +214,3 @@ export function watchSettings(callback: (settings: AppSettings) => void): void {
 
 // 为了向后兼容，导出一些别名
 export type Settings = AppSettings;
-export const DEFAULT_SETTINGS_LEGACY = DEFAULT_SETTINGS;
-export const loadSettings = getSettings;

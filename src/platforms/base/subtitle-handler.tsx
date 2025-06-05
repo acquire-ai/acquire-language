@@ -7,7 +7,7 @@ import { WordPopup } from '@/components/word-popup';
 import { createRoot } from 'react-dom/client';
 import { Subtitle } from '@/components/subtitles';
 import React, { useEffect, useState } from 'react';
-import { loadSettings, Settings } from '@/core/config/settings';
+import { getSettings, Settings } from '@/core/config/settings';
 
 const SubtitleContainer: React.FC<{
     handler: BaseSubtitleHandler;
@@ -49,7 +49,7 @@ const SubtitleContainer: React.FC<{
     return (
         <Subtitle
             texts={subtitles}
-            settings={settings!.subtitleSettings}
+            settings={settings!.subtitle}
             onWordClick={handleWordClick}
             visible={subtitleEnabled}
         />
@@ -114,7 +114,7 @@ export abstract class BaseSubtitleHandler implements SubtitleHandler {
         return await this.aiService.getWordDefinition(
             word,
             context,
-            this.settings?.nativeLanguage || 'zh-CN',
+            this.settings?.general?.nativeLanguage,
         );
     }
 
@@ -141,7 +141,7 @@ export abstract class BaseSubtitleHandler implements SubtitleHandler {
     }
 
     protected async loadSettings() {
-        this.settings = await loadSettings();
+        this.settings = await getSettings();
         this.renderSubtitleContainer();
     }
 

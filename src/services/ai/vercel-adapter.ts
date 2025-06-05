@@ -8,7 +8,7 @@ import { generateText } from 'ai';
 import { AIService } from '@/core/types/ai';
 import { getLanguageName } from '@/core/utils';
 import { translatePrompt } from '@/prompts';
-import { loadSettings } from '@/core/config/settings';
+import { getSettings } from '@/core/config/settings';
 
 export class VercelAIAdapter implements AIService {
     readonly provider: any;
@@ -25,8 +25,8 @@ export class VercelAIAdapter implements AIService {
         targetLanguage: string,
     ): Promise<string> {
         try {
-            const settings = await loadSettings();
-            const nativeLanguage = settings.nativeLanguage;
+            const settings = await getSettings();
+            const nativeLanguage = settings.general.nativeLanguage;
             const prompt = translatePrompt(word, context, nativeLanguage);
             const { text } = await generateText({
                 model: this.provider(this.model),

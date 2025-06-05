@@ -24,11 +24,11 @@ import {
 export function SubtitleSettings() {
     const [showNativeSubtitles, setShowNativeSubtitles] = useState(true);
     const [showLearningSubtitles, setShowLearningSubtitles] = useState(true);
-    const [subtitleSize, setSubtitleSize] = useState(16);
-    const [subtitlePosition, setSubtitlePosition] = useState('bottom');
-    const [subtitleColor, setSubtitleColor] = useState('#ffffff');
-    const [subtitleBgColor, setSubtitleBgColor] = useState('#000000');
-    const [subtitleBgOpacity, setSubtitleBgOpacity] = useState(70);
+    const [fontSize, setFontSize] = useState(16);
+    const [position, setPosition] = useState<'top' | 'bottom'>('bottom');
+    const [textColor, setTextColor] = useState('#ffffff');
+    const [backgroundColor, setBackgroundColor] = useState('#000000');
+    const [opacity, setOpacity] = useState(0.7); // 0-1 decimal
     const [isSaving, setIsSaving] = useState(false);
     const [isInitialized, setIsInitialized] = useState(false);
 
@@ -58,11 +58,11 @@ export function SubtitleSettings() {
                 const settings = await getSettings();
                 setShowNativeSubtitles(settings.subtitle.showNativeSubtitles);
                 setShowLearningSubtitles(settings.subtitle.showLearningSubtitles);
-                setSubtitleSize(settings.subtitle.subtitleSize);
-                setSubtitlePosition(settings.subtitle.subtitlePosition);
-                setSubtitleColor(settings.subtitle.subtitleColor);
-                setSubtitleBgColor(settings.subtitle.subtitleBgColor);
-                setSubtitleBgOpacity(settings.subtitle.subtitleBgOpacity);
+                setFontSize(settings.subtitle.fontSize);
+                setPosition(settings.subtitle.position);
+                setTextColor(settings.subtitle.textColor);
+                setBackgroundColor(settings.subtitle.backgroundColor);
+                setOpacity(settings.subtitle.opacity);
                 setIsInitialized(true);
             } catch (error) {
                 console.error('Failed to load subtitle settings:', error);
@@ -79,22 +79,22 @@ export function SubtitleSettings() {
             const settings: SubtitleSettingsType = {
                 showNativeSubtitles,
                 showLearningSubtitles,
-                subtitleSize,
-                subtitlePosition,
-                subtitleColor,
-                subtitleBgColor,
-                subtitleBgOpacity,
+                fontSize,
+                position,
+                textColor,
+                backgroundColor,
+                opacity,
             };
             debouncedSave(settings);
         }
     }, [
         showNativeSubtitles,
         showLearningSubtitles,
-        subtitleSize,
-        subtitlePosition,
-        subtitleColor,
-        subtitleBgColor,
-        subtitleBgOpacity,
+        fontSize,
+        position,
+        textColor,
+        backgroundColor,
+        opacity,
         debouncedSave,
         isInitialized,
     ]);
@@ -140,15 +140,15 @@ export function SubtitleSettings() {
                     </div>
                     <div className="space-y-2">
                         <div className="flex justify-between">
-                            <Label htmlFor="subtitle-size">Size: {subtitleSize}px</Label>
+                            <Label htmlFor="subtitle-size">Size: {fontSize}px</Label>
                         </div>
                         <Slider
                             id="subtitle-size"
                             min={12}
                             max={32}
                             step={1}
-                            value={[subtitleSize]}
-                            onValueChange={(value) => setSubtitleSize(value[0])}
+                            value={[fontSize]}
+                            onValueChange={(value) => setFontSize(value[0])}
                             className="w-full"
                             color="primary"
                         />
@@ -161,8 +161,8 @@ export function SubtitleSettings() {
                         <h3 className="text-lg font-medium gradient-text">Subtitle Position</h3>
                     </div>
                     <RadioGroup
-                        value={subtitlePosition}
-                        onValueChange={setSubtitlePosition}
+                        value={position}
+                        onValueChange={(value) => setPosition(value as 'top' | 'bottom')}
                         className="flex gap-4"
                     >
                         <div className="flex items-center space-x-2">
@@ -186,7 +186,7 @@ export function SubtitleSettings() {
                             <Palette className="h-4 w-4 text-primary" />
                             <h3 className="text-lg font-medium gradient-text">Subtitle Color</h3>
                         </div>
-                        <HexColorPicker color={subtitleColor} onChange={setSubtitleColor} />
+                        <HexColorPicker color={textColor} onChange={setTextColor} />
                     </div>
 
                     <div className="space-y-4">
@@ -194,18 +194,20 @@ export function SubtitleSettings() {
                             <Palette className="h-4 w-4 text-primary" />
                             <h3 className="text-lg font-medium gradient-text">Background Color</h3>
                         </div>
-                        <HexColorPicker color={subtitleBgColor} onChange={setSubtitleBgColor} />
+                        <HexColorPicker color={backgroundColor} onChange={setBackgroundColor} />
                         <div className="space-y-2">
                             <div className="flex justify-between">
-                                <Label htmlFor="bg-opacity">Opacity: {subtitleBgOpacity}%</Label>
+                                <Label htmlFor="bg-opacity">
+                                    Opacity: {Math.round(opacity * 100)}%
+                                </Label>
                             </div>
                             <Slider
                                 id="bg-opacity"
                                 min={0}
-                                max={100}
-                                step={5}
-                                value={[subtitleBgOpacity]}
-                                onValueChange={(value) => setSubtitleBgOpacity(value[0])}
+                                max={1}
+                                step={0.01}
+                                value={[opacity]}
+                                onValueChange={(value) => setOpacity(value[0])}
                                 className="w-full"
                                 color="primary"
                             />
@@ -219,16 +221,15 @@ export function SubtitleSettings() {
                         <div
                             className="px-4 py-2 rounded-md text-center"
                             style={{
-                                color: subtitleColor,
-                                backgroundColor: `${subtitleBgColor}${Math.round(
-                                    subtitleBgOpacity * 2.55,
-                                )
+                                color: textColor,
+                                backgroundColor: `${backgroundColor}${Math.round(opacity * 255)
                                     .toString(16)
                                     .padStart(2, '0')}`,
-                                fontSize: `${subtitleSize}px`,
-                                position: 'absolute',
-                                [subtitlePosition]: '8px',
+                                fontSize: `${fontSize}px`,
                                 maxWidth: '90%',
+                                ...(position === 'top'
+                                    ? { alignSelf: 'flex-start' }
+                                    : { alignSelf: 'flex-end' }),
                             }}
                         >
                             {showLearningSubtitles && <div>Hello, how are you today?</div>}

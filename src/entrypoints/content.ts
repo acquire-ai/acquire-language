@@ -7,7 +7,7 @@
 import { defineContentScript } from 'wxt/sandbox';
 import { createPlatformHandler } from '@/platforms';
 import { createAIService } from '@/services/ai';
-import { loadSettings, watchSettings } from '@/core/config/settings';
+import { getSettings, watchSettings } from '@/core/config/settings';
 
 export default defineContentScript({
     matches: ['*://*.youtube.com/*'],
@@ -18,16 +18,17 @@ export default defineContentScript({
         const processedSubtitleRequests = new Set<string>();
 
         async function initializeWithSettings() {
-            const settings = await loadSettings();
-            // Create AI service using separate provider and model fields
-            aiService = createAIService({
-                providerType: settings.aiProvider,
-                model: settings.aiModel,
-                apiKey: settings.apiKey,
-                baseURL: settings.options?.baseURL,
-                providerName: settings.options?.providerName,
-                options: settings.options,
-            });
+            const settings = await getSettings();
+            // Get the default AI server or the first one if no default is set
+            const defaultServer =
+                settings.aiServers.find((server) => server.isDefault) || settings.aiServers[0];
+
+            if (defaultServer) {
+                aiService = createAIService(defaultServer);
+            } else {
+                console.error('No AI server configured');
+                return;
+            }
 
             if (subtitleHandler) {
                 subtitleHandler.updateSettings(settings);
