@@ -46,18 +46,10 @@ const SubtitleContainer: React.FC<{
         handler.showWordDefinition(word, definition, position);
     };
 
-    const subtitleSettings = settings?.subtitle || {
-        fontSize: 20,
-        position: 'bottom' as const,
-        backgroundColor: '#000000',
-        textColor: '#ffffff',
-        opacity: 0.8,
-    };
-
     return (
         <Subtitle
             texts={subtitles}
-            settings={subtitleSettings}
+            settings={settings!.subtitle}
             onWordClick={handleWordClick}
             visible={subtitleEnabled}
         />

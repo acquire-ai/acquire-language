@@ -52,7 +52,6 @@ export function GeneralSettings() {
     const [isSaving, setIsSaving] = useState(false);
     const [isInitialized, setIsInitialized] = useState(false);
 
-
     // 创建防抖保存函数
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const debouncedSave = useCallback(
@@ -63,7 +62,7 @@ export function GeneralSettings() {
                     console.log('Save General Settings success:', settings);
                 })
                 .catch((error) => {
-                    console.error('Error saving General Settings:', error);
+                    console.error('Failed to save settings:', error);
                 })
                 .finally(() => {
                     setIsSaving(false);
@@ -81,11 +80,11 @@ export function GeneralSettings() {
                 setAppLanguage(settings.general.appLanguage);
                 setNativeLanguage(settings.general.nativeLanguage);
                 setLearnLanguage(settings.general.learnLanguage);
-                setLanguageLevel(settings.general.languageLevel || 'a1');
+                setLanguageLevel(settings.general.languageLevel);
 
                 setIsInitialized(true);
             } catch (error) {
-                console.error('Error loading General Settings:', error);
+                console.error('Failed to load general settings:', error);
                 setIsInitialized(true);
             }
         };

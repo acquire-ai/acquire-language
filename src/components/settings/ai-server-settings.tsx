@@ -14,7 +14,6 @@ export function AIServerSettings() {
     const [isSaving, setIsSaving] = useState(false);
     const [isInitialized, setIsInitialized] = useState(false);
 
-
     // 创建防抖保存函数
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const debouncedSave = useCallback(
@@ -25,7 +24,7 @@ export function AIServerSettings() {
                     console.log('Save AI Servers success:', aiServers);
                 })
                 .catch((error) => {
-                    console.error('Error saving AI Servers:', error);
+                    console.error('Failed to save AI servers:', error);
                 })
                 .finally(() => {
                     setIsSaving(false);
@@ -39,18 +38,10 @@ export function AIServerSettings() {
         const loadSettings = async () => {
             try {
                 const settings = await getSettings();
-
-                // 总是设置服务器数据，如果没有则使用默认设置中的数据
-                setServers(settings.aiServers || []);
-
-                // 如果有服务器数据，设置第一个为展开状态
-                if (settings.aiServers && settings.aiServers.length > 0) {
-                    setExpandedServer(settings.aiServers[0].id);
-                }
-
+                setServers(settings.aiServers);
                 setIsInitialized(true);
             } catch (error) {
-                console.error('Error loading AI Server Settings:', error);
+                console.error('Failed to load AI server settings:', error);
                 setIsInitialized(true);
             }
         };
@@ -60,7 +51,6 @@ export function AIServerSettings() {
 
     // 当设置变更时自动保存
     useEffect(() => {
-
         if (isInitialized) {
             debouncedSave(servers);
         }
