@@ -213,22 +213,34 @@ export const getSettings = async (): Promise<AppSettings> => {
             }
         }
 
-        // 合并环境变量设置
+        // 检查是否有实际存储的设置（通过检查是否有 lastUpdated 字段）
         const envSettings = loadEnvSettings();
-        const mergedSettings: AppSettings = {
-            ...storageSettings,
-            ...envSettings,
-            // 确保嵌套对象也被正确合并
-            general: {
-                ...storageSettings.general,
-                ...envSettings.general,
-            },
-            subtitle: {
-                ...storageSettings.subtitle,
-                ...envSettings.subtitle,
-            },
-            aiServers: envSettings.aiServers || storageSettings.aiServers,
-        };
+        const hasStoredSettings = storageSettings.lastUpdated !== DEFAULT_SETTINGS.lastUpdated;
+
+        let mergedSettings: AppSettings;
+
+        if (hasStoredSettings) {
+            // 如果有存储的设置，优先使用存储的设置，不被环境变量覆盖
+            console.log('Using stored settings, ignoring environment variables');
+            mergedSettings = storageSettings;
+        } else {
+            // 如果没有存储的设置，使用环境变量作为默认值
+            console.log('No stored settings found, using environment variables as defaults');
+            mergedSettings = {
+                ...DEFAULT_SETTINGS,
+                ...envSettings,
+                // 确保嵌套对象也被正确合并
+                general: {
+                    ...DEFAULT_SETTINGS.general,
+                    ...envSettings.general,
+                },
+                subtitle: {
+                    ...DEFAULT_SETTINGS.subtitle,
+                    ...envSettings.subtitle,
+                },
+                aiServers: envSettings.aiServers || DEFAULT_SETTINGS.aiServers,
+            };
+        }
         return mergedSettings;
     } catch (error) {
         console.error('Failed to load settings:', error);
