@@ -140,6 +140,7 @@ export function AIServerSettings() {
                             <div
                                 className="flex items-center justify-between p-4 cursor-pointer"
                                 onClick={() => toggleExpand(server.id)}
+                                style={{ position: 'relative' }}
                             >
                                 <div className="flex items-center gap-2">
                                     <Bot className="h-5 w-5 text-primary" />
