@@ -41,9 +41,9 @@ export interface AppSettings {
 export const DEFAULT_SETTINGS: AppSettings = {
     general: {
         appLanguage: 'en',
-        nativeLanguage: 'zh-cn',
-        learnLanguage: 'en',
-        languageLevel: 'b1', // 默认为B1 - Intermediate
+        nativeLanguage: 'en',
+        learnLanguage: 'es',
+        languageLevel: 'a1', // 默认为A1 - Beginner
     },
     subtitle: {
         showNativeSubtitles: true,
@@ -52,7 +52,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
         position: 'bottom',
         textColor: '#ffffff',
         backgroundColor: '#000000',
-        opacity: 0.8,
+        opacity: 0.7,
     },
     aiServers: [
         {
