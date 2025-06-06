@@ -1,0 +1,6 @@
+---
+description: the rule of git commit messages
+globs: 
+alwaysApply: false
+---
+When writing a git commit message, always keep it simple and clear, usually not exceeding one sentence.
