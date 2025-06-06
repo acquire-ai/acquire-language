@@ -37,27 +37,33 @@ export const SidePanel: React.FC = () => {
         initAIService();
     }, []);
 
-    // Check for pending word analysis from storage (fallback window mode)
+    // Check for pending word analysis from storage on initialization
     useEffect(() => {
         const checkPendingAnalysis = async () => {
+            if (!aiService) return;
+
             const result = await browser.storage.local.get('pendingWordAnalysis');
             if (result.pendingWordAnalysis) {
                 const { word, context } = result.pendingWordAnalysis;
+                console.log('Found pending word analysis:', word);
+
                 // Clear the pending analysis
                 await browser.storage.local.remove('pendingWordAnalysis');
+
                 // Analyze the word
                 analyzeWord(word, context);
             }
         };
 
         checkPendingAnalysis();
-    }, [aiService]);
+    }, [aiService]); // Depend on aiService so it runs after AI service is initialized
 
-    // Listen for messages from content script
+    // Listen for messages from content script (for subsequent word clicks when sidepanel is already open)
     useEffect(() => {
         const handleMessage = async (message: any) => {
             if (message.type === 'ANALYZE_WORD') {
                 const { word, context } = message.data;
+                console.log('Received ANALYZE_WORD message:', word);
                 analyzeWord(word, context);
             }
         };

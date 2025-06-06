@@ -32,14 +32,21 @@ function setupMessageListeners() {
                     await browser.sidePanel.open({ windowId: sender.tab.windowId });
                     console.log('Sidepanel opened successfully');
 
-                    // Send the word data to sidepanel after a short delay to ensure it's loaded
+                    // Store the word data for sidepanel to pick up when it initializes
+                    await browser.storage.local.set({ pendingWordAnalysis: message.data });
+
+                    // Also try to send message in case sidepanel is already loaded
                     setTimeout(() => {
-                        browser.runtime.sendMessage({
-                            type: 'ANALYZE_WORD',
-                            data: message.data,
-                        });
-                        console.log('Sent ANALYZE_WORD message to sidepanel');
-                    }, 100);
+                        browser.runtime
+                            .sendMessage({
+                                type: 'ANALYZE_WORD',
+                                data: message.data,
+                            })
+                            .catch(() => {
+                                // Ignore errors - sidepanel will pick up from storage
+                                console.log('Direct message failed, sidepanel will use storage');
+                            });
+                    }, 50);
                 } catch (error) {
                     console.error('Error opening sidepanel:', error);
                     // Fallback to popup window
@@ -52,13 +59,8 @@ function setupMessageListeners() {
                 // @ts-ignore
                 await browser.sidebarAction.open();
 
-                // Send the word data to sidepanel
-                setTimeout(() => {
-                    browser.runtime.sendMessage({
-                        type: 'ANALYZE_WORD',
-                        data: message.data,
-                    });
-                }, 100);
+                // Store data for pickup
+                await browser.storage.local.set({ pendingWordAnalysis: message.data });
             } else {
                 console.error(
                     'Neither sidePanel nor sidebarAction API is available, using fallback window',
