@@ -20,7 +20,6 @@ export const SidePanel: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [aiService, setAiService] = useState<AIService | null>(null);
     const [savedWords, setSavedWords] = useState<Set<string>>(new Set());
-    const [currentAnalysisId, setCurrentAnalysisId] = useState<string | null>(null);
 
     // Initialize AI service
     useEffect(() => {
@@ -76,10 +75,6 @@ export const SidePanel: React.FC = () => {
             return;
         }
 
-        // Generate unique analysis ID to handle concurrent requests
-        const analysisId = `${word}-${Date.now()}`;
-        setCurrentAnalysisId(analysisId);
-
         setIsLoading(true);
         setIsStreaming(false);
         setError(null);
@@ -109,21 +104,15 @@ export const SidePanel: React.FC = () => {
                     context || '',
                     targetLanguage,
                     (chunk: string) => {
-                        // Check if this is still the current analysis
-                        if (currentAnalysisId === analysisId) {
-                            streamedDefinition += chunk;
-                            setCurrentAnalysis((prev) => ({
-                                ...prev!,
-                                definition: streamedDefinition,
-                            }));
-                        }
+                        streamedDefinition += chunk;
+                        setCurrentAnalysis((prev) => ({
+                            ...prev!,
+                            definition: streamedDefinition,
+                        }));
                     },
                 );
 
-                // Only update state if this is still the current analysis
-                if (currentAnalysisId === analysisId) {
-                    setIsStreaming(false); // Streaming completed
-                }
+                setIsStreaming(false); // Streaming completed
             } else {
                 // Fallback to non-streaming
                 const definition = await aiService.getWordDefinition(
@@ -132,26 +121,18 @@ export const SidePanel: React.FC = () => {
                     targetLanguage,
                 );
 
-                // Only update if this is still the current analysis
-                if (currentAnalysisId === analysisId) {
-                    setCurrentAnalysis({
-                        word,
-                        definition,
-                        context,
-                        timestamp: Date.now(),
-                    });
-                }
+                setCurrentAnalysis({
+                    word,
+                    definition,
+                    context,
+                    timestamp: Date.now(),
+                });
             }
         } catch (err) {
-            // Only show error if this is still the current analysis
-            if (currentAnalysisId === analysisId) {
-                setError(err instanceof Error ? err.message : 'Failed to analyze word');
-                setIsStreaming(false);
-            }
+            setError(err instanceof Error ? err.message : 'Failed to analyze word');
+            setIsStreaming(false);
         } finally {
-            if (currentAnalysisId === analysisId) {
-                setIsLoading(false);
-            }
+            setIsLoading(false);
         }
     };
 
