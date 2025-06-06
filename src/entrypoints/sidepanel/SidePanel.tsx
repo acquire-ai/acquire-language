@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Save, X, Volume2 } from 'lucide-react';
 import { createAIService } from '@/services/ai';
 import { getSettings } from '@/core/config/settings';
-import type { AIService } from '@/services/ai/types';
+import type { AIService } from '@/core/types/ai';
 
 interface WordAnalysis {
     word: string;
@@ -20,6 +20,7 @@ export const SidePanel: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [aiService, setAiService] = useState<AIService | null>(null);
     const [savedWords, setSavedWords] = useState<Set<string>>(new Set());
+    const [currentAnalysisId, setCurrentAnalysisId] = useState<string | null>(null);
 
     // Initialize AI service
     useEffect(() => {
@@ -75,6 +76,10 @@ export const SidePanel: React.FC = () => {
             return;
         }
 
+        // Generate unique analysis ID to handle concurrent requests
+        const analysisId = `${word}-${Date.now()}`;
+        setCurrentAnalysisId(analysisId);
+
         setIsLoading(true);
         setIsStreaming(false);
         setError(null);
@@ -103,16 +108,22 @@ export const SidePanel: React.FC = () => {
                     word,
                     context || '',
                     targetLanguage,
-                    (chunk) => {
-                        streamedDefinition += chunk;
-                        setCurrentAnalysis((prev) => ({
-                            ...prev!,
-                            definition: streamedDefinition,
-                        }));
+                    (chunk: string) => {
+                        // Check if this is still the current analysis
+                        if (currentAnalysisId === analysisId) {
+                            streamedDefinition += chunk;
+                            setCurrentAnalysis((prev) => ({
+                                ...prev!,
+                                definition: streamedDefinition,
+                            }));
+                        }
                     },
                 );
 
-                setIsStreaming(false); // Streaming completed
+                // Only update state if this is still the current analysis
+                if (currentAnalysisId === analysisId) {
+                    setIsStreaming(false); // Streaming completed
+                }
             } else {
                 // Fallback to non-streaming
                 const definition = await aiService.getWordDefinition(
@@ -121,18 +132,26 @@ export const SidePanel: React.FC = () => {
                     targetLanguage,
                 );
 
-                setCurrentAnalysis({
-                    word,
-                    definition,
-                    context,
-                    timestamp: Date.now(),
-                });
+                // Only update if this is still the current analysis
+                if (currentAnalysisId === analysisId) {
+                    setCurrentAnalysis({
+                        word,
+                        definition,
+                        context,
+                        timestamp: Date.now(),
+                    });
+                }
             }
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to analyze word');
-            setIsStreaming(false);
+            // Only show error if this is still the current analysis
+            if (currentAnalysisId === analysisId) {
+                setError(err instanceof Error ? err.message : 'Failed to analyze word');
+                setIsStreaming(false);
+            }
         } finally {
-            setIsLoading(false);
+            if (currentAnalysisId === analysisId) {
+                setIsLoading(false);
+            }
         }
     };
 
@@ -223,7 +242,7 @@ export const SidePanel: React.FC = () => {
                                         variant={
                                             savedWords.has(currentAnalysis.word)
                                                 ? 'secondary'
-                                                : 'primary'
+                                                : 'default'
                                         }
                                         size="icon"
                                         onClick={handleSaveWord}
