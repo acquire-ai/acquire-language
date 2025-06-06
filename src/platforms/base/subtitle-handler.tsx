@@ -39,11 +39,20 @@ const SubtitleContainer: React.FC<{
     }, [handler]);
 
     const handleWordClick = async (word: string, position: { x: number; y: number }) => {
-        handler.showWordLoading(word, position);
 
-        const definition = await handler.getWordDefinition(word, subtitles.join('\n'));
-
-        handler.showWordDefinition(word, definition, position);
+        try {
+            // Send message to background script to open sidepanel
+            await chrome.runtime.sendMessage({
+                type: 'OPEN_SIDEPANEL',
+                data: {
+                    word,
+                    context: subtitles.join('\n'),
+                },
+            });
+            console.log('Message sent to background script');
+        } catch (error) {
+            console.error('Error sending message to background:', error);
+        }
     };
 
     return (

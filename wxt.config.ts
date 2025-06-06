@@ -25,7 +25,7 @@ export default defineConfig({
 
         // Version number
         version: '0.0.1',
-        permissions: ['storage', 'tabs', 'scripting', 'webRequest'],
+        permissions: ['storage', 'tabs', 'scripting', 'webRequest', 'sidePanel'],
         host_permissions: ['*://*.youtube.com/*'],
 
         options_page: null,

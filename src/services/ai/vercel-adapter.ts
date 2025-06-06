@@ -4,7 +4,7 @@
  * This implementation uses the Vercel provider SDK to interact with multiple provider providers
  * through a unified interface.
  */
-import { generateText } from 'ai';
+import { generateText, streamText } from 'ai';
 import { AIService } from '@/core/types/ai';
 import { getLanguageName } from '@/core/utils';
 import { translatePrompt } from '@/prompts';
@@ -39,6 +39,33 @@ export class VercelAIAdapter implements AIService {
         } catch (error: any) {
             console.error(`Failed to get word definition with ${this.model}:`, error);
             return `Failed to get definition for "${word}": ${error.message}`;
+        }
+    }
+
+    async getWordDefinitionStream(
+        word: string,
+        context: string,
+        targetLanguage: string,
+        onChunk: (chunk: string) => void,
+    ): Promise<void> {
+        try {
+            const settings = await getSettings();
+            const nativeLanguage = settings.general.nativeLanguage;
+            const prompt = translatePrompt(word, context, nativeLanguage);
+
+            const { textStream } = await streamText({
+                model: this.provider(this.model),
+                prompt,
+                maxTokens: 500,
+                temperature: 0.3,
+            });
+
+            for await (const chunk of textStream) {
+                onChunk(chunk);
+            }
+        } catch (error: any) {
+            console.error(`Failed to get word definition stream with ${this.model}:`, error);
+            throw new Error(`Failed to get definition for "${word}": ${error.message}`);
         }
     }
 

@@ -7,15 +7,116 @@ import { Word } from '@/core/types/storage';
 
 export default defineBackground({
     main() {
-        // Listen for updates from content scripts
-        listenForSubtitleRequests();
+        // Set up all listeners
+        setupMessageListeners();
+        setupSubtitleRequestListener();
     },
 });
 
 /**
- * Listen for subtitle requests from content scripts
+ * Set up all message listeners
  */
-function listenForSubtitleRequests() {
+function setupMessageListeners() {
+    browser.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+        console.log('Background received message:', message);
+
+        if (message.type === 'OPEN_SIDEPANEL') {
+            console.log('Opening sidepanel for word:', message.data.word);
+
+            // Open sidepanel when word is clicked
+            // @ts-ignore - Chrome API
+            if (browser.sidePanel && sender.tab?.windowId !== undefined) {
+                try {
+                    // Chrome API
+                    // @ts-ignore
+                    await browser.sidePanel.open({ windowId: sender.tab.windowId });
+                    console.log('Sidepanel opened successfully');
+
+                    // Send the word data to sidepanel after a short delay to ensure it's loaded
+                    setTimeout(() => {
+                        browser.runtime.sendMessage({
+                            type: 'ANALYZE_WORD',
+                            data: message.data,
+                        });
+                        console.log('Sent ANALYZE_WORD message to sidepanel');
+                    }, 100);
+                } catch (error) {
+                    console.error('Error opening sidepanel:', error);
+                    // Fallback to popup window
+                    openFallbackWindow(message.data);
+                }
+            }
+            // @ts-ignore - Firefox API
+            else if (browser.sidebarAction) {
+                // Firefox API
+                // @ts-ignore
+                await browser.sidebarAction.open();
+
+                // Send the word data to sidepanel
+                setTimeout(() => {
+                    browser.runtime.sendMessage({
+                        type: 'ANALYZE_WORD',
+                        data: message.data,
+                    });
+                }, 100);
+            } else {
+                console.error(
+                    'Neither sidePanel nor sidebarAction API is available, using fallback window',
+                );
+                // Fallback to popup window
+                openFallbackWindow(message.data);
+            }
+        } else if (message.type === 'CLOSE_SIDEPANEL') {
+            // Close sidepanel
+            // @ts-ignore - Chrome API
+            if (browser.sidePanel) {
+                // Chrome doesn't have a close method, user needs to close manually
+                console.log('Sidepanel close requested - user needs to close manually');
+            }
+            // @ts-ignore - Firefox API
+            else if (browser.sidebarAction) {
+                // Firefox API
+                // @ts-ignore
+                await browser.sidebarAction.close();
+            }
+        } else if (message.type === 'SAVE_WORD') {
+            // Save word to vocabulary
+            saveWordToVocabulary(message.word, message.context, message.definition)
+                .then(() => sendResponse({ success: true }))
+                .catch((error) => sendResponse({ success: false, error: error.message }));
+            return true; // Indicates that the response will be sent asynchronously
+        }
+    });
+}
+
+/**
+ * Open a fallback window if sidepanel is not available
+ */
+async function openFallbackWindow(data: { word: string; context: string }) {
+    try {
+        // Store the data temporarily
+        await browser.storage.local.set({ pendingWordAnalysis: data });
+
+        // Open sidepanel.html in a new window
+        const window = await browser.windows.create({
+            url: browser.runtime.getURL('/sidepanel.html'),
+            type: 'popup',
+            width: 400,
+            height: 600,
+            left: screen.width - 420,
+            top: 100,
+        });
+
+        console.log('Opened fallback window:', window);
+    } catch (error) {
+        console.error('Error opening fallback window:', error);
+    }
+}
+
+/**
+ * Set up subtitle request listener
+ */
+function setupSubtitleRequestListener() {
     chrome.webRequest.onBeforeRequest.addListener(
         (details) => {
             if (details.method !== 'GET') return;
@@ -66,17 +167,6 @@ function listenForSubtitleRequests() {
         },
         { urls: ['*://*.youtube.com/*timedtext*', '*://*.youtube.com/api/*'] },
     );
-
-    // Listen for messages from content script
-    browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-        if (message.type === 'SAVE_WORD') {
-            // Save word to vocabulary
-            saveWordToVocabulary(message.word, message.context)
-                .then(() => sendResponse({ success: true }))
-                .catch((error) => sendResponse({ success: false, error: error.message }));
-            return true; // Indicates that the response will be sent asynchronously
-        }
-    });
 }
 
 async function fetchSubtitle(url: string) {
@@ -92,7 +182,11 @@ async function fetchSubtitle(url: string) {
     }
 }
 
-async function saveWordToVocabulary(word: string, context: string): Promise<Word> {
+async function saveWordToVocabulary(
+    word: string,
+    context: string,
+    definition?: string,
+): Promise<Word> {
     const vocabulary = await StorageManager.getVocabulary();
 
     // Check if word already exists
@@ -101,12 +195,17 @@ async function saveWordToVocabulary(word: string, context: string): Promise<Word
         if (!vocabulary[word].contexts.includes(context)) {
             vocabulary[word].contexts.push(context);
         }
+        // Update definition if provided
+        if (definition) {
+            vocabulary[word].definition = definition;
+        }
     } else {
         // If word doesn't exist, create new entry
         vocabulary[word] = {
             word,
             contexts: [context],
             createdAt: new Date().toISOString(),
+            definition,
         };
     }
 

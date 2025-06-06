@@ -10,6 +10,7 @@ export interface Word {
     word: string;
     contexts: string[];
     createdAt: string;
+    definition?: string;
 }
 
 /**
