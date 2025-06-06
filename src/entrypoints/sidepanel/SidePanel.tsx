@@ -5,6 +5,13 @@ import { Loader2, Save, X, Volume2 } from 'lucide-react';
 import { createAIService } from '@/services/ai';
 import { getSettings } from '@/core/config/settings';
 import type { AIService } from '@/core/types/ai';
+import { marked } from 'marked';
+
+// Configure marked options
+marked.setOptions({
+    breaks: true, // Convert line breaks to <br>
+    gfm: true, // Enable GitHub Flavored Markdown
+});
 
 interface WordAnalysis {
     word: string;
@@ -261,13 +268,15 @@ export const SidePanel: React.FC = () => {
                                     Definition & Explanation:
                                 </h3>
                                 <div className="prose prose-sm dark:prose-invert max-w-none">
-                                    <p className="whitespace-pre-wrap">
-                                        {currentAnalysis.definition}
-                                        {/* Show blinking cursor when streaming */}
-                                        {isStreaming && (
-                                            <span className="inline-block w-0.5 h-4 bg-primary animate-pulse ml-0.5" />
-                                        )}
-                                    </p>
+                                    <div
+                                        dangerouslySetInnerHTML={{
+                                            __html: marked(currentAnalysis.definition || ''),
+                                        }}
+                                    />
+                                    {/* Show blinking cursor when streaming */}
+                                    {isStreaming && (
+                                        <span className="inline-block w-0.5 h-4 bg-primary animate-pulse ml-0.5" />
+                                    )}
                                 </div>
                             </div>
                         </CardContent>
