@@ -8,6 +8,7 @@ import { defineContentScript } from 'wxt/sandbox';
 import { createPlatformHandler } from '@/platforms';
 import { createAIService } from '@/services/ai';
 import { getSettings, watchSettings } from '@/core/config/settings';
+import { initializeOverlayPanel } from './overlay-panel';
 
 export default defineContentScript({
     matches: ['*://*.youtube.com/*'],
@@ -16,6 +17,9 @@ export default defineContentScript({
         let subtitleHandler: any = null;
         let aiService: any = null;
         const processedSubtitleRequests = new Set<string>();
+
+        // Initialize the overlay panel
+        initializeOverlayPanel();
 
         async function initializeWithSettings() {
             const settings = await getSettings();

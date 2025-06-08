@@ -20,68 +20,7 @@ function setupMessageListeners() {
     browser.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
         console.log('Background received message:', message);
 
-        if (message.type === 'OPEN_SIDEPANEL') {
-            console.log('Opening sidepanel for word:', message.data.word);
-
-            // Open sidepanel when word is clicked
-            // @ts-ignore - Chrome API
-            if (browser.sidePanel && sender.tab?.windowId !== undefined) {
-                try {
-                    // Chrome API
-                    // @ts-ignore
-                    await browser.sidePanel.open({ windowId: sender.tab.windowId });
-                    console.log('Sidepanel opened successfully');
-
-                    // Store the word data for sidepanel to pick up when it initializes
-                    await browser.storage.local.set({ pendingWordAnalysis: message.data });
-
-                    // Also try to send message in case sidepanel is already loaded
-                    setTimeout(() => {
-                        browser.runtime
-                            .sendMessage({
-                                type: 'ANALYZE_WORD',
-                                data: message.data,
-                            })
-                            .catch(() => {
-                                // Ignore errors - sidepanel will pick up from storage
-                                console.log('Direct message failed, sidepanel will use storage');
-                            });
-                    }, 50);
-                } catch (error) {
-                    console.error('Error opening sidepanel:', error);
-                    // Fallback to popup window
-                    openFallbackWindow(message.data);
-                }
-            }
-            // @ts-ignore - Firefox API
-            else if (browser.sidebarAction) {
-                // Firefox API
-                // @ts-ignore
-                await browser.sidebarAction.open();
-
-                // Store data for pickup
-                await browser.storage.local.set({ pendingWordAnalysis: message.data });
-            } else {
-                console.error(
-                    'Neither sidePanel nor sidebarAction API is available, using fallback window',
-                );
-                // Fallback to popup window
-                openFallbackWindow(message.data);
-            }
-        } else if (message.type === 'CLOSE_SIDEPANEL') {
-            // Close sidepanel
-            // @ts-ignore - Chrome API
-            if (browser.sidePanel) {
-                // Chrome doesn't have a close method, user needs to close manually
-                console.log('Sidepanel close requested - user needs to close manually');
-            }
-            // @ts-ignore - Firefox API
-            else if (browser.sidebarAction) {
-                // Firefox API
-                // @ts-ignore
-                await browser.sidebarAction.close();
-            }
-        } else if (message.type === 'SAVE_WORD') {
+        if (message.type === 'SAVE_WORD') {
             // Save word to vocabulary
             saveWordToVocabulary(message.word, message.context, message.definition)
                 .then(() => sendResponse({ success: true }))
@@ -89,30 +28,6 @@ function setupMessageListeners() {
             return true; // Indicates that the response will be sent asynchronously
         }
     });
-}
-
-/**
- * Open a fallback window if sidepanel is not available
- */
-async function openFallbackWindow(data: { word: string; context: string }) {
-    try {
-        // Store the data temporarily
-        await browser.storage.local.set({ pendingWordAnalysis: data });
-
-        // Open sidepanel.html in a new window
-        const window = await browser.windows.create({
-            url: browser.runtime.getURL('/sidepanel.html'),
-            type: 'popup',
-            width: 400,
-            height: 600,
-            left: screen.width - 420,
-            top: 100,
-        });
-
-        console.log('Opened fallback window:', window);
-    } catch (error) {
-        console.error('Error opening fallback window:', error);
-    }
 }
 
 /**

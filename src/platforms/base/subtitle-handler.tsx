@@ -39,19 +39,23 @@ const SubtitleContainer: React.FC<{
     }, [handler]);
 
     const handleWordClick = async (word: string, position: { x: number; y: number }) => {
+        console.log('Word clicked:', word, 'at position:', position);
 
         try {
-            // Send message to background script to open sidepanel
-            await chrome.runtime.sendMessage({
-                type: 'OPEN_SIDEPANEL',
-                data: {
-                    word,
-                    context: subtitles.join('\n'),
-                },
-            });
-            console.log('Message sent to background script');
+            // Dispatch custom event to open overlay panel
+            const wordData = {
+                word,
+                context: subtitles.join('\n'),
+            };
+            console.log('Dispatching event to open overlay panel:', wordData);
+
+            window.dispatchEvent(
+                new CustomEvent('acquire-language-open-panel', {
+                    detail: wordData,
+                }),
+            );
         } catch (error) {
-            console.error('Error sending message to background:', error);
+            console.error('Error opening overlay panel:', error);
         }
     };
 
