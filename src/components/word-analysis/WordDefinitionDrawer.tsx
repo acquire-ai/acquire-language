@@ -21,7 +21,7 @@ import {
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Separator } from '@/components/ui/separator';
-import type { TraditionalDefinitionEntry } from '../player/page';
+import type { TraditionalDefinitionEntry } from '@/core/types/dictionary';
 // Import Card components
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/core/utils';
@@ -43,6 +43,14 @@ interface WordDefinitionDrawerProps {
     aiContextualDefinition: string | null;
     isLoadingTraditional: boolean;
     isLoadingAI: boolean;
+    onChatMessage?: (
+        message: string,
+        word: string,
+        context: string,
+        history: ChatMessage[],
+    ) => Promise<string>;
+    onSaveWord?: () => void;
+    isSaved?: boolean;
 }
 
 // Simulate fetching AI chat response
@@ -81,6 +89,9 @@ const WordDefinitionDrawer: React.FC<WordDefinitionDrawerProps> = ({
     aiContextualDefinition,
     isLoadingTraditional,
     isLoadingAI,
+    onChatMessage,
+    onSaveWord,
+    isSaved = false,
 }) => {
     const [streamedAIDefinition, setStreamedAIDefinition] = useState('');
     const [isFavorited, setIsFavorited] = useState(false);
@@ -115,14 +126,14 @@ const WordDefinitionDrawer: React.FC<WordDefinitionDrawerProps> = ({
 
     useEffect(() => {
         if (isOpen) {
-            setIsFavorited(false);
+            setIsFavorited(isSaved);
             setIsContextExpanded(false);
             setChatMessages([]);
             setCurrentUserInput('');
             // Reset isDrawerMaximized to false when drawer opens with a new word
             // setIsDrawerMaximized(false); // Commented out to retain maximized state across word changes if desired.
         }
-    }, [word, isOpen]);
+    }, [word, isOpen, isSaved]);
 
     useEffect(() => {
         if (scrollAreaRef.current) {
@@ -131,8 +142,10 @@ const WordDefinitionDrawer: React.FC<WordDefinitionDrawerProps> = ({
     }, [chatMessages]);
 
     const handleFavoriteToggle = () => {
+        if (onSaveWord && !isSaved) {
+            onSaveWord();
+        }
         setIsFavorited(!isFavorited);
-        console.log(word, isFavorited ? 'removed from favorites' : 'added to favorites');
     };
 
     const handlePlayPronunciation = (accent: 'UK' | 'US') => {
@@ -159,12 +172,26 @@ const WordDefinitionDrawer: React.FC<WordDefinitionDrawerProps> = ({
         setIsAIChatting(true);
 
         try {
-            const aiResponseContent = await simulateAIChatResponse(
-                word,
-                contextSentence,
-                [...chatMessages, newUserMessage],
-                trimmedInput,
-            );
+            let aiResponseContent: string;
+
+            if (onChatMessage) {
+                // Use the provided chat handler
+                aiResponseContent = await onChatMessage(
+                    trimmedInput,
+                    word || '',
+                    contextSentence || '',
+                    [...chatMessages, newUserMessage],
+                );
+            } else {
+                // Fallback to simulation
+                aiResponseContent = await simulateAIChatResponse(
+                    word,
+                    contextSentence,
+                    [...chatMessages, newUserMessage],
+                    trimmedInput,
+                );
+            }
+
             const newAIMessage: ChatMessage = {
                 id: `assistant-${Date.now()}`,
                 role: 'assistant',
