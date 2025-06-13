@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
-import { X } from 'lucide-react';
-import { WordAnalysisPanel } from '@/components/word-analysis/WordAnalysisPanel';
+import { WordAnalysisDrawer } from '@/components/word-analysis/WordAnalysisDrawer';
 import '@/assets/globals.css';
 
 interface OverlayPanelProps {
@@ -9,85 +8,22 @@ interface OverlayPanelProps {
 }
 
 const OverlayPanel: React.FC<OverlayPanelProps> = ({ onClose }) => {
-    const [isOpen, setIsOpen] = useState(false);
-
     useEffect(() => {
-        // Trigger animation after mount
-        setTimeout(() => setIsOpen(true), 10);
+        // Add class to html element to ensure dark mode works
+        const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const root = document.getElementById('acquire-language-overlay-root');
+        if (root) {
+            if (isDarkMode) {
+                root.classList.add('dark');
+            } else {
+                root.classList.remove('dark');
+            }
+        }
     }, []);
 
-    const handleClose = () => {
-        setIsOpen(false);
-        setTimeout(onClose, 300); // Wait for animation to complete
-    };
-
-    return (
-        <>
-            {/* Backdrop */}
-            <div
-                className={`acquire-language-backdrop ${isOpen ? 'acquire-language-backdrop-open' : ''}`}
-                onClick={handleClose}
-                style={{
-                    position: 'fixed',
-                    inset: 0,
-                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                    transition: 'opacity 300ms',
-                    opacity: isOpen ? 1 : 0,
-                    zIndex: 999998,
-                }}
-            />
-
-            {/* Panel */}
-            <div
-                className={`acquire-language-panel ${isOpen ? 'acquire-language-panel-open' : ''}`}
-                style={{
-                    position: 'fixed',
-                    top: 0,
-                    right: 0,
-                    height: '100%',
-                    width: '400px',
-                    backgroundColor: 'var(--background, white)',
-                    boxShadow: '-2px 0 10px rgba(0, 0, 0, 0.1)',
-                    transition: 'transform 300ms',
-                    transform: isOpen ? 'translateX(0)' : 'translateX(100%)',
-                    zIndex: 999999,
-                    overflow: 'hidden',
-                }}
-            >
-                <div
-                    style={{
-                        position: 'absolute',
-                        top: '1rem',
-                        right: '1rem',
-                        zIndex: 10,
-                    }}
-                >
-                    <button
-                        onClick={handleClose}
-                        style={{
-                            padding: '0.5rem',
-                            borderRadius: '9999px',
-                            backgroundColor: 'transparent',
-                            border: 'none',
-                            cursor: 'pointer',
-                            transition: 'background-color 200ms',
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.1)';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                        }}
-                    >
-                        <X className="h-5 w-5" />
-                    </button>
-                </div>
-                <div style={{ height: '100%', overflow: 'auto' }}>
-                    <WordAnalysisPanel />
-                </div>
-            </div>
-        </>
-    );
+    // Since WordDefinitionDrawer already has its own Sheet component with close button,
+    // we don't need the backdrop and panel wrapper
+    return <WordAnalysisDrawer />;
 };
 
 let root: ReactDOM.Root | null = null;
@@ -119,41 +55,26 @@ export function initializeOverlayPanel() {
         container = document.createElement('div');
         container.id = 'acquire-language-overlay-root';
         container.className = 'acquire-language-extension';
-        document.body.appendChild(container);
 
-        // Add scoped styles to prevent conflicts
-        const style = document.createElement('style');
-        style.textContent = `
-            /* Scope all extension styles to our container */
-            #acquire-language-overlay-root {
-                /* Reset inherited styles */
-                all: initial;
-                /* Set base font */
-                font-family: system-ui, -apple-system, sans-serif;
-                /* Ensure proper stacking */
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 0;
-                height: 0;
-                z-index: 999999;
-                /* Ensure Tailwind styles are applied */
-                color-scheme: light dark;
-            }
-            
-            /* Ensure our styles don't affect the page */
-            #acquire-language-overlay-root * {
-                box-sizing: border-box;
-            }
-
-            /* Force Tailwind classes to have higher specificity */
-            #acquire-language-overlay-root .acquire-language-panel {
-                background-color: var(--background, white) !important;
-                color: var(--foreground, black) !important;
-            }
+        // Apply Tailwind base styles to our container
+        container.style.cssText = `
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            z-index: 2147483647 !important;
+            pointer-events: none !important;
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji" !important;
+            font-feature-settings: normal !important;
+            font-variation-settings: normal !important;
+            line-height: 1.5 !important;
+            -webkit-text-size-adjust: 100% !important;
+            -moz-tab-size: 4 !important;
+            tab-size: 4 !important;
         `;
-        document.head.appendChild(style);
 
+        document.body.appendChild(container);
         root = ReactDOM.createRoot(container);
     }
 
@@ -168,17 +89,26 @@ export function openPanel(wordData: any) {
     // Store word data in storage for the panel to access
     chrome.storage.local.set({ pendingWordAnalysis: wordData });
 
-    root.render(
-        <OverlayPanel
-            onClose={() => {
-                if (root && container) {
-                    root.unmount();
-                    // Re-create root for next use
-                    root = ReactDOM.createRoot(container);
-                }
-            }}
-        />,
-    );
+    // Ensure container allows pointer events for its children
+    if (container) {
+        // Add a wrapper div that allows pointer events
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'pointer-events: auto !important; width: 100%; height: 100%;';
+
+        root.render(
+            <div style={{ pointerEvents: 'auto' }}>
+                <OverlayPanel
+                    onClose={() => {
+                        if (root && container) {
+                            root.unmount();
+                            // Re-create root for next use
+                            root = ReactDOM.createRoot(container);
+                        }
+                    }}
+                />
+            </div>,
+        );
+    }
 }
 
 export function closePanel() {
