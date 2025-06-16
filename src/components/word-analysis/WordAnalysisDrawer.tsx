@@ -194,8 +194,12 @@ export const WordAnalysisDrawer: React.FC = () => {
         return await aiService.getChatResponse(message, word, context, chatHistory, targetLanguage);
     };
 
-    // Replace the simulateAIChatResponse in WordDefinitionDrawer with actual AI service
-    const enhancedWordDefinitionDrawer = React.cloneElement(
+    const getPortalContainer = () => {
+        const shadowHost = document.getElementById('acquire-language-overlay-root');
+        return shadowHost?.shadowRoot?.getElementById('react-root') || document.body;
+    };
+
+    return (
         <WordDefinitionDrawer
             isOpen={isOpen}
             onClose={handleClose}
@@ -207,14 +211,10 @@ export const WordAnalysisDrawer: React.FC = () => {
             aiContextualDefinition={currentAnalysis?.definition || null}
             isLoadingTraditional={isLoadingTraditional}
             isLoadingAI={isLoadingAI}
-        />,
-        {
-            // Override the simulateAIChatResponse with actual AI service
-            onChatMessage: handleAIChatResponse,
-            onSaveWord: handleSaveWord,
-            isSaved: currentAnalysis ? savedWords.has(currentAnalysis.word) : false,
-        },
+            onChatMessage={handleAIChatResponse}
+            onSaveWord={handleSaveWord}
+            isSaved={currentAnalysis ? savedWords.has(currentAnalysis.word) : false}
+            portalContainer={getPortalContainer()}
+        />
     );
-
-    return enhancedWordDefinitionDrawer;
 };

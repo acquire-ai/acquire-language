@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { WordAnalysisDrawer } from '@/components/word-analysis/WordAnalysisDrawer';
-import '@/assets/globals.css';
+import { loadStylesForShadowDOM } from '@/core/utils';
 
 interface OverlayPanelProps {
     onClose: () => void;
@@ -11,23 +11,22 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ onClose }) => {
     useEffect(() => {
         // Add class to html element to ensure dark mode works
         const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const root = document.getElementById('acquire-language-overlay-root');
-        if (root) {
+        const shadowHost = document.getElementById('acquire-language-overlay-root');
+        if (shadowHost) {
             if (isDarkMode) {
-                root.classList.add('dark');
+                shadowHost.classList.add('dark');
             } else {
-                root.classList.remove('dark');
+                shadowHost.classList.remove('dark');
             }
         }
     }, []);
 
-    // Since WordDefinitionDrawer already has its own Sheet component with close button,
-    // we don't need the backdrop and panel wrapper
     return <WordAnalysisDrawer />;
 };
 
 let root: ReactDOM.Root | null = null;
 let container: HTMLDivElement | null = null;
+let shadowRoot: ShadowRoot | null = null; 
 let isInitialized = false;
 
 // Listen for messages to open the panel
@@ -44,7 +43,7 @@ window.addEventListener('acquire-language-open-panel', (event: any) => {
     openPanel(event.detail);
 });
 
-export function initializeOverlayPanel() {
+export async function initializeOverlayPanel() {
     // Prevent multiple initializations
     if (isInitialized) {
         return;
@@ -56,59 +55,49 @@ export function initializeOverlayPanel() {
         container.id = 'acquire-language-overlay-root';
         container.className = 'acquire-language-extension';
 
-        // Apply Tailwind base styles to our container
-        container.style.cssText = `
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-            z-index: 2147483647 !important;
-            pointer-events: none !important;
-            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji" !important;
-            font-feature-settings: normal !important;
-            font-variation-settings: normal !important;
-            line-height: 1.5 !important;
-            -webkit-text-size-adjust: 100% !important;
-            -moz-tab-size: 4 !important;
-            tab-size: 4 !important;
-        `;
+        shadowRoot = container.attachShadow({ mode: 'open' });
+        const cssText = await loadStylesForShadowDOM();
+        const style = document.createElement('style');
+        style.textContent = cssText;
+        shadowRoot.appendChild(style);
+
+        const reactContainer = document.createElement('div');
+        reactContainer.id = 'react-root';
+        shadowRoot.appendChild(reactContainer);
 
         document.body.appendChild(container);
-        root = ReactDOM.createRoot(container);
+
+        // Note, the root is created in the shadow DOM, not the container
+        root = ReactDOM.createRoot(reactContainer);
+        console.log('Shadow DOM initialized successfully');
     }
 
     isInitialized = true;
 }
 
 export function openPanel(wordData: any) {
-    if (!root || !container) {
+    if (!root || !container || !shadowRoot) {
         return;
     }
 
     // Store word data in storage for the panel to access
     chrome.storage.local.set({ pendingWordAnalysis: wordData });
 
-    // Ensure container allows pointer events for its children
-    if (container) {
-        // Add a wrapper div that allows pointer events
-        const wrapper = document.createElement('div');
-        wrapper.style.cssText = 'pointer-events: auto !important; width: 100%; height: 100%;';
+    root.render(
+        <OverlayPanel
+            onClose={() => {
+                if (root && shadowRoot) {
+                    root.unmount();
+                    // Re-create root for next use
+                    const reactContainer = shadowRoot.getElementById('react-root');
+                    if (reactContainer) {
+                        root = ReactDOM.createRoot(reactContainer);
+                    }
+                }
+            }}
+        />,
+    );
 
-        root.render(
-            <div style={{ pointerEvents: 'auto' }}>
-                <OverlayPanel
-                    onClose={() => {
-                        if (root && container) {
-                            root.unmount();
-                            // Re-create root for next use
-                            root = ReactDOM.createRoot(container);
-                        }
-                    }}
-                />
-            </div>,
-        );
-    }
 }
 
 export function closePanel() {

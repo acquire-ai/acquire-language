@@ -84,3 +84,25 @@ export function getLanguageName(code: string): string {
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
+
+
+export async function loadStylesForShadowDOM(): Promise<string> {
+    try {
+        const cssUrl = chrome.runtime.getURL('assets/globals.css');
+        
+        const response = await fetch(cssUrl);
+        
+        if (!response.ok) {
+            throw new Error(`Failed to load CSS: ${response.status} ${response.statusText}`);
+        }
+        
+        const cssText = await response.text();
+        
+        console.log('Successfully loaded CSS for Shadow DOM');
+        return cssText;
+        
+    } catch (error) {
+        console.error('Failed to load styles for Shadow DOM:', error);
+        return '';
+    }
+}
