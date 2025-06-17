@@ -4,6 +4,7 @@
  * This script runs on platform pages and is responsible for initializing subtitle handlers.
  * It detects platform video pages and activates subtitle enhancement features after the video player loads.
  */
+import '@/assets/globals.css';
 import { defineContentScript } from 'wxt/sandbox';
 import { createPlatformHandler } from '@/platforms';
 import { createAIService } from '@/services/ai';
