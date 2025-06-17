@@ -10,27 +10,6 @@ export const OverlayPanel: React.FC<OverlayPanelProps> = ({ onClose, portalConta
     const [isDarkMode, setIsDarkMode] = useState(false);
 
     useEffect(() => {
-        console.log('OverlayPanel mounted');
-
-        // Debug: Check if styles are applied
-        setTimeout(() => {
-            const shadowRoot = (window as any).__acquireLanguageShadowRoot;
-            if (shadowRoot) {
-                console.log(
-                    'Shadow DOM styles:',
-                    shadowRoot.querySelectorAll('style, link').length,
-                );
-                const testEl = shadowRoot.querySelector('.bg-card');
-                if (testEl) {
-                    const computedStyle = window.getComputedStyle(testEl);
-                    console.log('bg-card computed background:', computedStyle.backgroundColor);
-                    console.log('bg-card computed color:', computedStyle.color);
-                } else {
-                    console.log('No .bg-card element found in Shadow DOM');
-                }
-            }
-        }, 1000);
-
         // Check dark mode preference
         const checkDarkMode = () => {
             const darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -44,14 +23,12 @@ export const OverlayPanel: React.FC<OverlayPanelProps> = ({ onClose, portalConta
         mediaQuery.addEventListener('change', checkDarkMode);
 
         return () => {
-            console.log('OverlayPanel unmounting');
             mediaQuery.removeEventListener('change', checkDarkMode);
         };
     }, []);
 
     // Create a wrapper for onClose to handle the drawer closing
     const handleDrawerClose = () => {
-        console.log('Drawer closed, unmounting component');
         onClose();
     };
 

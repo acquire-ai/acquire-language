@@ -82,8 +82,6 @@ const WordDefinitionDrawer: React.FC<WordDefinitionDrawerProps> = ({
     isSaved = false,
     portalContainer,
 }) => {
-    console.log('WordDefinitionDrawer rendered with isOpen:', isOpen, 'word:', word);
-
     const [streamedAIDefinition, setStreamedAIDefinition] = useState('');
     const [isFavorited, setIsFavorited] = useState(false);
     const [pronouncingAccent, setPronouncingAccent] = useState<'UK' | 'US' | null>(null);
@@ -121,8 +119,6 @@ const WordDefinitionDrawer: React.FC<WordDefinitionDrawerProps> = ({
             setIsContextExpanded(false);
             setChatMessages([]);
             setCurrentUserInput('');
-            // Reset isDrawerMaximized to false when drawer opens with a new word
-            // setIsDrawerMaximized(false); // Commented out to retain maximized state across word changes if desired.
         }
     }, [word, isOpen, isSaved]);
 
@@ -166,7 +162,6 @@ const WordDefinitionDrawer: React.FC<WordDefinitionDrawerProps> = ({
             let aiResponseContent: string;
 
             if (onChatMessage) {
-                // Use the provided chat handler
                 aiResponseContent = await onChatMessage(
                     trimmedInput,
                     word || '',
@@ -174,7 +169,6 @@ const WordDefinitionDrawer: React.FC<WordDefinitionDrawerProps> = ({
                     [...chatMessages, newUserMessage],
                 );
             } else {
-                // Fallback to a simple error message
                 aiResponseContent =
                     'Chat functionality is not available. Please configure an AI service.';
             }

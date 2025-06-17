@@ -29,8 +29,6 @@ export const WordAnalysisDrawer: React.FC<WordAnalysisDrawerProps> = ({
     portalContainer,
 }) => {
     const [isOpen, setIsOpen] = useState(true);
-
-    console.log('WordAnalysisDrawer rendered, isOpen:', isOpen);
     const [currentAnalysis, setCurrentAnalysis] = useState<WordAnalysis | null>(null);
     const [isLoadingAI, setIsLoadingAI] = useState(false);
     const [isLoadingTraditional, setIsLoadingTraditional] = useState(false);
@@ -74,7 +72,6 @@ export const WordAnalysisDrawer: React.FC<WordAnalysisDrawerProps> = ({
             const result = await browser.storage.local.get('pendingWordAnalysis');
             if (result.pendingWordAnalysis) {
                 const { word, context } = result.pendingWordAnalysis;
-                console.log('Found pending word analysis:', word);
 
                 // Clear the pending analysis
                 await browser.storage.local.remove('pendingWordAnalysis');
@@ -92,7 +89,6 @@ export const WordAnalysisDrawer: React.FC<WordAnalysisDrawerProps> = ({
         const handleMessage = async (message: any) => {
             if (message.type === 'ANALYZE_WORD') {
                 const { word, context } = message.data;
-                console.log('Received ANALYZE_WORD message:', word);
                 analyzeWord(word, context);
             }
         };
@@ -105,8 +101,6 @@ export const WordAnalysisDrawer: React.FC<WordAnalysisDrawerProps> = ({
     }, [aiService]);
 
     const analyzeWord = async (word: string, context?: string) => {
-        console.log('analyzeWord called with:', word, 'aiService:', !!aiService);
-
         // Immediately set the word analysis with the word and context
         setCurrentAnalysis({
             word,
@@ -116,7 +110,6 @@ export const WordAnalysisDrawer: React.FC<WordAnalysisDrawerProps> = ({
         });
 
         if (!aiService) {
-            console.log('AI service not initialized, setting error');
             setError('AI service not initialized');
             return;
         }
@@ -194,10 +187,7 @@ export const WordAnalysisDrawer: React.FC<WordAnalysisDrawerProps> = ({
 
     const handleClose = () => {
         setIsOpen(false);
-        // Don't call window.close() here
-        // The parent component should handle the actual unmounting
         if (onCloseCallback) {
-            // Give time for the closing animation to complete
             setTimeout(() => {
                 onCloseCallback();
             }, 300);
