@@ -210,7 +210,7 @@ const WordDefinitionDrawer: React.FC<WordDefinitionDrawerProps> = ({
             onOpenChange={(open) => {
                 if (!open) onClose();
             }}
-            modal={true}
+            modal={false}
         >
             <SheetContent
                 className={cn(
@@ -228,19 +228,7 @@ const WordDefinitionDrawer: React.FC<WordDefinitionDrawerProps> = ({
                         e.preventDefault();
                     }
                 }}
-                onOpenAutoFocus={(e) => {
-                    // Debug: Log the portal container and its parent elements
-                    console.log('SheetContent mounted, portalContainer:', portalContainer);
-                    if (portalContainer) {
-                        console.log('Portal container parent:', portalContainer.parentElement);
-                        console.log(
-                            'Portal container parent chain:',
-                            getElementChain(portalContainer),
-                        );
-                    }
-                    // Prevent default focus behavior
-                    e.preventDefault();
-                }}
+                onOpenAutoFocus={(e) => e.preventDefault()}
             >
                 <SheetHeader className="p-3 sm:p-4 border-b sticky top-0 bg-card z-10 flex-shrink-0">
                     <div className="flex justify-between items-center">
