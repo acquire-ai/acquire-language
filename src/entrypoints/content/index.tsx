@@ -60,7 +60,6 @@ export default defineContentScript({
             if (defaultServer) {
                 aiService = createAIService(defaultServer);
             } else {
-                console.error('No AI server configured');
                 return;
             }
 
@@ -72,7 +71,6 @@ export default defineContentScript({
 
         await initializeWithSettings();
         watchSettings(async (newSettings) => {
-            console.log('Settings changed, reinitializing with new settings');
             await initializeWithSettings();
         });
 

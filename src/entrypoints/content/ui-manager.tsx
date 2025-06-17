@@ -57,7 +57,6 @@ class UIManager {
             if (styleEl instanceof HTMLLinkElement) {
                 // For linked stylesheets, we'll try to fetch the content
                 // This is a simplified approach - in production you might want to handle this differently
-                console.log('Found linked stylesheet:', styleEl.href);
             } else if (styleEl instanceof HTMLStyleElement) {
                 cssContent += styleEl.textContent || '';
             }
@@ -78,16 +77,11 @@ class UIManager {
         style.textContent = cssContent;
         this.shadowRoot.appendChild(style);
 
-        console.log('CSS injected into Shadow DOM');
-        console.log('Shadow DOM children:', this.shadowRoot.children);
-        console.log('CSS content length:', cssContent.length);
-
         // Also try to inject the CSS file directly
         const link = document.createElement('link');
         link.rel = 'stylesheet';
         link.href = chrome.runtime.getURL('content-scripts/content.css');
         this.shadowRoot.appendChild(link);
-        console.log('CSS link injected:', link.href);
     }
 
     /**
@@ -100,7 +94,6 @@ class UIManager {
         }
 
         if (this.mounted) {
-            console.log('Panel already mounted, skipping');
             return;
         }
 
@@ -116,7 +109,6 @@ class UIManager {
         );
 
         this.mounted = true;
-        console.log('Panel opened with portalContainer:', portalContainer);
     }
 
     /**
@@ -127,7 +119,6 @@ class UIManager {
             // Render null to unmount the component
             this.root.render(null);
             this.mounted = false;
-            console.log('Panel closed');
         }
     }
 
