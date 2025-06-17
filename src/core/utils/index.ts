@@ -85,24 +85,41 @@ export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
+let cachedStyles: string | null = null;
 
-export async function loadStylesForShadowDOM(): Promise<string> {
+export const loadStylesForShadowDOM = async (): Promise<string> => {
+    // Return cached styles if available
+    if (cachedStyles) {
+        return cachedStyles;
+    }
+
     try {
-        const cssUrl = chrome.runtime.getURL('assets/globals.css');
-        
+        // Try to fetch the content.css file that WXT generates
+        const cssUrl = chrome.runtime.getURL('content-scripts/content.css');
         const response = await fetch(cssUrl);
-        
-        if (!response.ok) {
-            throw new Error(`Failed to load CSS: ${response.status} ${response.statusText}`);
+
+        if (response.ok) {
+            cachedStyles = await response.text();
+            console.log('Successfully loaded content.css for Shadow DOM');
+            return cachedStyles;
         }
-        
-        const cssText = await response.text();
-        
-        console.log('Successfully loaded CSS for Shadow DOM');
-        return cssText;
-        
+
+        // Fallback: try dynamic import
+        console.log('Falling back to dynamic import');
+        const cssModule = await import('@/assets/globals.css?inline');
+        cachedStyles = cssModule.default;
+        return cachedStyles;
     } catch (error) {
         console.error('Failed to load styles for Shadow DOM:', error);
-        return '';
+
+        // Return minimal fallback styles
+        cachedStyles = `
+            .acquire-language-extension {
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                font-size: 16px;
+                line-height: 1.5;
+            }
+        `;
+        return cachedStyles;
     }
-}
+};

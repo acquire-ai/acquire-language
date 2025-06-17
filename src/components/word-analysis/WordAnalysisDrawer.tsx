@@ -19,7 +19,13 @@ interface ChatMessage {
     content: string;
 }
 
-export const WordAnalysisDrawer: React.FC = () => {
+interface WordAnalysisDrawerProps {
+    onClose?: () => void;
+}
+
+export const WordAnalysisDrawer: React.FC<WordAnalysisDrawerProps> = ({
+    onClose: onCloseCallback,
+}) => {
     const [isOpen, setIsOpen] = useState(true);
     const [currentAnalysis, setCurrentAnalysis] = useState<WordAnalysis | null>(null);
     const [isLoadingAI, setIsLoadingAI] = useState(false);
@@ -34,6 +40,11 @@ export const WordAnalysisDrawer: React.FC = () => {
     >(null);
     const [ukPhonetic, setUkPhonetic] = useState<string | null>(null);
     const [usPhonetic, setUsPhonetic] = useState<string | null>(null);
+
+    // Reset isOpen when component mounts
+    useEffect(() => {
+        setIsOpen(true);
+    }, []);
 
     // Initialize AI service
     useEffect(() => {
@@ -168,8 +179,14 @@ export const WordAnalysisDrawer: React.FC = () => {
 
     const handleClose = () => {
         setIsOpen(false);
-        // Optionally close the side panel
-        window.close();
+        // Don't call window.close() here
+        // The parent component should handle the actual unmounting
+        if (onCloseCallback) {
+            // Give time for the closing animation to complete
+            setTimeout(() => {
+                onCloseCallback();
+            }, 300);
+        }
     };
 
     // Handle AI chat functionality
@@ -196,7 +213,10 @@ export const WordAnalysisDrawer: React.FC = () => {
 
     const getPortalContainer = () => {
         const shadowHost = document.getElementById('acquire-language-overlay-root');
-        return shadowHost?.shadowRoot?.getElementById('react-root') || document.body;
+        const portalContainer =
+            shadowHost?.shadowRoot?.getElementById('react-root') || document.body;
+        console.log('Portal container:', portalContainer, 'Shadow host:', shadowHost);
+        return portalContainer;
     };
 
     return (
