@@ -10,7 +10,7 @@ import { defineContentScript } from 'wxt/sandbox';
 import { createPlatformHandler } from '@/platforms';
 import { createAIService } from '@/services/ai';
 import { getSettings, watchSettings } from '@/core/config/settings';
-import {OverlayPanel}  from './overlay-panel';
+import { uiManager } from './ui-manager';
 
 export default defineContentScript({
     matches: ['*://*.youtube.com/*'],
@@ -20,7 +20,6 @@ export default defineContentScript({
         let subtitleHandler: any = null;
         let aiService: any = null;
         const processedSubtitleRequests = new Set<string>();
-
 
         const ui = await createShadowRootUi(ctx, {
             name: 'acquire-language-ui',
@@ -33,20 +32,24 @@ export default defineContentScript({
                 const wrapper = document.createElement('div');
                 container.append(wrapper);
 
-                // Create a root on the UI container and render a component
+                // Create a root on the UI container but don't render anything yet
                 const root = ReactDOM.createRoot(wrapper);
-                root.render(<OverlayPanel onClose={() => {}} />);
+
+                // Initialize UIManager with the root and wrapper
+                uiManager.initialize(root, wrapper);
+
                 return { root, wrapper };
             },
             onRemove: (elements) => {
+                // Clean up UIManager
+                uiManager.cleanup();
                 elements?.root.unmount();
                 elements?.wrapper.remove();
             },
         });
 
-        // 4. Mount the UI
+        // Mount the UI (this creates the Shadow DOM but doesn't render React components yet)
         ui.mount();
-
 
         async function initializeWithSettings() {
             const settings = await getSettings();
@@ -85,11 +88,20 @@ export default defineContentScript({
             monitorUrlChanges();
         }
 
+        // Setup message listeners
         chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+            // Handle overlay panel opening
+            if (message.type === 'OPEN_OVERLAY_PANEL' && message.word) {
+                uiManager.openPanel(message.word).then(() => {
+                    sendResponse({ success: true });
+                });
+                return true;
+            }
+
+            // Handle subtitle request detection
             if (message.type === 'SUBTITLE_REQUEST_DETECTED') {
                 if (!subtitleHandler) {
                     initializeHandler().then(() => {
-                        // Process subtitle request after initialization
                         processSubtitleRequest(message.data);
                     });
                     return true;
@@ -99,6 +111,11 @@ export default defineContentScript({
             }
 
             return true;
+        });
+
+        // Listen for custom events from subtitle handler
+        window.addEventListener('acquire-language-open-panel', (event: any) => {
+            uiManager.openPanel(event.detail);
         });
 
         function processSubtitleRequest(data: any) {
@@ -183,7 +200,5 @@ export default defineContentScript({
                 }, 10000);
             });
         }
-
-        
     },
 });

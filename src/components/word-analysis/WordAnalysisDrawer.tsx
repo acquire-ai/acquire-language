@@ -21,12 +21,16 @@ interface ChatMessage {
 
 interface WordAnalysisDrawerProps {
     onClose?: () => void;
+    portalContainer?: HTMLElement | null;
 }
 
 export const WordAnalysisDrawer: React.FC<WordAnalysisDrawerProps> = ({
     onClose: onCloseCallback,
+    portalContainer,
 }) => {
     const [isOpen, setIsOpen] = useState(true);
+
+    console.log('WordAnalysisDrawer rendered, isOpen:', isOpen);
     const [currentAnalysis, setCurrentAnalysis] = useState<WordAnalysis | null>(null);
     const [isLoadingAI, setIsLoadingAI] = useState(false);
     const [isLoadingTraditional, setIsLoadingTraditional] = useState(false);
@@ -101,7 +105,18 @@ export const WordAnalysisDrawer: React.FC<WordAnalysisDrawerProps> = ({
     }, [aiService]);
 
     const analyzeWord = async (word: string, context?: string) => {
+        console.log('analyzeWord called with:', word, 'aiService:', !!aiService);
+
+        // Immediately set the word analysis with the word and context
+        setCurrentAnalysis({
+            word,
+            definition: '',
+            context,
+            timestamp: Date.now(),
+        });
+
         if (!aiService) {
+            console.log('AI service not initialized, setting error');
             setError('AI service not initialized');
             return;
         }
@@ -211,14 +226,6 @@ export const WordAnalysisDrawer: React.FC<WordAnalysisDrawerProps> = ({
         return await aiService.getChatResponse(message, word, context, chatHistory, targetLanguage);
     };
 
-    const getPortalContainer = () => {
-        const shadowHost = document.getElementById('acquire-language-overlay-root');
-        const portalContainer =
-            shadowHost?.shadowRoot?.getElementById('react-root') || document.body;
-        console.log('Portal container:', portalContainer, 'Shadow host:', shadowHost);
-        return portalContainer;
-    };
-
     return (
         <WordDefinitionDrawer
             isOpen={isOpen}
@@ -234,7 +241,7 @@ export const WordAnalysisDrawer: React.FC<WordAnalysisDrawerProps> = ({
             onChatMessage={handleAIChatResponse}
             onSaveWord={handleSaveWord}
             isSaved={currentAnalysis ? savedWords.has(currentAnalysis.word) : false}
-            portalContainer={getPortalContainer()}
+            portalContainer={portalContainer}
         />
     );
 };
