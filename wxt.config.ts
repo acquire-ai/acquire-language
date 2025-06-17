@@ -33,7 +33,7 @@ export default defineConfig({
                 matches: ['<all_urls>'],
             },
             {
-                resources: ['assets/*.css', 'content-scripts/*.css'],
+                resources: ['assets/*.css'],
                 matches: ['<all_urls>'],
             },
         ],
