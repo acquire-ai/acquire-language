@@ -5,22 +5,48 @@
  * It detects platform video pages and activates subtitle enhancement features after the video player loads.
  */
 import '@/assets/globals.css';
+import ReactDOM from 'react-dom/client';
 import { defineContentScript } from 'wxt/sandbox';
 import { createPlatformHandler } from '@/platforms';
 import { createAIService } from '@/services/ai';
 import { getSettings, watchSettings } from '@/core/config/settings';
-import { initializeOverlayPanel } from './overlay-panel';
+import {OverlayPanel}  from './overlay-panel';
 
 export default defineContentScript({
     matches: ['*://*.youtube.com/*'],
+    cssInjectionMode: 'ui',
 
-    async main() {
+    async main(ctx) {
         let subtitleHandler: any = null;
         let aiService: any = null;
         const processedSubtitleRequests = new Set<string>();
 
-        // Initialize the overlay panel
-        initializeOverlayPanel();
+
+        const ui = await createShadowRootUi(ctx, {
+            name: 'acquire-language-ui',
+            position: 'overlay',
+            anchor: 'body',
+            zIndex: 2147483647,
+            append: 'first',
+            onMount: (container) => {
+                // Container is a body, and React warns when creating a root on the body, so create a wrapper div
+                const wrapper = document.createElement('div');
+                container.append(wrapper);
+
+                // Create a root on the UI container and render a component
+                const root = ReactDOM.createRoot(wrapper);
+                root.render(<OverlayPanel onClose={() => {}} />);
+                return { root, wrapper };
+            },
+            onRemove: (elements) => {
+                elements?.root.unmount();
+                elements?.wrapper.remove();
+            },
+        });
+
+        // 4. Mount the UI
+        ui.mount();
+
 
         async function initializeWithSettings() {
             const settings = await getSettings();
@@ -157,5 +183,7 @@ export default defineContentScript({
                 }, 10000);
             });
         }
+
+        
     },
 });
