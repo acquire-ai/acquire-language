@@ -1,23 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { createAIService } from '@/services/ai';
-import { getSettings } from '@/core/config/settings';
-import { AIService } from '@/core/types/ai';
-import { dictionaryService } from '@/services/dictionary';
-import type { TraditionalDefinitionEntry } from '@/core/types/dictionary';
 import WordDefinitionDrawer from '@/components/word-analysis/WordDefinitionDrawer';
-
-interface ChatMessage {
-    id: string;
-    role: 'user' | 'assistant';
-    content: string;
-}
-
-interface WordAnalysis {
-    word: string;
-    definition: string;
-    context?: string;
-    timestamp?: number;
-}
+import { useWordAnalysis } from '@/hooks/useWordAnalysis';
 
 interface OverlayPanelProps {
     onClose: () => void;
@@ -26,20 +9,21 @@ interface OverlayPanelProps {
 
 export const OverlayPanel: React.FC<OverlayPanelProps> = ({ onClose, portalContainer }) => {
     const [isDarkMode, setIsDarkMode] = useState(false);
-    const [isOpen, setIsOpen] = useState(true);
-    const [currentAnalysis, setCurrentAnalysis] = useState<WordAnalysis | null>(null);
-    const [isLoadingAI, setIsLoadingAI] = useState(false);
-    const [isLoadingTraditional, setIsLoadingTraditional] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [aiService, setAiService] = useState<AIService | null>(null);
-    const [savedWords, setSavedWords] = useState<Set<string>>(new Set());
 
-    // Dictionary data
-    const [traditionalDefinitions, setTraditionalDefinitions] = useState<
-        TraditionalDefinitionEntry[] | null
-    >(null);
-    const [ukPhonetic, setUkPhonetic] = useState<string | null>(null);
-    const [usPhonetic, setUsPhonetic] = useState<string | null>(null);
+    // Use the custom hook for all word analysis logic
+    const {
+        isOpen,
+        currentAnalysis,
+        isLoadingAI,
+        isLoadingTraditional,
+        traditionalDefinitions,
+        ukPhonetic,
+        usPhonetic,
+        savedWords,
+        handleSaveWord,
+        handleClose,
+        handleAIChatResponse,
+    } = useWordAnalysis();
 
     useEffect(() => {
         // Check dark mode preference
@@ -59,170 +43,12 @@ export const OverlayPanel: React.FC<OverlayPanelProps> = ({ onClose, portalConta
         };
     }, []);
 
-    // Initialize AI service
-    useEffect(() => {
-        const initAIService = async () => {
-            const settings = await getSettings();
-            const defaultServer =
-                settings.aiServers.find((server) => server.isDefault) || settings.aiServers[0];
-
-            if (defaultServer) {
-                const service = createAIService(defaultServer);
-                setAiService(service);
-            }
-        };
-
-        initAIService();
-    }, []);
-
-    // Check for pending word analysis from storage on initialization
-    useEffect(() => {
-        const checkPendingAnalysis = async () => {
-            if (!aiService) return;
-
-            const result = await browser.storage.local.get('pendingWordAnalysis');
-            if (result.pendingWordAnalysis) {
-                const { word, context } = result.pendingWordAnalysis;
-
-                // Clear the pending analysis
-                await browser.storage.local.remove('pendingWordAnalysis');
-
-                // Analyze the word
-                analyzeWord(word, context);
-            }
-        };
-
-        checkPendingAnalysis();
-    }, [aiService]);
-
-    // Listen for messages from content script
-    useEffect(() => {
-        const handleMessage = async (message: any) => {
-            if (message.type === 'ANALYZE_WORD') {
-                const { word, context } = message.data;
-                analyzeWord(word, context);
-            }
-        };
-
-        browser.runtime.onMessage.addListener(handleMessage);
-
-        return () => {
-            browser.runtime.onMessage.removeListener(handleMessage);
-        };
-    }, [aiService]);
-
-    const analyzeWord = async (word: string, context?: string) => {
-        // Immediately set the word analysis with the word and context
-        setCurrentAnalysis({
-            word,
-            definition: '',
-            context,
-            timestamp: Date.now(),
-        });
-
-        if (!aiService) {
-            setError('AI service not initialized');
-            return;
-        }
-
-        setIsLoadingAI(true);
-        setIsLoadingTraditional(true);
-        setError(null);
-
-        // Reset previous data
-        setTraditionalDefinitions(null);
-        setUkPhonetic(null);
-        setUsPhonetic(null);
-
-        // Fetch dictionary definition in parallel
-        const fetchDictionaryDefinition = async () => {
-            try {
-                const dictResponse = await dictionaryService.getDefinition(word);
-                if (dictResponse) {
-                    setTraditionalDefinitions(dictResponse.definitions);
-                    setUkPhonetic(dictResponse.phonetics.uk || null);
-                    setUsPhonetic(dictResponse.phonetics.us || null);
-                }
-            } catch (err) {
-                console.error('Failed to fetch dictionary definition:', err);
-            } finally {
-                setIsLoadingTraditional(false);
-            }
-        };
-
-        // Fetch AI definition
-        const fetchAIDefinition = async () => {
-            try {
-                const settings = await getSettings();
-                const targetLanguage = settings.general?.nativeLanguage || 'zh-CN';
-
-                const definition = await aiService.getWordDefinition(
-                    word,
-                    context || '',
-                    targetLanguage,
-                );
-
-                setCurrentAnalysis({
-                    word,
-                    definition,
-                    context,
-                    timestamp: Date.now(),
-                });
-            } catch (err) {
-                setError(err instanceof Error ? err.message : 'Failed to analyze word');
-            } finally {
-                setIsLoadingAI(false);
-            }
-        };
-
-        // Run both in parallel
-        await Promise.all([fetchDictionaryDefinition(), fetchAIDefinition()]);
-    };
-
-    const handleSaveWord = async () => {
-        if (!currentAnalysis) return;
-
-        try {
-            await browser.runtime.sendMessage({
-                type: 'SAVE_WORD',
-                word: currentAnalysis.word,
-                context: currentAnalysis.context || '',
-                definition: currentAnalysis.definition,
-            });
-
-            setSavedWords(new Set([...savedWords, currentAnalysis.word]));
-        } catch (err) {
-            console.error('Failed to save word:', err);
-        }
-    };
-
-    const handleClose = () => {
-        setIsOpen(false);
+    // Handle drawer close with delay for animation
+    const handleDrawerClose = () => {
+        handleClose();
         setTimeout(() => {
             onClose();
         }, 300);
-    };
-
-    // Handle AI chat functionality
-    const handleAIChatResponse = async (
-        message: string,
-        word: string,
-        context: string,
-        history: ChatMessage[],
-    ): Promise<string> => {
-        if (!aiService || !aiService.getChatResponse) {
-            throw new Error('Chat functionality not available');
-        }
-
-        const settings = await getSettings();
-        const targetLanguage = settings.general?.nativeLanguage || 'zh-CN';
-
-        const chatHistory = history.map((msg) => ({
-            role: msg.role,
-            content: msg.content,
-        }));
-
-        return await aiService.getChatResponse(message, word, context, chatHistory, targetLanguage);
     };
 
     return (
@@ -241,7 +67,7 @@ export const OverlayPanel: React.FC<OverlayPanelProps> = ({ onClose, portalConta
             <div style={{ pointerEvents: 'auto' }}>
                 <WordDefinitionDrawer
                     isOpen={isOpen}
-                    onClose={handleClose}
+                    onClose={handleDrawerClose}
                     word={currentAnalysis?.word || null}
                     contextSentence={currentAnalysis?.context || null}
                     traditionalDefinitionEntries={traditionalDefinitions}
