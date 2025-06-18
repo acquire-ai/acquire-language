@@ -27,23 +27,24 @@ export default defineContentScript({
             anchor: 'body',
             zIndex: 2147483647,
             append: 'first',
-            onMount: (container) => {
+            onMount: (uiContainer, shadow, shadowHost) => {
                 // Container is a body, and React warns when creating a root on the body, so create a wrapper div
+                // showHost -> shadow root-> uiContainer-> wrapper-> reactRoot
                 const wrapper = document.createElement('div');
-                container.append(wrapper);
+                uiContainer.append(wrapper);
 
                 // Create a root on the UI container but don't render anything yet
-                const root = ReactDOM.createRoot(wrapper);
+                const reactRoot = ReactDOM.createRoot(wrapper);
 
                 // Initialize UIManager with the root and wrapper
-                uiManager.initialize(root, wrapper);
+                uiManager.initialize(reactRoot, uiContainer);
 
-                return { root, wrapper };
+                return { reactRoot, wrapper };
             },
             onRemove: (elements) => {
                 // Clean up UIManager
                 uiManager.cleanup();
-                elements?.root.unmount();
+                elements?.reactRoot.unmount();
                 elements?.wrapper.remove();
             },
         });
