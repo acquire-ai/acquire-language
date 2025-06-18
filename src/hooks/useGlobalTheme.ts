@@ -17,13 +17,14 @@ export function useGlobalTheme() {
     // 监听设置变化
     useEffect(() => {
         const handleSettingsChange = (settings: any) => {
-            if (settings.theme) {
+            if (settings?.theme) {
                 setTheme(settings.theme);
             }
         };
 
         watchSettings(handleSettingsChange);
-    }, [theme]);
+
+    }, []); // only set once when component mounts
 
     return {
         theme,
