@@ -160,8 +160,10 @@ export const getSettings = async (): Promise<AppSettings> => {
             }
         }
 
-        // 直接返回存储的设置，如果没有则返回默认设置
-        const mergedSettings: AppSettings = storageSettings;
+        const mergedSettings: AppSettings = {
+            ...DEFAULT_SETTINGS,
+            ...storageSettings,
+        };
         return mergedSettings;
     } catch (error) {
         console.error('Failed to load settings:', error);
