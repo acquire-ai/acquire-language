@@ -6,7 +6,8 @@
  */
 import '@/assets/globals.css';
 import ReactDOM from 'react-dom/client';
-import { defineContentScript } from 'wxt/sandbox';
+import { defineContentScript } from 'wxt/utils/define-content-script';
+import { createShadowRootUi } from 'wxt/utils/content-script-ui/shadow-root';
 import { createPlatformHandler } from '@/platforms';
 import { createAIService } from '@/services/ai';
 import { getSettings, watchSettings } from '@/core/config/settings';
@@ -88,7 +89,7 @@ export default defineContentScript({
         }
 
         // Setup message listeners
-        chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
             // Handle overlay panel opening
             if (message.type === 'OPEN_OVERLAY_PANEL' && message.word) {
                 uiManager.openPanel(message.word).then(() => {

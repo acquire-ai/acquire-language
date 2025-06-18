@@ -1,7 +1,10 @@
 /**
  * Acquire Language Background Script
+ *
+ * This script runs in the background and is responsible for handling extension-wide events.
+ * It manages subtitle request detection and communication between content scripts.
  */
-import { defineBackground } from 'wxt/sandbox';
+import { defineBackground } from 'wxt/utils/define-background';
 import { StorageManager } from '@/core/storage';
 import { Word } from '@/core/types/storage';
 
