@@ -6,8 +6,6 @@ import { defineConfig } from 'wxt';
 // See https://wxt.dev/api/config.html
 export default defineConfig({
     srcDir: 'src',
-    // Use Chrome extension API
-    extensionApi: 'chrome',
 
     // Use React module
     modules: ['@wxt-dev/module-react'],
