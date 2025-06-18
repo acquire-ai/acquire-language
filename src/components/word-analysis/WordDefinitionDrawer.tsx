@@ -214,7 +214,7 @@ const WordDefinitionDrawer: React.FC<WordDefinitionDrawerProps> = ({
         >
             <SheetContent
                 className={cn(
-                    'fixed inset-y-0 right-0 z-50 w-full border-l bg-background shadow-lg',
+                    'bg-card text-card-foreground border-l-primary/20 flex flex-col p-0',
                     'transition-[width] duration-500 ease-in-out',
                     isDrawerMaximized
                         ? '!w-1/3 !min-w-[600px] !max-w-[750px]'
