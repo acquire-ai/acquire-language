@@ -33,13 +33,7 @@ export const OverlayPanel: React.FC<OverlayPanelProps> = ({ onClose, portalConta
     };
 
     return (
-        <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-            forcedTheme={undefined}
-        >
+        <ThemeProvider>
             <div
                 className="acquire-language-extension"
                 style={{

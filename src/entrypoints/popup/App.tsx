@@ -23,13 +23,7 @@ function App() {
     };
 
     return (
-        <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-            forcedTheme={undefined}
-        >
+        <ThemeProvider>
             <div className="w-80 min-h-96 bg-gradient-to-b from-background to-muted/20 relative">
                 <div className="scanline absolute inset-0 pointer-events-none z-0"></div>
 
