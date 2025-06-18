@@ -34,6 +34,7 @@ export interface AppSettings {
     general: GeneralSettings;
     subtitle: SubtitleSettings;
     aiServers: AIServer[];
+    theme: string; // 'light' | 'dark' | 'system'
     lastUpdated: number;
 }
 
@@ -67,6 +68,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
             isDefault: true,
         },
     ],
+    theme: 'system', // 默认跟随系统
     lastUpdated: Date.now(),
 };
 
@@ -178,6 +180,10 @@ export const saveSubtitleSettings = async (settings: SubtitleSettings): Promise<
 
 export const saveAIServers = async (aiServers: AIServer[]): Promise<void> => {
     return saveSettings({ aiServers });
+};
+
+export const saveTheme = async (theme: string): Promise<void> => {
+    return saveSettings({ theme });
 };
 
 // 防抖函数，用于自动保存
