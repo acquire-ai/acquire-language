@@ -27,62 +27,8 @@ class UIManager {
         }
         this.shadowRoot = current as ShadowRoot;
 
-        // Manually inject CSS into Shadow DOM
-        if (this.shadowRoot) {
-            this.injectCSS();
-            (window as any).__acquireLanguageShadowRoot = this.shadowRoot;
-        }
     }
 
-    /**
-     * Inject CSS styles into Shadow DOM
-     */
-    private injectCSS() {
-        if (!this.shadowRoot) return;
-
-        // Check if CSS is already injected
-        if (this.shadowRoot.querySelector('style[data-acquire-language-styles]')) {
-            return;
-        }
-
-        // Create style element
-        const style = document.createElement('style');
-        style.setAttribute('data-acquire-language-styles', 'true');
-
-        // Get the CSS content from the main document
-        const existingStyles = document.querySelectorAll('link[rel="stylesheet"], style');
-        let cssContent = '';
-
-        existingStyles.forEach((styleEl) => {
-            if (styleEl instanceof HTMLLinkElement) {
-                // For linked stylesheets, we'll try to fetch the content
-                // This is a simplified approach - in production you might want to handle this differently
-            } else if (styleEl instanceof HTMLStyleElement) {
-                cssContent += styleEl.textContent || '';
-            }
-        });
-
-        // Add our custom CSS for Shadow DOM
-        cssContent += `
-            /* Shadow DOM specific styles */
-            :host {
-                all: initial;
-                display: block;
-            }
-            
-            /* Import Tailwind and custom styles */
-            @import url('chrome-extension://${chrome.runtime.id}/content-scripts/content.css');
-        `;
-
-        style.textContent = cssContent;
-        this.shadowRoot.appendChild(style);
-
-        // Also try to inject the CSS file directly
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = chrome.runtime.getURL('content-scripts/content.css');
-        this.shadowRoot.appendChild(link);
-    }
 
     /**
      * Open the overlay panel with word data
@@ -169,8 +115,6 @@ class UIManager {
         this.shadowRoot = null;
         this.mounted = false;
 
-        // Clean up global reference
-        delete (window as any).__acquireLanguageShadowRoot;
 
         console.log('UIManager cleaned up');
     }
