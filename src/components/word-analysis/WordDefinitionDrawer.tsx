@@ -18,6 +18,7 @@ import {
     PanelLeftOpen,
     PanelRightClose,
 } from 'lucide-react';
+import { ShadowThemeToggle } from '@/components/settings/theme-toggle';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Separator } from '@/components/ui/separator';
@@ -257,6 +258,7 @@ const WordDefinitionDrawer: React.FC<WordDefinitionDrawerProps> = ({
                             </Button>
                         </div>
                         <div className="flex items-center gap-x-1 sm:gap-x-0">
+                            <ShadowThemeToggle />
                             <Button
                                 variant="ghost"
                                 size="icon"
@@ -380,7 +382,7 @@ const WordDefinitionDrawer: React.FC<WordDefinitionDrawerProps> = ({
                                     <button
                                         onClick={() => setIsContextExpanded(!isContextExpanded)}
                                         className="flex items-center text-muted-foreground hover:text-accent transition-colors"
-                                        aria-expanded={isContextExpanded}
+                                        aria-expanded={isContextExpanded ? 'true' : 'false'}
                                         aria-controls="contextual-sentence-content"
                                     >
                                         {isContextExpanded ? (

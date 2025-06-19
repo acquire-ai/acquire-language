@@ -37,8 +37,8 @@ export default defineContentScript({
                 // Create a root on the UI container but don't render anything yet
                 const reactRoot = ReactDOM.createRoot(wrapper);
 
-                // Initialize UIManager with the root and wrapper
-                uiManager.initialize(reactRoot, uiContainer);
+                // Initialize UIManager with the root, wrapper, and shadow root
+                uiManager.initialize(reactRoot, uiContainer, shadow);
 
                 return { reactRoot, wrapper };
             },

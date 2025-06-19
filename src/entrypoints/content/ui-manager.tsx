@@ -4,11 +4,13 @@ import { OverlayPanel } from './overlay-panel';
 class UIManager {
     private uiContainer: HTMLElement | null = null;
     private reactRoot: ReactDOM.Root | null = null;
+    private shadowRoot: ShadowRoot | null = null;
     private mounted = false;
 
-    initialize(reactRoot: ReactDOM.Root, uiContainer: HTMLElement) {
+    initialize(reactRoot: ReactDOM.Root, uiContainer: HTMLElement, shadowRoot?: ShadowRoot) {
         this.uiContainer = uiContainer;
         this.reactRoot = reactRoot;
+        this.shadowRoot = shadowRoot || null;
     }
 
     /**
@@ -29,7 +31,11 @@ class UIManager {
 
         // Render the component
         this.reactRoot.render(
-            <OverlayPanel onClose={() => this.closePanel()} portalContainer={this.uiContainer} />,
+            <OverlayPanel
+                onClose={() => this.closePanel()}
+                portalContainer={this.uiContainer}
+                shadowRoot={this.shadowRoot}
+            />,
         );
 
         this.mounted = true;
@@ -52,6 +58,7 @@ class UIManager {
             this.reactRoot.unmount();
         }
         this.reactRoot = null;
+        this.shadowRoot = null;
         this.mounted = false;
 
         console.log('UIManager cleaned up');

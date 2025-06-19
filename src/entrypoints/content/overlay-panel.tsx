@@ -1,14 +1,19 @@
 import React from 'react';
 import WordDefinitionDrawer from '@/components/word-analysis/WordDefinitionDrawer';
 import { useWordAnalysis } from '@/hooks/useWordAnalysis';
-import { ThemeProvider } from '@/components/settings/theme-provider';
+import { ShadowThemeProvider } from '@/components/settings/theme-provider';
 
 interface OverlayPanelProps {
     onClose: () => void;
     portalContainer?: HTMLElement | null;
+    shadowRoot?: ShadowRoot | null;
 }
 
-export const OverlayPanel: React.FC<OverlayPanelProps> = ({ onClose, portalContainer }) => {
+export const OverlayPanel: React.FC<OverlayPanelProps> = ({
+    onClose,
+    portalContainer,
+    shadowRoot,
+}) => {
     // Use the custom hook for all word analysis logic
     const {
         isOpen,
@@ -33,7 +38,7 @@ export const OverlayPanel: React.FC<OverlayPanelProps> = ({ onClose, portalConta
     };
 
     return (
-        <ThemeProvider>
+        <ShadowThemeProvider shadowRoot={shadowRoot}>
             <div
                 className="acquire-language-extension"
                 style={{
@@ -65,6 +70,6 @@ export const OverlayPanel: React.FC<OverlayPanelProps> = ({ onClose, portalConta
                     />
                 </div>
             </div>
-        </ThemeProvider>
+        </ShadowThemeProvider>
     );
 };
