@@ -382,7 +382,7 @@ const WordDefinitionDrawer: React.FC<WordDefinitionDrawerProps> = ({
                                     <button
                                         onClick={() => setIsContextExpanded(!isContextExpanded)}
                                         className="flex items-center text-muted-foreground hover:text-accent transition-colors"
-                                        aria-expanded={isContextExpanded ? 'true' : 'false'}
+                                        aria-expanded={isContextExpanded}
                                         aria-controls="contextual-sentence-content"
                                     >
                                         {isContextExpanded ? (
