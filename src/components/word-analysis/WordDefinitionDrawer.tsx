@@ -221,9 +221,6 @@ const WordDefinitionDrawer: React.FC<WordDefinitionDrawerProps> = ({
                         ? '!w-1/3 !min-w-[600px] !max-w-[750px]'
                         : 'w-[380px] sm:w-[480px] md:w-[580px]',
                 )}
-                style={{
-                    zIndex: 2147483647,
-                }}
                 portalContainer={portalContainer || undefined}
                 onInteractOutside={(e) => {
                     // Prevent closing when clicking on elements that might be rendered outside by React Portals (e.g. some popovers)

@@ -1,0 +1,96 @@
+/**
+ * Shadow DOM Z-Index Overrides
+ * 
+ * This file contains CSS overrides to ensure our extension components
+ * appear above YouTube and other website elements when rendered in shadow DOM.
+ */
+
+/* Override Sheet component z-index to ensure it's above YouTube elements */
+[role='dialog'] {
+    z-index: 2147483647 !important;
+}
+
+[data-radix-dialog-overlay] {
+    z-index: 2147483646 !important;
+}
+
+[data-radix-dialog-content] {
+    z-index: 2147483647 !important;
+}
+
+/* Additional overrides for radix components */
+[data-state='open'][role='dialog'] {
+    z-index: 2147483647 !important;
+}
+
+/* Override any Tailwind z-index classes */
+.z-50 {
+    z-index: 2147483647 !important;
+}
+
+/* Ensure all fixed positioned elements in our extension have high z-index */
+[style*='position: fixed'] {
+    z-index: 2147483647 !important;
+}
+
+/* Target specific sheet overlay and content */
+[data-radix-popper-content-wrapper] {
+    z-index: 2147483647 !important;
+}
+
+/* Additional Radix UI component overrides */
+[data-radix-portal] {
+    z-index: 2147483647 !important;
+}
+
+[data-radix-dialog-trigger] {
+    z-index: 2147483647 !important;
+}
+
+/* Ensure popover components are also above other elements */
+[data-radix-popover-content] {
+    z-index: 2147483647 !important;
+}
+
+[data-radix-popover-trigger] {
+    z-index: 2147483647 !important;
+}
+
+/* Toast components */
+[data-radix-toast-viewport] {
+    z-index: 2147483647 !important;
+}
+
+[data-radix-toast] {
+    z-index: 2147483647 !important;
+}
+
+/* Dropdown menu components */
+[data-radix-dropdown-menu-content] {
+    z-index: 2147483647 !important;
+}
+
+/* Select components */
+[data-radix-select-content] {
+    z-index: 2147483647 !important;
+}
+
+/* Tooltip components */
+[data-radix-tooltip-content] {
+    z-index: 2147483647 !important;
+}
+
+/* Ensure our extension container has the highest z-index */
+.acquire-language-extension {
+    z-index: 2147483647 !important;
+}
+
+/* Override any potential conflicting styles from the host page */
+.acquire-language-extension * {
+    box-sizing: border-box;
+}
+
+/* Ensure proper stacking context for our components */
+.acquire-language-extension [data-state='open'] {
+    z-index: 2147483647 !important;
+}

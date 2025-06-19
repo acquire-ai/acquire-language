@@ -5,6 +5,7 @@
  * It detects platform video pages and activates subtitle enhancement features after the video player loads.
  */
 import '@/assets/globals.css';
+import './shadow-dom-overrides.css';
 import ReactDOM from 'react-dom/client';
 import { defineContentScript } from 'wxt/utils/define-content-script';
 import { createShadowRootUi } from 'wxt/utils/content-script-ui/shadow-root';
