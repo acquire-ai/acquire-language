@@ -97,14 +97,14 @@ describe('Storage Manager Tests', () => {
             const mockSettings: Settings = {
                 general: {
                     appLanguage: 'en',
-                    nativeLanguage: 'zh-cn',
-                    learnLanguage: 'en-us',
-                    languageLevel: 'b1',
+                    nativeLanguage: 'zh-CN',
+                    learnLanguage: 'en',
+                    languageLevel: 'beginner',
                 },
                 subtitle: {
                     showNativeSubtitles: true,
                     showLearningSubtitles: true,
-                    fontSize: 20,
+                    fontSize: 16,
                     position: 'bottom',
                     textColor: '#ffffff',
                     backgroundColor: '#000000',
@@ -112,17 +112,18 @@ describe('Storage Manager Tests', () => {
                 },
                 aiServers: [
                     {
-                        id: 'default',
-                        name: 'Default DeepSeek',
-                        provider: 'deepseek',
-                        model: 'deepseek-chat',
+                        id: '1',
+                        name: 'OpenAI',
+                        provider: 'openai',
+                        model: 'gpt-3.5-turbo',
                         settings: {
-                            apiKey: '',
-                            baseURL: '',
+                            apiKey: 'test-key',
+                            baseURL: 'https://api.openai.com/v1',
                         },
                         isDefault: true,
                     },
                 ],
+                theme: 'system',
                 lastUpdated: Date.now(),
             };
 
@@ -177,6 +178,7 @@ describe('Storage Manager Tests', () => {
                         isDefault: true,
                     },
                 ],
+                theme: 'system',
                 lastUpdated: Date.now(),
             };
 

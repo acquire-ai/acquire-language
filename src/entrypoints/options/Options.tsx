@@ -11,13 +11,7 @@ export default function Options() {
     const [activeTab, setActiveTab] = useState('general');
 
     return (
-        <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-            forcedTheme={undefined}
-        >
+        <ThemeProvider>
             <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 pb-8 relative">
                 <div className="scanline absolute inset-0 pointer-events-none z-0"></div>
                 <header className="sticky top-0 z-20 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -40,7 +34,7 @@ export default function Options() {
                             <p className="text-muted-foreground">
                                 Customize your language learning adventure!
                             </p>
-                </div>
+                        </div>
 
                         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                             <TabsList className="grid w-full grid-cols-3 relative z-10">

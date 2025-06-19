@@ -34,6 +34,7 @@ export interface AppSettings {
     general: GeneralSettings;
     subtitle: SubtitleSettings;
     aiServers: AIServer[];
+    theme: string; // 'light' | 'dark' | 'system'
     lastUpdated: number;
 }
 
@@ -67,6 +68,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
             isDefault: true,
         },
     ],
+    theme: 'system', // 默认跟随系统
     lastUpdated: Date.now(),
 };
 
@@ -158,8 +160,10 @@ export const getSettings = async (): Promise<AppSettings> => {
             }
         }
 
-        // 直接返回存储的设置，如果没有则返回默认设置
-        const mergedSettings: AppSettings = storageSettings;
+        const mergedSettings: AppSettings = {
+            ...DEFAULT_SETTINGS,
+            ...storageSettings,
+        };
         return mergedSettings;
     } catch (error) {
         console.error('Failed to load settings:', error);
@@ -178,6 +182,10 @@ export const saveSubtitleSettings = async (settings: SubtitleSettings): Promise<
 
 export const saveAIServers = async (aiServers: AIServer[]): Promise<void> => {
     return saveSettings({ aiServers });
+};
+
+export const saveTheme = async (theme: string): Promise<void> => {
+    return saveSettings({ theme });
 };
 
 // 防抖函数，用于自动保存

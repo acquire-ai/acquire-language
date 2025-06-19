@@ -1,21 +1,42 @@
 /**
  * Acquire Language Background Script
+ *
+ * This script runs in the background and is responsible for handling extension-wide events.
+ * It manages subtitle request detection and communication between content scripts.
  */
-import { defineBackground } from 'wxt/sandbox';
+import { defineBackground } from 'wxt/utils/define-background';
 import { StorageManager } from '@/core/storage';
 import { Word } from '@/core/types/storage';
 
 export default defineBackground({
     main() {
-        // Listen for updates from content scripts
-        listenForSubtitleRequests();
+        // Set up all listeners
+        setupMessageListeners();
+        setupSubtitleRequestListener();
     },
 });
 
 /**
- * Listen for subtitle requests from content scripts
+ * Set up all message listeners
  */
-function listenForSubtitleRequests() {
+function setupMessageListeners() {
+    browser.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+        console.log('Background received message:', message);
+
+        if (message.type === 'SAVE_WORD') {
+            // Save word to vocabulary
+            saveWordToVocabulary(message.word, message.context, message.definition)
+                .then(() => sendResponse({ success: true }))
+                .catch((error) => sendResponse({ success: false, error: error.message }));
+            return true; // Indicates that the response will be sent asynchronously
+        }
+    });
+}
+
+/**
+ * Set up subtitle request listener
+ */
+function setupSubtitleRequestListener() {
     chrome.webRequest.onBeforeRequest.addListener(
         (details) => {
             if (details.method !== 'GET') return;
@@ -66,17 +87,6 @@ function listenForSubtitleRequests() {
         },
         { urls: ['*://*.youtube.com/*timedtext*', '*://*.youtube.com/api/*'] },
     );
-
-    // Listen for messages from content script
-    browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-        if (message.type === 'SAVE_WORD') {
-            // Save word to vocabulary
-            saveWordToVocabulary(message.word, message.context)
-                .then(() => sendResponse({ success: true }))
-                .catch((error) => sendResponse({ success: false, error: error.message }));
-            return true; // Indicates that the response will be sent asynchronously
-        }
-    });
 }
 
 async function fetchSubtitle(url: string) {
@@ -92,7 +102,11 @@ async function fetchSubtitle(url: string) {
     }
 }
 
-async function saveWordToVocabulary(word: string, context: string): Promise<Word> {
+async function saveWordToVocabulary(
+    word: string,
+    context: string,
+    definition?: string,
+): Promise<Word> {
     const vocabulary = await StorageManager.getVocabulary();
 
     // Check if word already exists
@@ -101,12 +115,17 @@ async function saveWordToVocabulary(word: string, context: string): Promise<Word
         if (!vocabulary[word].contexts.includes(context)) {
             vocabulary[word].contexts.push(context);
         }
+        // Update definition if provided
+        if (definition) {
+            vocabulary[word].definition = definition;
+        }
     } else {
         // If word doesn't exist, create new entry
         vocabulary[word] = {
             word,
             contexts: [context],
             createdAt: new Date().toISOString(),
+            definition,
         };
     }
 

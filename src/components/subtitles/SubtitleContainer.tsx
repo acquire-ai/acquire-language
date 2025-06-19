@@ -29,7 +29,7 @@ export const SubtitleContainer: React.FC<SubtitleContainerProps> = ({
 
     const containerStyle: CSSProperties = {
         position: 'absolute',
-        zIndex: 9999,
+        zIndex: 9999999,
         left: `${videoRect.left}px`,
         width: `${videoRect.width}px`,
         display: 'flex',

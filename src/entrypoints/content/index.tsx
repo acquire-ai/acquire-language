@@ -4,18 +4,54 @@
  * This script runs on platform pages and is responsible for initializing subtitle handlers.
  * It detects platform video pages and activates subtitle enhancement features after the video player loads.
  */
-import { defineContentScript } from 'wxt/sandbox';
+import '@/assets/globals.css';
+import ReactDOM from 'react-dom/client';
+import { defineContentScript } from 'wxt/utils/define-content-script';
+import { createShadowRootUi } from 'wxt/utils/content-script-ui/shadow-root';
 import { createPlatformHandler } from '@/platforms';
 import { createAIService } from '@/services/ai';
 import { getSettings, watchSettings } from '@/core/config/settings';
+import { uiManager } from './ui-manager';
 
 export default defineContentScript({
     matches: ['*://*.youtube.com/*'],
+    cssInjectionMode: 'ui',
 
-    async main() {
+    async main(ctx) {
         let subtitleHandler: any = null;
         let aiService: any = null;
         const processedSubtitleRequests = new Set<string>();
+
+        const ui = await createShadowRootUi(ctx, {
+            name: 'acquire-language-ui',
+            position: 'overlay',
+            anchor: 'body',
+            zIndex: 2147483647,
+            append: 'first',
+            onMount: (uiContainer, shadow, shadowHost) => {
+                // Container is a body, and React warns when creating a root on the body, so create a wrapper div
+                // showHost -> shadow root-> uiContainer-> wrapper-> reactRoot
+                const wrapper = document.createElement('div');
+                uiContainer.append(wrapper);
+
+                // Create a root on the UI container but don't render anything yet
+                const reactRoot = ReactDOM.createRoot(wrapper);
+
+                // Initialize UIManager with the root and wrapper
+                uiManager.initialize(reactRoot, uiContainer);
+
+                return { reactRoot, wrapper };
+            },
+            onRemove: (elements) => {
+                // Clean up UIManager
+                uiManager.cleanup();
+                elements?.reactRoot.unmount();
+                elements?.wrapper.remove();
+            },
+        });
+
+        // Mount the UI (this creates the Shadow DOM but doesn't render React components yet)
+        ui.mount();
 
         async function initializeWithSettings() {
             const settings = await getSettings();
@@ -26,7 +62,6 @@ export default defineContentScript({
             if (defaultServer) {
                 aiService = createAIService(defaultServer);
             } else {
-                console.error('No AI server configured');
                 return;
             }
 
@@ -38,7 +73,6 @@ export default defineContentScript({
 
         await initializeWithSettings();
         watchSettings(async (newSettings) => {
-            console.log('Settings changed, reinitializing with new settings');
             await initializeWithSettings();
         });
 
@@ -54,11 +88,20 @@ export default defineContentScript({
             monitorUrlChanges();
         }
 
-        chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        // Setup message listeners
+        browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+            // Handle overlay panel opening
+            if (message.type === 'OPEN_OVERLAY_PANEL' && message.word) {
+                uiManager.openPanel(message.word).then(() => {
+                    sendResponse({ success: true });
+                });
+                return true;
+            }
+
+            // Handle subtitle request detection
             if (message.type === 'SUBTITLE_REQUEST_DETECTED') {
                 if (!subtitleHandler) {
                     initializeHandler().then(() => {
-                        // Process subtitle request after initialization
                         processSubtitleRequest(message.data);
                     });
                     return true;
@@ -68,6 +111,11 @@ export default defineContentScript({
             }
 
             return true;
+        });
+
+        // Listen for custom events from subtitle handler
+        window.addEventListener('acquire-language-open-panel', (event: any) => {
+            uiManager.openPanel(event.detail);
         });
 
         function processSubtitleRequest(data: any) {

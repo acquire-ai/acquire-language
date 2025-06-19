@@ -126,7 +126,10 @@ describe('Content Script Tests', () => {
             lastUpdated: Date.now(),
         };
 
-        vi.mocked(getSettings).mockResolvedValue(mockSettings);
+        vi.mocked(getSettings).mockResolvedValue({
+            ...mockSettings,
+            theme: 'system',
+        });
 
         // Call the function we want to test directly
         const defaultServer =

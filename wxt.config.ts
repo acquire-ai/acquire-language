@@ -6,8 +6,6 @@ import { defineConfig } from 'wxt';
 // See https://wxt.dev/api/config.html
 export default defineConfig({
     srcDir: 'src',
-    // Use Chrome extension API
-    extensionApi: 'chrome',
 
     // Use React module
     modules: ['@wxt-dev/module-react'],
@@ -18,15 +16,25 @@ export default defineConfig({
     // Extension manifest configuration
     manifest: {
         // Extension name
-        name: '习得语言 (Acquire Language)',
+        name: 'Acquire Language',
 
         // Extension description
-        description: '通过观看视频学习语言的 Chrome 扩展 - 增强字幕显示',
+        description: 'Learn foreign languages while watching videos',
 
         // Version number
         version: '0.0.1',
-        permissions: ['storage', 'tabs', 'scripting', 'webRequest'],
+        permissions: ['storage', 'webRequest', 'tabs'],
         host_permissions: ['*://*.youtube.com/*'],
+        web_accessible_resources: [
+            {
+                resources: ['icon/*.png'],
+                matches: ['<all_urls>'],
+            },
+            {
+                resources: ['assets/*.css'],
+                matches: ['<all_urls>'],
+            },
+        ],
 
         options_page: null,
         options_ui: null,

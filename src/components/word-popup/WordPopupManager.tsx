@@ -36,7 +36,6 @@ export class WordPopupManager {
      * 私有构造函数，防止外部直接创建实例
      */
     private constructor() {
-        console.log('WordPopupManager: constructor called');
         this.cleanupExistingPopups();
         this.createContainer();
     }
@@ -47,7 +46,6 @@ export class WordPopupManager {
     private cleanupExistingPopups() {
         const existingContainer = document.getElementById('acquire-language-word-popup-container');
         if (existingContainer) {
-            console.log('WordPopupManager: Found existing container, removing it');
             existingContainer.remove();
         }
     }
@@ -56,10 +54,8 @@ export class WordPopupManager {
      * Create container element for the popup
      */
     private createContainer() {
-        console.log('WordPopupManager: createContainer called');
         // Remove existing container if it exists
         if (this.containerElement) {
-            console.log('WordPopupManager: removing existing container');
             this.containerElement.remove();
             this.root = null;
         }
@@ -71,14 +67,9 @@ export class WordPopupManager {
 
         // Container doesn't need position: absolute because the React component handles its own positioning
         document.body.appendChild(this.containerElement);
-        console.log(
-            'WordPopupManager: new container created and appended to body',
-            this.containerElement,
-        );
 
         // Create React root
         this.root = createRoot(this.containerElement);
-        console.log('WordPopupManager: React root created');
 
         // Initial render (hidden)
         this.render();
@@ -88,11 +79,6 @@ export class WordPopupManager {
      * Render or update the React component
      */
     private render() {
-        console.log('WordPopupManager: render called', {
-            hasRoot: !!this.root,
-            word: this.word,
-            isLoading: this.isLoading,
-        });
 
         if (!this.root) {
             console.error('WordPopupManager: No React root available');
@@ -111,7 +97,6 @@ export class WordPopupManager {
                     onSave={(word) => this.saveWord(word)}
                 />,
             );
-            console.log('WordPopupManager: React component rendered successfully');
         } catch (error) {
             console.error('WordPopupManager: Error rendering React component', error);
         }
@@ -121,7 +106,6 @@ export class WordPopupManager {
      * Show loading state
      */
     showLoading(word: string, position: { x: number; y: number }) {
-        console.log('WordPopupManager: showLoading called', { word, position });
 
         // 确保有有效的位置
         const adjustedPosition = this.validatePosition(position);
@@ -138,7 +122,6 @@ export class WordPopupManager {
 
         if (this.containerElement) {
             this.containerElement.style.display = 'block';
-            console.log('WordPopupManager: container display set to block');
         }
 
         this.render();
@@ -148,11 +131,6 @@ export class WordPopupManager {
      * Show word definition
      */
     show(word: string, definition: string, position: { x: number; y: number }) {
-        console.log('WordPopupManager: show called', {
-            word,
-            definition: definition.substring(0, 50) + '...',
-            position,
-        });
 
         // 确保有有效的位置
         const adjustedPosition = this.validatePosition(position);
@@ -169,7 +147,6 @@ export class WordPopupManager {
 
         if (this.containerElement) {
             this.containerElement.style.display = 'block';
-            console.log('WordPopupManager: container display set to block');
         }
 
         this.render();
@@ -191,7 +168,6 @@ export class WordPopupManager {
      * Hide popup
      */
     hide() {
-        console.log('WordPopupManager: hide called');
         if (this.containerElement) {
             this.containerElement.style.display = 'none';
             console.log('WordPopupManager: container hidden');
@@ -248,13 +224,11 @@ export class WordPopupManager {
             if (this.root) {
                 this.root.unmount();
                 this.root = null;
-                console.log('WordPopupManager: React root unmounted');
             }
 
             if (this.containerElement) {
                 this.containerElement.remove();
                 this.containerElement = null;
-                console.log('WordPopupManager: container element removed');
             }
 
             // 移除单例实例

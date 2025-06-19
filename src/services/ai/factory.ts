@@ -25,50 +25,79 @@ export const AVAILABLE_MODELS: ModelConfigType = {
     'openai-compatible': [],
 };
 
+/**
+ * Clean configuration object by removing empty strings, null, and undefined values
+ * This allows AI SDK to use its built-in default values
+ */
+function cleanConfig<T extends Record<string, any>>(config: T): Partial<T> {
+    const cleaned: Partial<T> = {};
+
+    for (const [key, value] of Object.entries(config)) {
+        // Only include non-empty values
+        if (value !== null && value !== undefined && value !== '') {
+            cleaned[key as keyof T] = value;
+        }
+    }
+
+    return cleaned;
+}
+
 export function createAIService(server: AIServer): AIService {
     let ai: ProviderV1;
 
     switch (server.provider) {
         case 'openai':
-            ai = createOpenAI({
-                apiKey: server.settings.apiKey,
-                baseURL: server.settings.baseURL,
-                organization: server.settings.organization,
-                project: server.settings.project,
-            });
+            ai = createOpenAI(
+                cleanConfig({
+                    apiKey: server.settings.apiKey,
+                    baseURL: server.settings.baseURL,
+                    organization: server.settings.organization,
+                    project: server.settings.project,
+                }),
+            );
             break;
         case 'anthropic':
-            ai = createAnthropic({
-                apiKey: server.settings.apiKey,
-                baseURL: server.settings.baseURL,
-            });
+            ai = createAnthropic(
+                cleanConfig({
+                    apiKey: server.settings.apiKey,
+                    baseURL: server.settings.baseURL,
+                }),
+            );
             break;
         case 'google':
-            ai = createGoogleGenerativeAI({
-                apiKey: server.settings.apiKey,
-                baseURL: server.settings.baseURL,
-            });
+            ai = createGoogleGenerativeAI(
+                cleanConfig({
+                    apiKey: server.settings.apiKey,
+                    baseURL: server.settings.baseURL,
+                }),
+            );
             break;
         case 'deepseek':
-            ai = createDeepSeek({
-                apiKey: server.settings.apiKey,
-                baseURL: server.settings.baseURL,
-            });
+            ai = createDeepSeek(
+                cleanConfig({
+                    apiKey: server.settings.apiKey,
+                    baseURL: server.settings.baseURL,
+                }),
+            );
             break;
         case 'azure':
-            ai = createAzure({
-                apiKey: server.settings.apiKey,
-                resourceName: server.settings.resourceName,
-                baseURL: server.settings.baseURL,
-                apiVersion: server.settings.apiVersion || '2024-10-01-preview',
-            });
+            ai = createAzure(
+                cleanConfig({
+                    apiKey: server.settings.apiKey,
+                    resourceName: server.settings.resourceName,
+                    baseURL: server.settings.baseURL,
+                    apiVersion: server.settings.apiVersion || '2024-10-01-preview',
+                }),
+            );
             break;
         case 'openai-compatible':
             ai = createOpenAICompatible({
-                name: server.settings.providerName || server.name || 'custom-provider',
+                name: server.name || server.settings.providerName + '-custom-provider',
                 apiKey: server.settings.apiKey,
-                baseURL: server.settings.baseURL || '',
-                queryParams: server.settings.queryParams || {},
+                baseURL: server.settings.baseURL,
+                ...cleanConfig({
+                    queryParams: server.settings.queryParams,
+                }),
             });
             break;
         default:
