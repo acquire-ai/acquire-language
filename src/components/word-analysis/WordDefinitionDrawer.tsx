@@ -219,7 +219,7 @@ const WordDefinitionDrawer: React.FC<WordDefinitionDrawerProps> = ({
                     'transition-[width] duration-500 ease-in-out',
                     isDrawerMaximized
                         ? '!w-1/3 !min-w-[600px] !max-w-[750px]'
-                        : 'w-[380px] sm:w-[480px] md:w-[580px]',
+                        : '!w-[380px] sm:!w-[480px] md:!w-[580px] !min-w-[300px]',
                 )}
                 portalContainer={portalContainer || undefined}
                 onInteractOutside={(e) => {

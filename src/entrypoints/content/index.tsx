@@ -28,6 +28,13 @@ export default defineContentScript({
             anchor: 'body',
             zIndex: 2147483647,
             append: 'first',
+            css: `
+        /* 设置 Shadow DOM 的基准字体大小 */
+        :host {
+            font-size: 16px !important;
+            line-height: 1.5 !important;
+        }
+    `,
             onMount: (uiContainer, shadow, shadowHost) => {
                 // Container is a body, and React warns when creating a root on the body, so create a wrapper div
                 // showHost -> shadow root-> uiContainer-> wrapper-> reactRoot
