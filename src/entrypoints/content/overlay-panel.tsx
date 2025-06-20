@@ -51,7 +51,13 @@ export const OverlayPanel: React.FC<OverlayPanelProps> = ({
                     pointerEvents: 'none',
                 }}
             >
-                <div style={{ pointerEvents: 'auto' }}>
+                <div
+                    style={{
+                        pointerEvents: 'auto',
+                        position: 'relative',
+                        zIndex: 2147483647,
+                    }}
+                >
                     <WordDefinitionDrawer
                         isOpen={isOpen}
                         onClose={handleDrawerClose}
