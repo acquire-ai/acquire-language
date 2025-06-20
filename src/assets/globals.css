@@ -259,3 +259,7 @@ a,
 .select-content {
     z-index: 999 !important;
 }
+
+.z-max {
+    z-index: 2147483647 !important;
+}
